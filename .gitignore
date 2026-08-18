@@ -24,8 +24,13 @@
 _ide_helper.php
 Homestead.json
 Homestead.yaml
-Thumbs.db
 .vercel
+*.tsbuildinfo
 /dist
+/out
+/.next
 composer.phar
-.agents
+.env*
+
+
+.vercel
