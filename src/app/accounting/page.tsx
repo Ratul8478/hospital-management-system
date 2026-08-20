@@ -5,7 +5,7 @@ import { useApp } from '@/lib/store';
 import {
   Wallet,
   Building2,
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   TrendingDown,
   Receipt,
@@ -18,9 +18,36 @@ import {
   Landmark,
 } from 'lucide-react';
 
+import Link from 'next/link';
+import { Lock } from 'lucide-react';
+
 export default function AccountingPage() {
-  const { invoices, branches, selectedBranchId } = useApp();
+  const { invoices, branches, selectedBranchId, userRole } = useApp();
   const [activeTab, setActiveTab] = useState<'cash_book' | 'bank_book' | 'ledger' | 'expenses' | 'pnl'>('cash_book');
+
+  if (userRole === 'patient') {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
+          <div className="h-16 w-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900">Hospital Accounts Restricted</h2>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            Institutional general ledgers, cash books, and P&L balances are restricted to Hospital Administration. To view your personal billing receipts, please visit the Patient Billing section.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/billing"
+              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#046a4e] hover:bg-[#03543e] text-white rounded-2xl font-bold text-xs shadow-md transition-all"
+            >
+              View My Personal Invoices
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filter invoices for calculations
   const filteredInvoices = invoices.filter(inv => {
@@ -30,17 +57,22 @@ export default function AccountingPage() {
 
   const totalCollected = filteredInvoices.reduce((acc, inv) => acc + (inv.status === 'paid' ? inv.amount : 0), 0);
   const totalPending = filteredInvoices.reduce((acc, inv) => acc + (inv.status === 'pending' ? inv.amount : 0), 0);
-  const totalExpenses = 4250.00;
+  const totalExpenses = 0.00;
   const netResult = totalCollected - totalExpenses;
 
-  // Mock Ledger Entries
-  const ledgerEntries = [
-    { id: 1, date: '2026-08-11', type: 'Credit', account: 'OPD Billing', reference: 'INV-B1-20260810-01', debit: 0, credit: 1200.00, balance: 1200.00 },
-    { id: 2, date: '2026-08-11', type: 'Debit', account: 'Medical Oxygen Supplies', reference: 'EXP-PO-9912', debit: 850.00, credit: 0, balance: 350.00 },
-    { id: 3, date: '2026-08-10', type: 'Credit', account: 'IPD Bed Charge', reference: 'INV-B1-20260810-02', debit: 0, credit: 500.00, balance: 850.00 },
-    { id: 4, date: '2026-08-10', type: 'Debit', account: 'Pharmacy Restock', reference: 'EXP-PH-4401', debit: 1400.00, credit: 0, balance: -550.00 },
-    { id: 5, date: '2026-08-09', type: 'Credit', account: 'Lab Diagnostics', reference: 'INV-B2-20260810-01', debit: 0, credit: 650.00, balance: 100.00 },
-  ];
+  // Dynamic Ledger Entries from settled invoices
+  const ledgerEntries = filteredInvoices.map(inv => ({
+    id: inv.id,
+    date: inv.date,
+    type: inv.status === 'paid' ? 'Credit' : 'Pending',
+    account: `${inv.patientName} — Invoice Settlement`,
+    reference: inv.invoiceNumber,
+    debit: 0,
+    credit: inv.status === 'paid' ? inv.amount : 0,
+    balance: inv.status === 'paid' ? inv.amount : 0,
+  }));
+
+  const paidInvoices = filteredInvoices.filter(i => i.status === 'paid');
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -48,33 +80,30 @@ export default function AccountingPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 text-xs font-black bg-emerald-100 text-emerald-800 rounded-md uppercase tracking-wider">
-              TRD Section 14 — Financial Ledger & Accounting
+            <span className="p-2 rounded-xl bg-sky-50 text-sky-600 border border-sky-100">
+              <Landmark className="h-5 w-5" />
             </span>
+            <h1 className="text-xl font-black text-slate-900">Hospital Financial Accounts & Ledger</h1>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">Enterprise Hospital Accounting</h1>
-          <p className="text-sm font-medium text-slate-500">
-            Cash Book, Bank Book, Double-Entry General Ledger & P&L Statement.
-          </p>
+          <p className="text-xs text-slate-500 mt-1">Multi-branch financial balance sheets, cash books, general ledger & audited reports.</p>
         </div>
 
-        <button
-          onClick={() => alert('Downloading Financial Ledger Export PDF...')}
-          className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-all shrink-0"
-        >
-          <Download className="h-4 w-4" /> Export Ledger (PDF)
-        </button>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">
+            <Download className="h-4 w-4" /> Export Balance Sheet
+          </button>
+        </div>
       </div>
 
-      {/* KPI Financial Overview */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
           <div className="h-12 w-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <DollarSign className="h-6 w-6" />
+            <IndianRupee className="h-6 w-6" />
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Collections</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">${totalCollected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">₹{totalCollected.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
           </div>
         </div>
 
@@ -84,7 +113,7 @@ export default function AccountingPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Outstanding Receivables</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">${totalPending.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">₹{totalPending.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
           </div>
         </div>
 
@@ -94,7 +123,7 @@ export default function AccountingPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Operational Expenses</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">₹{totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
           </div>
         </div>
 
@@ -105,7 +134,7 @@ export default function AccountingPage() {
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Net Operating Surplus</p>
             <p className={`text-2xl font-black mt-0.5 ${netResult >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              ${netResult.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              ₹{netResult.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -166,39 +195,39 @@ export default function AccountingPage() {
             <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
               <Wallet className="h-5 w-5 text-sky-600" /> Cash Transactions Register
             </h3>
-            <span className="text-xs font-mono font-bold text-slate-500">Closing Cash Balance: $4,850.00</span>
+            <span className="text-xs font-mono font-bold text-slate-500">Closing Cash Balance: ₹{totalCollected.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
 
-          <table className="w-full text-left text-xs font-medium">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
-              <tr>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Receipt / Voucher</th>
-                <th className="px-4 py-3">Particulars</th>
-                <th className="px-4 py-3 text-right">Cash In</th>
-                <th className="px-4 py-3 text-right">Cash Out</th>
-                <th className="px-4 py-3 text-right">Running Balance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
-              <tr>
-                <td className="px-4 py-3">2026-08-11</td>
-                <td className="px-4 py-3 text-sky-700 font-bold">REC-CS-101</td>
-                <td className="px-4 py-3 font-sans">OPD Counter Cash Deposit</td>
-                <td className="px-4 py-3 text-right text-emerald-600 font-bold">$1,200.00</td>
-                <td className="px-4 py-3 text-right text-slate-400">$0.00</td>
-                <td className="px-4 py-3 text-right font-bold">$4,850.00</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3">2026-08-10</td>
-                <td className="px-4 py-3 text-rose-700 font-bold">VOUCH-EX-04</td>
-                <td className="px-4 py-3 font-sans">Petty Cash Oxygen Cylinder Refill</td>
-                <td className="px-4 py-3 text-right text-slate-400">$0.00</td>
-                <td className="px-4 py-3 text-right text-rose-600 font-bold">$250.00</td>
-                <td className="px-4 py-3 text-right font-bold">$3,650.00</td>
-              </tr>
-            </tbody>
-          </table>
+          {paidInvoices.length === 0 ? (
+            <div className="py-12 text-center text-xs text-slate-500 font-medium">
+              No cash transactions recorded yet. Settled patient receipts will appear here automatically.
+            </div>
+          ) : (
+            <table className="w-full text-left text-xs font-medium">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
+                <tr>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Receipt / Voucher</th>
+                  <th className="px-4 py-3">Particulars</th>
+                  <th className="px-4 py-3 text-right">Cash In</th>
+                  <th className="px-4 py-3 text-right">Cash Out</th>
+                  <th className="px-4 py-3 text-right">Running Balance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
+                {paidInvoices.map((inv, idx) => (
+                  <tr key={inv.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3">{inv.date}</td>
+                    <td className="px-4 py-3 text-sky-700 font-bold">{inv.invoiceNumber}</td>
+                    <td className="px-4 py-3 font-sans">Payment from {inv.patientName}</td>
+                    <td className="px-4 py-3 text-right text-emerald-600 font-bold">₹{inv.amount.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right text-slate-400">₹0.00</td>
+                    <td className="px-4 py-3 text-right font-bold">₹{inv.amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 
@@ -213,30 +242,66 @@ export default function AccountingPage() {
             </span>
           </div>
 
-          <table className="w-full text-left text-xs font-medium">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
-              <tr>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Account Title</th>
-                <th className="px-4 py-3">Ref ID</th>
-                <th className="px-4 py-3 text-right">Debit ($)</th>
-                <th className="px-4 py-3 text-right">Credit ($)</th>
-                <th className="px-4 py-3 text-right">Balance ($)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
-              {ledgerEntries.map(entry => (
-                <tr key={entry.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">{entry.date}</td>
-                  <td className="px-4 py-3 font-sans font-bold text-slate-800">{entry.account}</td>
-                  <td className="px-4 py-3 text-sky-700">{entry.reference}</td>
-                  <td className="px-4 py-3 text-right text-rose-600">{entry.debit > 0 ? `$${entry.debit.toFixed(2)}` : '-'}</td>
-                  <td className="px-4 py-3 text-right text-emerald-600">{entry.credit > 0 ? `$${entry.credit.toFixed(2)}` : '-'}</td>
-                  <td className="px-4 py-3 text-right font-black text-slate-900">${entry.balance.toFixed(2)}</td>
+          {ledgerEntries.length === 0 ? (
+            <div className="py-12 text-center text-xs text-slate-500 font-medium">
+              No ledger entries recorded yet. System ledger will generate entries as bills and transactions are created.
+            </div>
+          ) : (
+            <table className="w-full text-left text-xs font-medium">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-extrabold">
+                <tr>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Account Title</th>
+                  <th className="px-4 py-3">Ref ID</th>
+                  <th className="px-4 py-3 text-right">Debit (₹)</th>
+                  <th className="px-4 py-3 text-right">Credit (₹)</th>
+                  <th className="px-4 py-3 text-right">Balance (₹)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
+                {ledgerEntries.map(entry => (
+                  <tr key={entry.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3">{entry.date}</td>
+                    <td className="px-4 py-3 font-sans font-bold text-slate-800">{entry.account}</td>
+                    <td className="px-4 py-3 text-sky-700">{entry.reference}</td>
+                    <td className="px-4 py-3 text-right text-rose-600">{entry.debit > 0 ? `₹${entry.debit.toFixed(2)}` : '-'}</td>
+                    <td className="px-4 py-3 text-right text-emerald-600">{entry.credit > 0 ? `₹${entry.credit.toFixed(2)}` : '-'}</td>
+                    <td className="px-4 py-3 text-right font-black text-slate-900">₹{entry.balance.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'expenses' && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-rose-600" /> Hospital Operational Expenses & Procurement
+            </h3>
+            <span className="text-xs font-mono font-bold text-slate-500">Total Expenses: ₹{totalExpenses.toFixed(2)}</span>
+          </div>
+
+          <div className="py-12 text-center text-xs text-slate-500 font-medium">
+            No active expense vouchers logged. Hospital procurement and operational vouchers will appear here.
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'bank_book' && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
+              <Landmark className="h-5 w-5 text-sky-600" /> Bank Book & Digital Settlement Account
+            </h3>
+            <span className="text-xs font-mono font-bold text-slate-500">Bank Balance: ₹{totalCollected.toFixed(2)}</span>
+          </div>
+
+          <div className="py-12 text-center text-xs text-slate-500 font-medium">
+            Bank account settlements and direct NEFT/UPI transaction receipts will be mirrored here.
+          </div>
         </div>
       )}
 
@@ -248,24 +313,16 @@ export default function AccountingPage() {
             </h3>
             <div className="space-y-3 text-xs font-medium">
               <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600">OPD Consultation Fees</span>
-                <span className="font-bold text-slate-900 font-mono">$4,850.00</span>
+                <span className="text-slate-600">Patient Billing Collections</span>
+                <span className="font-bold text-slate-900 font-mono">₹{totalCollected.toFixed(2)}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600">IPD Room & Nursing Charges</span>
-                <span className="font-bold text-slate-900 font-mono">$8,900.00</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600">Pharmacy Medication Sales</span>
-                <span className="font-bold text-slate-900 font-mono">$3,420.00</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600">Laboratory & Diagnostic Tests</span>
-                <span className="font-bold text-slate-900 font-mono">$2,100.00</span>
+                <span className="text-slate-600">Outstanding Receivables</span>
+                <span className="font-bold text-slate-900 font-mono">₹{totalPending.toFixed(2)}</span>
               </div>
               <div className="flex justify-between pt-3 font-extrabold text-sm text-emerald-700 border-t border-slate-200">
                 <span>Total Gross Income</span>
-                <span className="font-mono">$19,270.00</span>
+                <span className="font-mono">₹{(totalCollected + totalPending).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -276,20 +333,12 @@ export default function AccountingPage() {
             </h3>
             <div className="space-y-3 text-xs font-medium">
               <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600">Medical Supplies & Restock</span>
-                <span className="font-bold text-slate-900 font-mono">$2,800.00</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600">Utilities & Biomedical Maintenance</span>
-                <span className="font-bold text-slate-900 font-mono">$1,150.00</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-600">Franchise Referral Commissions</span>
-                <span className="font-bold text-slate-900 font-mono">$300.00</span>
+                <span className="text-slate-600">Operational Expenses</span>
+                <span className="font-bold text-slate-900 font-mono">₹{totalExpenses.toFixed(2)}</span>
               </div>
               <div className="flex justify-between pt-3 font-extrabold text-sm text-rose-700 border-t border-slate-200">
                 <span>Total Operating Expense</span>
-                <span className="font-mono">$4,250.00</span>
+                <span className="font-mono">₹{totalExpenses.toFixed(2)}</span>
               </div>
             </div>
           </div>

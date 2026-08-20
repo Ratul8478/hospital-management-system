@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Medix</string>
+    <string name="login_title">Medix Doctor Portal</string>
+    <string name="login_subtitle">Clinical Hospital Management Suite</string>
+    <string name="email_or_id_label">Doctor Email / License ID</string>
+    <string name="password_label">Password</string>
+    <string name="sign_in_button">Secure Sign In</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_appointments">Appointments</string>
+    <string name="nav_patients">Patients</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_profile">Profile</string>
+</resources>

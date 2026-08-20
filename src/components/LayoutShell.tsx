@@ -21,9 +21,9 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-h-[calc(100vh-4rem)]">
         <Sidebar />
-        <main className="flex-1 p-6 lg:p-8 overflow-x-hidden bg-slate-100">
+        <main className="flex-1 p-3.5 sm:p-5 md:p-6 lg:p-8 min-w-0 max-w-full overflow-x-hidden bg-slate-100">
           {children}
         </main>
       </div>

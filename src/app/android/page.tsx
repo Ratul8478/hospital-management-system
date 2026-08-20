@@ -52,16 +52,13 @@ export default function AndroidDoctorSimulator() {
   const [searchQuery, setSearchQuery] = useState('');
   
   // Prescription Form State
-  const [rxDiagnosis, setRxDiagnosis] = useState('Hypertension Stage 2 with Angina symptoms');
-  const [rxMedicines, setRxMedicines] = useState([
-    { id: 1, name: 'Amlodipine 5mg', dosage: '1 Tablet', frequency: 'Twice Daily (1-0-1)', duration: '30 Days', instructions: 'After meals' },
-    { id: 2, name: 'Metformin 500mg', dosage: '1 Tablet', frequency: 'Once Daily (1-0-0)', duration: '30 Days', instructions: 'Before breakfast' },
-  ]);
+  const [rxDiagnosis, setRxDiagnosis] = useState('');
+  const [rxMedicines, setRxMedicines] = useState<Array<{ id: number; name: string; dosage: string; frequency: string; duration: string; instructions: string }>>([]);
   const [rxSuccess, setRxSuccess] = useState(false);
 
   // Leave Form State
   const [leaveType, setLeaveType] = useState('Conference Leave');
-  const [leaveReason, setLeaveReason] = useState('National Cardiology Summit 2026');
+  const [leaveReason, setLeaveReason] = useState('');
   const [leaveSuccess, setLeaveSuccess] = useState(false);
 
   // Time state for status bar
@@ -78,47 +75,28 @@ export default function AndroidDoctorSimulator() {
   }, []);
 
   const doctorData = {
-    name: 'Dr. Robert Sullivan',
-    specialty: 'Cardiology & Heart Care',
-    hospital: 'Medix Central Multispecialty (Mumbai)',
-    uhid: 'DOC-B1-7890',
-    experience: '18+ Years',
-    rating: '4.9 ★ (142 reviews)',
+    name: 'Dr . Jiarul Haque',
+    specialty: 'General & Cardiology Medicine',
+    hospital: 'ARIYAN HOSPITAL MULTISPECIALITY',
+    uhid: 'DOC-ARIYAN-01',
+    experience: '15+ Years',
+    rating: '5.0 ★ (Medical Director)',
     fee: '₹ 800',
-    todayConsults: 18,
-    queueCount: 6,
-    completedCount: 12,
-    pendingReports: 3,
-    earningsToday: '₹ 14,400',
-    earningsMonth: '₹ 1,84,500'
+    todayConsults: 0,
+    queueCount: 0,
+    completedCount: 0,
+    pendingReports: 0,
+    earningsToday: '₹ 0',
+    earningsMonth: '₹ 0'
   };
 
-  const appointments = [
-    { id: 1, token: 'TK-101', patient: 'Rahul Sharma', age: 45, gender: 'Male', uhid: 'UHID-B1-2026-901', time: '10:00 AM', status: 'waiting', condition: 'Chest tightness, BP 142/92' },
-    { id: 2, token: 'TK-102', patient: 'Pooja Verma', age: 38, gender: 'Female', uhid: 'UHID-B1-2026-902', time: '10:15 AM', status: 'in_progress', condition: 'Follow-up ECG & Holter Review' },
-    { id: 3, token: 'TK-103', patient: 'Amit Trivedi', age: 52, gender: 'Male', uhid: 'UHID-B1-2026-903', time: '10:30 AM', status: 'waiting', condition: 'Post-CABG Stent Evaluation' },
-    { id: 4, token: 'TK-104', patient: 'Priyanka Sen', age: 29, gender: 'Female', uhid: 'UHID-B1-2026-904', time: '09:30 AM', status: 'completed', condition: 'Arrhythmia Palpitation check' },
-    { id: 5, token: 'TK-105', patient: 'Vikram Malhotra', age: 61, gender: 'Male', uhid: 'UHID-B1-2026-905', time: '09:15 AM', status: 'completed', condition: 'Hyperlipidemia Medication Refill' },
-  ];
+  const appointments: Array<{ id: number; token: string; patient: string; age: number; gender: string; uhid: string; time: string; status: string; condition: string }> = [];
 
-  const patientsList = [
-    { id: 1, name: 'Rahul Sharma', uhid: 'UHID-B1-2026-901', age: 45, gender: 'Male', blood: 'O+', phone: '+91 98201 12345', condition: 'Hypertension Stage 2', status: 'OPD Active' },
-    { id: 2, name: 'Pooja Verma', uhid: 'UHID-B1-2026-902', age: 38, gender: 'Female', blood: 'B+', phone: '+91 98201 54321', condition: 'Post-Op Knee Rehab', status: 'Admitted (ICU-04)' },
-    { id: 3, name: 'Amit Trivedi', uhid: 'UHID-B1-2026-903', age: 52, gender: 'Male', blood: 'A+', phone: '+91 98201 98765', condition: 'Coronary Artery Disease', status: 'OPD Active' },
-    { id: 4, name: 'Priyanka Sen', uhid: 'UHID-B1-2026-904', age: 29, gender: 'Female', blood: 'AB+', phone: '+91 98201 67890', condition: 'Maternal Telehealth', status: 'Discharged' },
-  ];
+  const patientsList: Array<{ id: number; name: string; uhid: string; age: number; gender: string; blood: string; phone: string; condition: string; status: string }> = [];
 
-  const reportsList = [
-    { id: 1, test: 'Comprehensive Lipid Profile & HbA1c', patient: 'Rahul Sharma', uhid: 'UHID-B1-2026-901', date: 'Today, 09:30 AM', status: 'READY', critical: false },
-    { id: 2, test: 'High-Sensitivity Troponin-I & ECG', patient: 'Pooja Verma', uhid: 'UHID-B1-2026-902', date: 'Today, 09:00 AM', status: 'READY', critical: true },
-    { id: 3, test: '2D Echocardiography with Doppler', patient: 'Amit Trivedi', uhid: 'UHID-B1-2026-903', date: 'Today, 10:15 AM', status: 'PROCESSING', critical: false },
-  ];
+  const reportsList: Array<{ id: number; test: string; patient: string; uhid: string; date: string; status: string; critical: boolean }> = [];
 
-  const admissionsList = [
-    { id: 1, patient: 'Pooja Verma', uhid: 'UHID-B1-2026-902', ward: 'ICU WING', bed: 'ICU-BED-04', daily: '₹ 8,500', admDate: '14 Aug 2026', status: 'ICU Care', notes: 'Continuous telemetry. Vitals stable.' },
-    { id: 2, patient: 'Suresh Raina', uhid: 'UHID-B1-2026-802', ward: 'DELUXE SUITE', bed: 'DLX-201', daily: '₹ 5,000', admDate: '15 Aug 2026', status: 'Post-Op Recovery', notes: 'Physical therapy round completed.' },
-    { id: 3, patient: 'Kiran Patel', uhid: 'UHID-B1-2026-803', ward: 'GENERAL WARD', bed: 'GEN-108', daily: '₹ 1,500', admDate: '13 Aug 2026', status: 'Under Observation', notes: 'IV antibiotics cycle 3 of 5.' },
-  ];
+  const admissionsList: Array<{ id: number; patient: string; uhid: string; ward: string; bed: string; daily: string; admDate: string; status: string; notes: string }> = [];
 
   const filteredAppointments = activeTab === 'all'
     ? appointments
@@ -127,7 +105,7 @@ export default function AndroidDoctorSimulator() {
   const addMedicineRow = () => {
     setRxMedicines([
       ...rxMedicines,
-      { id: Date.now(), name: 'Atorvastatin 20mg', dosage: '1 Tablet', frequency: 'Once at Bedtime (0-0-1)', duration: '30 Days', instructions: 'After dinner' }
+      { id: Date.now(), name: 'Prescribed Medicine', dosage: '1 Tablet', frequency: 'Twice Daily (1-0-1)', duration: '5 Days', instructions: 'After meals' }
     ]);
   };
 
@@ -295,23 +273,29 @@ export default function AndroidDoctorSimulator() {
                       <span className="text-[10px] font-black uppercase text-[#1E6FD9] bg-blue-50 px-2.5 py-0.5 rounded-full">
                         CURRENT OPD QUEUE TOKEN
                       </span>
-                      <span className="text-[11px] font-mono font-bold text-slate-500">Wait: ~4 Mins</span>
+                      <span className="text-[11px] font-mono font-bold text-slate-500">Live Status</span>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-3xl font-black text-slate-900 tracking-tight">TK-101</span>
-                        <h4 className="font-bold text-sm text-slate-800 mt-0.5">Rahul Sharma (45y / M)</h4>
-                        <p className="text-[11px] text-slate-500">UHID-B1-2026-901 • Chest tightness</p>
+                    {appointments.length > 0 ? (
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-3xl font-black text-slate-900 tracking-tight">{appointments[0].token}</span>
+                          <h4 className="font-bold text-sm text-slate-800 mt-0.5">{appointments[0].patient} ({appointments[0].age}y / {appointments[0].gender})</h4>
+                          <p className="text-[11px] text-slate-500">{appointments[0].uhid} • {appointments[0].condition}</p>
+                        </div>
+                        
+                        <button
+                          onClick={() => setCurrentScreen('prescription')}
+                          className="px-4 py-2.5 rounded-xl bg-[#1E6FD9] hover:bg-blue-700 text-white text-xs font-black shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Stethoscope className="w-3.5 h-3.5" /> Start Consult
+                        </button>
                       </div>
-                      
-                      <button
-                        onClick={() => setCurrentScreen('prescription')}
-                        className="px-4 py-2.5 rounded-xl bg-[#1E6FD9] hover:bg-blue-700 text-white text-xs font-black shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
-                      >
-                        <Stethoscope className="w-3.5 h-3.5" /> Start Consult
-                      </button>
-                    </div>
+                    ) : (
+                      <div className="py-3 text-center text-xs text-slate-500 font-medium">
+                        No active tokens in queue. Waiting for patient check-in at reception.
+                      </div>
+                    )}
                   </div>
 
                   {/* KPI STATS TILES */}
@@ -320,7 +304,7 @@ export default function AndroidDoctorSimulator() {
                       <span className="text-[10px] font-bold text-slate-500 uppercase">Today&apos;s Consults</span>
                       <div className="flex items-baseline justify-between">
                         <span className="text-xl font-black text-slate-900">{doctorData.todayConsults}</span>
-                        <span className="text-[10px] text-emerald-600 font-bold font-mono">12 Done</span>
+                        <span className="text-[10px] text-emerald-600 font-bold font-mono">0 Done</span>
                       </div>
                     </div>
 
@@ -378,26 +362,32 @@ export default function AndroidDoctorSimulator() {
                       <button onClick={() => setCurrentScreen('appointments')} className="text-xs text-[#1E6FD9] font-bold">View All</button>
                     </div>
 
-                    <div className="space-y-2">
-                      {appointments.slice(0, 3).map((apt) => (
-                        <div key={apt.id} className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <span className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E6FD9] font-black text-xs flex items-center justify-center shrink-0">
-                              {apt.token}
-                            </span>
-                            <div>
-                              <h5 className="font-black text-xs text-slate-900">{apt.patient}</h5>
-                              <p className="text-[10px] text-slate-500">{apt.age}y / {apt.gender} • {apt.time}</p>
+                    {appointments.length === 0 ? (
+                      <div className="p-4 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-500 font-medium">
+                        No scheduled appointments in today&apos;s roster.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {appointments.slice(0, 3).map((apt) => (
+                          <div key={apt.id} className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E6FD9] font-black text-xs flex items-center justify-center shrink-0">
+                                {apt.token}
+                              </span>
+                              <div>
+                                <h5 className="font-black text-xs text-slate-900">{apt.patient}</h5>
+                                <p className="text-[10px] text-slate-500">{apt.age}y / {apt.gender} • {apt.time}</p>
+                              </div>
                             </div>
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                              apt.status === 'waiting' ? 'bg-amber-100 text-amber-900' : apt.status === 'in_progress' ? 'bg-blue-100 text-blue-900' : 'bg-emerald-100 text-emerald-900'
+                            }`}>
+                              {apt.status.replace('_', ' ').toUpperCase()}
+                            </span>
                           </div>
-                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
-                            apt.status === 'waiting' ? 'bg-amber-100 text-amber-900' : apt.status === 'in_progress' ? 'bg-blue-100 text-blue-900' : 'bg-emerald-100 text-emerald-900'
-                          }`}>
-                            {apt.status.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                 </div>
@@ -433,42 +423,31 @@ export default function AndroidDoctorSimulator() {
                 </div>
 
                 {/* Appointments List */}
-                <div className="space-y-2.5">
-                  {filteredAppointments.map((apt) => (
-                    <div key={apt.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-sm text-[#1E6FD9] bg-blue-50 px-2 py-0.5 rounded-md">
-                          {apt.token}
-                        </span>
-                        <span className="text-[11px] text-slate-400 font-bold">{apt.time}</span>
-                      </div>
+                {filteredAppointments.length === 0 ? (
+                  <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-500 font-medium space-y-2">
+                    <Calendar className="w-8 h-8 text-slate-300 mx-auto" />
+                    <p>No appointments found in this queue category.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {filteredAppointments.map((apt) => (
+                      <div key={apt.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-black text-sm text-[#1E6FD9] bg-blue-50 px-2 py-0.5 rounded-md">
+                            {apt.token}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-bold">{apt.time}</span>
+                        </div>
 
-                      <div>
-                        <h4 className="font-black text-sm text-slate-900">{apt.patient}</h4>
-                        <p className="text-xs text-slate-600">{apt.age} Years • {apt.gender} • {apt.uhid}</p>
-                        <p className="text-[11px] text-slate-500 italic mt-1">&ldquo;{apt.condition}&rdquo;</p>
+                        <div>
+                          <h4 className="font-black text-sm text-slate-900">{apt.patient}</h4>
+                          <p className="text-xs text-slate-600">{apt.age} Years • {apt.gender} • {apt.uhid}</p>
+                          <p className="text-[11px] text-slate-500 italic mt-1">&ldquo;{apt.condition}&rdquo;</p>
+                        </div>
                       </div>
-
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <button
-                          onClick={() => {
-                            setSelectedPatientId(apt.id);
-                            setCurrentScreen('patient_detail');
-                          }}
-                          className="text-xs text-[#1E6FD9] font-bold"
-                        >
-                          View EHR History
-                        </button>
-                        <button
-                          onClick={() => setCurrentScreen('prescription')}
-                          className="px-3 py-1 rounded-lg bg-[#159A67] text-white font-bold text-xs shadow-xs"
-                        >
-                          Open Rx Pad
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -488,8 +467,8 @@ export default function AndroidDoctorSimulator() {
                 {/* Patient Header Card */}
                 <div className="p-3 rounded-2xl bg-slate-900 text-white space-y-1">
                   <span className="text-[10px] text-emerald-300 font-bold uppercase">PATIENT PROFILE</span>
-                  <h4 className="font-black text-sm">Rahul Sharma (45y / Male)</h4>
-                  <p className="text-[11px] text-slate-300">UHID-B1-2026-901 • Blood: O+ • Phone: +91 98201 12345</p>
+                  <h4 className="font-black text-sm">OPD Consultation Patient</h4>
+                  <p className="text-[11px] text-slate-300">Universal Digital EHR Sync</p>
                 </div>
 
                 {/* Diagnosis Input */}
@@ -498,6 +477,7 @@ export default function AndroidDoctorSimulator() {
                   <input
                     type="text"
                     required
+                    placeholder="Enter clinical diagnosis / symptoms..."
                     value={rxDiagnosis}
                     onChange={(e) => setRxDiagnosis(e.target.value)}
                     className="w-full p-2.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:border-[#1E6FD9]"
@@ -517,33 +497,39 @@ export default function AndroidDoctorSimulator() {
                     </button>
                   </div>
 
-                  <div className="space-y-2">
-                    {rxMedicines.map((med) => (
-                      <div key={med.id} className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-black text-xs text-slate-900">{med.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeMedicineRow(med.id)}
-                            className="text-rose-500 hover:text-rose-700 p-1"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                  {rxMedicines.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-white border border-dashed border-slate-300 text-center text-xs text-slate-400">
+                      No medicines added yet. Click &quot;Add Drug&quot; to prescribe formulations.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {rxMedicines.map((med) => (
+                        <div key={med.id} className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-black text-xs text-slate-900">{med.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeMedicineRow(med.id)}
+                              className="text-rose-500 hover:text-rose-700 p-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5 text-[11px] text-slate-600">
+                            <span className="bg-slate-50 p-1 rounded">Dosage: {med.dosage}</span>
+                            <span className="bg-slate-50 p-1 rounded">Duration: {med.duration}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-medium">Freq: {med.frequency} • {med.instructions}</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-1.5 text-[11px] text-slate-600">
-                          <span className="bg-slate-50 p-1 rounded">Dosage: {med.dosage}</span>
-                          <span className="bg-slate-50 p-1 rounded">Duration: {med.duration}</span>
-                        </div>
-                        <p className="text-[10px] text-slate-500 font-medium">Freq: {med.frequency} • {med.instructions}</p>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Digital Stamp Stamp */}
                 <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <span className="text-[11px] font-bold">256-bit Digital Signature Attached (Dr. Robert Sullivan)</span>
+                  <span className="text-[11px] font-bold">256-bit Digital Signature Attached ({doctorData.name})</span>
                 </div>
 
                 <button
@@ -582,27 +568,34 @@ export default function AndroidDoctorSimulator() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  {patientsList.map((pt) => (
-                    <div
-                      key={pt.id}
-                      onClick={() => {
-                        setSelectedPatientId(pt.id);
-                        setCurrentScreen('patient_detail');
-                      }}
-                      className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 hover:border-[#1E6FD9] transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-black text-xs text-slate-900">{pt.name}</h4>
-                        <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                          {pt.status}
-                        </span>
+                {patientsList.length === 0 ? (
+                  <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-500 font-medium space-y-2">
+                    <Users className="w-8 h-8 text-slate-300 mx-auto" />
+                    <p>No patient EHR records registered yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {patientsList.map((pt) => (
+                      <div
+                        key={pt.id}
+                        onClick={() => {
+                          setSelectedPatientId(pt.id);
+                          setCurrentScreen('patient_detail');
+                        }}
+                        className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1 hover:border-[#1E6FD9] transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-black text-xs text-slate-900">{pt.name}</h4>
+                          <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                            {pt.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">{pt.uhid} • Blood: {pt.blood} • {pt.phone}</p>
+                        <p className="text-xs text-[#1E6FD9] font-bold">{pt.condition}</p>
                       </div>
-                      <p className="text-[11px] text-slate-500">{pt.uhid} • Blood: {pt.blood} • {pt.phone}</p>
-                      <p className="text-xs text-[#1E6FD9] font-bold">{pt.condition}</p>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -620,46 +613,13 @@ export default function AndroidDoctorSimulator() {
                 <div className="p-4 rounded-3xl bg-[#123B5D] text-white space-y-2">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-[10px] font-mono text-emerald-300 uppercase">UHID-B1-2026-901</span>
-                      <h3 className="font-black text-base">Rahul Sharma</h3>
-                      <p className="text-xs text-slate-300">45 Yrs • Male • Blood: O+</p>
+                      <span className="text-[10px] font-mono text-emerald-300 uppercase">UHID-ACTIVE</span>
+                      <h3 className="font-black text-base">EHR Patient Passport</h3>
+                      <p className="text-xs text-slate-300">Registered Patient Record</p>
                     </div>
                     <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/40">
-                      Active OPD
+                      Active
                     </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-700/60 text-center text-xs">
-                    <div>
-                      <span className="text-[10px] text-slate-400 block">BP</span>
-                      <span className="font-black">138/88</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block">Pulse</span>
-                      <span className="font-black">74 bpm</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block">SpO2</span>
-                      <span className="font-black">98%</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Clinical Timeline Events */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">Clinical Timeline</h4>
-                  <div className="space-y-2">
-                    <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1">
-                      <span className="text-[10px] text-slate-400 font-bold">14 Aug 2026 • OPD Consult</span>
-                      <h5 className="font-black text-xs text-slate-900">Cardiology Review - Dr. Robert Sullivan</h5>
-                      <p className="text-[11px] text-slate-600">Prescribed Amlodipine 5mg. Advised 2D Echo.</p>
-                    </div>
-
-                    <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-1">
-                      <span className="text-[10px] text-slate-400 font-bold">10 Aug 2026 • Diagnostic Lab</span>
-                      <h5 className="font-black text-xs text-slate-900">Lipid Profile & HbA1c</h5>
-                      <p className="text-[11px] text-slate-600">Total Cholesterol: 195 mg/dL, HbA1c: 6.4%.</p>
-                    </div>
                   </div>
                 </div>
 
@@ -682,34 +642,41 @@ export default function AndroidDoctorSimulator() {
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  {reportsList.map((rep) => (
-                    <div key={rep.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${rep.status === 'READY' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'}`}>
-                          {rep.status}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-bold">{rep.date}</span>
-                      </div>
-
-                      <div>
-                        <h4 className="font-black text-xs text-slate-900">{rep.test}</h4>
-                        <p className="text-[11px] text-slate-500">{rep.patient} • {rep.uhid}</p>
-                      </div>
-
-                      {rep.critical && (
-                        <div className="p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-black flex items-center gap-1">
-                          <AlertCircle className="w-3.5 h-3.5" /> CRITICAL BIOMARKER ELEVATED
+                {reportsList.length === 0 ? (
+                  <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-500 font-medium space-y-2">
+                    <Activity className="w-8 h-8 text-slate-300 mx-auto" />
+                    <p>No diagnostic test reports currently pending.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {reportsList.map((rep) => (
+                      <div key={rep.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${rep.status === 'READY' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'}`}>
+                            {rep.status}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-bold">{rep.date}</span>
                         </div>
-                      )}
 
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#1E6FD9]">
-                        <span>View Clinical Findings</span>
-                        <Download className="w-3.5 h-3.5" />
+                        <div>
+                          <h4 className="font-black text-xs text-slate-900">{rep.test}</h4>
+                          <p className="text-[11px] text-slate-500">{rep.patient} • {rep.uhid}</p>
+                        </div>
+
+                        {rep.critical && (
+                          <div className="p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-black flex items-center gap-1">
+                            <AlertCircle className="w-3.5 h-3.5" /> CRITICAL BIOMARKER ELEVATED
+                          </div>
+                        )}
+
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#1E6FD9]">
+                          <span>View Clinical Findings</span>
+                          <Download className="w-3.5 h-3.5" />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -721,31 +688,38 @@ export default function AndroidDoctorSimulator() {
                   <p className="text-[11px] text-slate-500">Admitted beds & clinical telemetry</p>
                 </div>
 
-                <div className="space-y-2.5">
-                  {admissionsList.map((adm) => (
-                    <div key={adm.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded">
-                          {adm.bed}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400">{adm.ward}</span>
-                      </div>
+                {admissionsList.length === 0 ? (
+                  <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-500 font-medium space-y-2">
+                    <Building2 className="w-8 h-8 text-slate-300 mx-auto" />
+                    <p>No admitted inpatient (IPD) cases.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {admissionsList.map((adm) => (
+                      <div key={adm.id} className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-black text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded">
+                            {adm.bed}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400">{adm.ward}</span>
+                        </div>
 
-                      <div>
-                        <h4 className="font-black text-xs text-slate-900">{adm.patient}</h4>
-                        <p className="text-[11px] text-slate-500">{adm.uhid} • Admitted: {adm.admDate}</p>
-                        <p className="text-[11px] text-emerald-700 font-bold mt-0.5">{adm.notes}</p>
-                      </div>
+                        <div>
+                          <h4 className="font-black text-xs text-slate-900">{adm.patient}</h4>
+                          <p className="text-[11px] text-slate-500">{adm.uhid} • Admitted: {adm.admDate}</p>
+                          <p className="text-[11px] text-emerald-700 font-bold mt-0.5">{adm.notes}</p>
+                        </div>
 
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <span className="text-slate-400 text-[10px]">Tariff: {adm.daily}/day</span>
-                        <button className="px-2.5 py-1 rounded bg-[#1E6FD9] text-white text-[10px] font-bold">
-                          Add Round Note
-                        </button>
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <span className="text-slate-400 text-[10px]">Tariff: {adm.daily}/day</span>
+                          <button className="px-2.5 py-1 rounded bg-[#1E6FD9] text-white text-[10px] font-bold">
+                            Add Round Note
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -760,21 +734,21 @@ export default function AndroidDoctorSimulator() {
                 <div className="p-4 rounded-3xl bg-[#159A67] text-white space-y-2 shadow-lg">
                   <span className="text-[10px] text-emerald-100 font-bold uppercase">THIS MONTH NET EARNINGS</span>
                   <h3 className="text-3xl font-black">{doctorData.earningsMonth}</h3>
-                  <p className="text-xs text-emerald-100">Next settlement date: 01 Sept 2026</p>
+                  <p className="text-xs text-emerald-100">Live automatic settlement tracking</p>
                 </div>
 
                 <div className="space-y-2 text-xs font-bold text-slate-700">
                   <div className="flex justify-between p-3 bg-white rounded-2xl border border-slate-200">
-                    <span>OPD Consultations (142)</span>
-                    <span className="font-black text-slate-900">₹ 1,13,600</span>
+                    <span>OPD Consultations</span>
+                    <span className="font-black text-slate-900">₹ 0</span>
                   </div>
                   <div className="flex justify-between p-3 bg-white rounded-2xl border border-slate-200">
-                    <span>HD Telehealth Sessions (48)</span>
-                    <span className="font-black text-slate-900">₹ 38,400</span>
+                    <span>HD Telehealth Sessions</span>
+                    <span className="font-black text-slate-900">₹ 0</span>
                   </div>
                   <div className="flex justify-between p-3 bg-white rounded-2xl border border-slate-200">
-                    <span>IPD Ward Rounds (32)</span>
-                    <span className="font-black text-slate-900">₹ 32,500</span>
+                    <span>IPD Ward Rounds</span>
+                    <span className="font-black text-slate-900">₹ 0</span>
                   </div>
                 </div>
               </div>

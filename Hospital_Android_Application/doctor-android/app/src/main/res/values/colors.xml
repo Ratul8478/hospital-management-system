@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Calm Clinical Intelligence Color Palette -->
+    <color name="hms_navy">#123B5D</color>
+    <color name="hms_blue">#1E6FD9</color>
+    <color name="hms_teal">#16A6B6</color>
+    <color name="hms_success">#159A67</color>
+    <color name="hms_warning">#D58B00</color>
+    <color name="hms_danger">#D64545</color>
+    <color name="hms_background">#F5F8FB</color>
+    <color name="hms_surface">#FFFFFF</color>
+    <color name="hms_text_primary">#17212B</color>
+    <color name="hms_text_secondary">#667684</color>
+    <color name="hms_border">#E2E8F0</color>
+</resources>

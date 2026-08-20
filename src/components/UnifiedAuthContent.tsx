@@ -199,14 +199,6 @@ export function UnifiedAuthContent({ defaultTab = 'register' }: { defaultTab?: '
     }, 700);
   };
 
-  // Quick Demo Auto-fill Helper
-  const fillDemo = (role: typeof loginRole, email: string) => {
-    setLoginRole(role);
-    setLoginEmail(email);
-    setLoginPassword('Medix#2026Secure');
-    setActiveTab('login');
-  };
-
   return (
     <div className="min-h-screen bg-[#f0fdf4] text-[#062c21] font-sans flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-[#d1fae5] selection:text-[#062c21]">
       
@@ -429,11 +421,11 @@ export function UnifiedAuthContent({ defaultTab = 'register' }: { defaultTab?: '
                       />
                     </div>
                     <div>
-                      <label className="block font-extrabold text-[#062c21] mb-1">Consultation Fee ($)</label>
+                      <label className="block font-extrabold text-[#062c21] mb-1">Consultation Fee (₹)</label>
                       <input
                         type="number"
                         required
-                        placeholder="150"
+                        placeholder="500"
                         value={consultFee}
                         onChange={e => setConsultFee(e.target.value)}
                         className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none font-mono"
@@ -591,19 +583,6 @@ export function UnifiedAuthContent({ defaultTab = 'register' }: { defaultTab?: '
           ) : (
             /* TAB 2: SIGN IN (LOGIN) */
             <div className="space-y-5">
-              {/* Quick Demo Login Preset */}
-              <div className="p-3.5 bg-[#f0fdf4] rounded-2xl border border-[#d1fae5] space-y-2 text-xs">
-                <p className="text-[11px] font-extrabold text-[#062c21] uppercase tracking-wider flex items-center gap-1.5">
-                  <KeyRound className="h-3.5 w-3.5 text-[#046a4e]" /> Quick Demo Login Presets:
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  <button type="button" onClick={() => fillDemo('super_admin', 'admin.main@medix.com')} className="px-3 py-1 bg-[#046a4e] text-white rounded-full text-[11px] font-bold shadow-xs hover:bg-[#03523c] cursor-pointer">👑 Super Admin</button>
-                  <button type="button" onClick={() => fillDemo('branch_admin', 'admin.south@medix.com')} className="px-3 py-1 bg-[#046a4e] text-white rounded-full text-[11px] font-bold shadow-xs hover:bg-[#03523c] cursor-pointer">🏬 Branch Central Admin</button>
-                  <button type="button" onClick={() => fillDemo('doctor', 'dr.hayes@medix.com')} className="px-3 py-1 bg-[#046a4e] text-white rounded-full text-[11px] font-bold shadow-xs hover:bg-[#03523c] cursor-pointer">🩺 Doctor</button>
-                  <button type="button" onClick={() => fillDemo('patient', 'james.wilson@patient.com')} className="px-3 py-1 bg-[#046a4e] text-white rounded-full text-[11px] font-bold shadow-xs hover:bg-[#03523c] cursor-pointer">👤 Patient</button>
-                </div>
-              </div>
-
               <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs font-medium">
                 <div>
                   <label className="block font-extrabold text-[#062c21] mb-1">Select User Scope & Role</label>
@@ -612,8 +591,8 @@ export function UnifiedAuthContent({ defaultTab = 'register' }: { defaultTab?: '
                     onChange={e => setLoginRole(e.target.value as any)}
                     className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-extrabold rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
                   >
-                    <option value="super_admin">👑 Super Admin (All 9 Branches Control)</option>
-                    <option value="branch_admin">🏬 Branch Central Admin (Specific Branch Scope)</option>
+                    <option value="super_admin">👑 Super Admin (Headquarters Master Control)</option>
+                    <option value="branch_admin">🏬 Hospital Central Admin (Specific Branch Scope)</option>
                     <option value="doctor">🩺 Medical Consultant / Doctor</option>
                     <option value="patient">👤 Patient (UHID EHR Access)</option>
                     <option value="accountant">💰 Branch Accountant</option>

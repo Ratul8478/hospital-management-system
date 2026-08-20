@@ -1,12 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState } from 'react';
-import {
+import type {
   Branch,
   BranchAdminUser,
   AdminApplicationRequest,
   MarketingRepresentative,
   MarketingJoinRequest,
+  MarketingEmailDispatchLog,
   Doctor,
   Patient,
   Bed,
@@ -15,11 +16,15 @@ import {
   Invoice,
   Appointment,
   AuditLog,
+  SuperAdminProfile,
+} from './data';
+import {
   INITIAL_BRANCHES,
   INITIAL_BRANCH_ADMINS,
   INITIAL_ADMIN_APPLICATIONS,
   INITIAL_MARKETING_REPRESENTATIVES,
   INITIAL_MARKETING_JOIN_REQUESTS,
+  INITIAL_MARKETING_EMAIL_LOGS,
   INITIAL_DOCTORS,
   INITIAL_PATIENTS,
   INITIAL_BEDS,
@@ -28,6 +33,7 @@ import {
   INITIAL_INVOICES,
   INITIAL_APPOINTMENTS,
   INITIAL_AUDIT_LOGS,
+  DEFAULT_SUPER_ADMIN_PROFILE,
 } from './data';
 
 export type UserRole = 
@@ -43,11 +49,14 @@ export type UserRole =
 
 
 interface AppContextType {
+  superAdminProfile: SuperAdminProfile;
+  updateSuperAdminProfile: (profile: Partial<SuperAdminProfile>) => void;
   branches: Branch[];
   branchAdmins: BranchAdminUser[];
   adminApplications: AdminApplicationRequest[];
   marketingRepresentatives: MarketingRepresentative[];
   marketingJoinRequests: MarketingJoinRequest[];
+  marketingEmailLogs: MarketingEmailDispatchLog[];
   doctors: Doctor[];
   patients: Patient[];
   beds: Bed[];
@@ -68,10 +77,26 @@ interface AppContextType {
   rejectAdminApplication: (applicationId: number) => void;
   submitAdminApplication: (appData: Omit<AdminApplicationRequest, 'id' | 'appliedDate' | 'status'>) => void;
   submitMarketingJoinRequest: (requestData: Omit<MarketingJoinRequest, 'id' | 'appliedDate' | 'status'>) => void;
+  branchAdminPreApproveMarketingRequest: (requestId: number, adminName?: string, adminEmail?: string) => void;
+  superAdminFinalApproveMarketingRequest: (requestId: number, superAdminName?: string) => string;
+  superAdminDirectApproveMainHospitalRequest: (requestId: number, superAdminName?: string) => string;
   approveMarketingJoinRequest: (requestId: number, approverAdminName?: string, approverAdminEmail?: string) => string;
   rejectMarketingJoinRequest: (requestId: number) => void;
+  directHireMarketingRepresentative: (candidateData: {
+    name: string;
+    email: string;
+    phone: string;
+    targetBranchId: number;
+    territory: string;
+    experienceYears?: number;
+    expectedMonthlyReferrals?: number;
+    qualificationsOrNotes?: string;
+  }) => void;
+  fireMarketingRepresentative: (repId: number, reason?: string) => void;
+  reinstateMarketingRepresentative: (repId: number) => void;
+  referPatientWithMarketingCode: (refId: string, patientName: string, amount?: number) => boolean;
   addMarketingRepresentative: (rep: Omit<MarketingRepresentative, 'id' | 'approvedDate'>) => void;
-  updateMarketingRepStatus: (id: number, status: 'active' | 'inactive' | 'suspended') => void;
+  updateMarketingRepStatus: (id: number, status: 'active' | 'fired' | 'inactive' | 'suspended') => void;
   addBranchAdmin: (admin: Omit<BranchAdminUser, 'id' | 'assignedDate'>) => void;
   updateBranchAdminStatus: (id: number, status: 'active' | 'vacant' | 'suspended') => void;
   reassignBranchAdmin: (adminId: number, newBranchId: number) => void;
@@ -80,91 +105,102 @@ interface AppContextType {
   addBranch: (newBranch: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'>) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'tokenNumber'>) => void;
   updateAppointmentStatus: (id: number, status: Appointment['status']) => void;
+  isMobileSidebarOpen: boolean;
+  setIsMobileSidebarOpen: (isOpen: boolean) => void;
+  toggleMobileSidebar: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [branches, setBranches] = useState<Branch[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_branches');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_BRANCHES;
-  });
+  const isLoadedRef = React.useRef(false);
 
-  const [branchAdmins, setBranchAdmins] = useState<BranchAdminUser[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_branch_admins');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_BRANCH_ADMINS;
-  });
-
-  const [adminApplications, setAdminApplications] = useState<AdminApplicationRequest[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_admin_applications');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_ADMIN_APPLICATIONS;
-  });
-
-  const [marketingRepresentatives, setMarketingRepresentatives] = useState<MarketingRepresentative[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_marketing_representatives');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_MARKETING_REPRESENTATIVES;
-  });
-
-  const [marketingJoinRequests, setMarketingJoinRequests] = useState<MarketingJoinRequest[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_marketing_join_requests');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_MARKETING_JOIN_REQUESTS;
-  });
-
-  const [doctors, setDoctors] = useState<Doctor[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_doctors');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_DOCTORS;
-  });
-
-  const [patients, setPatients] = useState<Patient[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_patients');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_PATIENTS;
-  });
-
-  const [beds] = useState<Bed[]>(INITIAL_BEDS);
-  const [medicines] = useState<Medicine[]>(INITIAL_MEDICINES);
-  const [labRequests] = useState<LabRequest[]>(INITIAL_LAB_REQUESTS);
-  const [invoices] = useState<Invoice[]>(INITIAL_INVOICES);
-
-  const [appointments, setAppointments] = useState<Appointment[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_appointments');
-      if (saved) try { return JSON.parse(saved); } catch (e) {}
-    }
-    return INITIAL_APPOINTMENTS;
-  });
-
-  const [auditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
+  const [superAdminProfile, setSuperAdminProfile] = useState<SuperAdminProfile>(DEFAULT_SUPER_ADMIN_PROFILE);
+  const [branches, setBranches] = useState<Branch[]>(INITIAL_BRANCHES);
+  const [branchAdmins, setBranchAdmins] = useState<BranchAdminUser[]>(INITIAL_BRANCH_ADMINS);
+  const [adminApplications, setAdminApplications] = useState<AdminApplicationRequest[]>(INITIAL_ADMIN_APPLICATIONS);
+  const [marketingRepresentatives, setMarketingRepresentatives] = useState<MarketingRepresentative[]>(INITIAL_MARKETING_REPRESENTATIVES);
+  const [marketingJoinRequests, setMarketingJoinRequests] = useState<MarketingJoinRequest[]>(INITIAL_MARKETING_JOIN_REQUESTS);
+  const [marketingEmailLogs, setMarketingEmailLogs] = useState<MarketingEmailDispatchLog[]>(INITIAL_MARKETING_EMAIL_LOGS);
+  const [doctors, setDoctors] = useState<Doctor[]>(INITIAL_DOCTORS);
+  const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
+  const [beds, setBeds] = useState<Bed[]>(INITIAL_BEDS);
+  const [medicines, setMedicines] = useState<Medicine[]>(INITIAL_MEDICINES);
+  const [labRequests, setLabRequests] = useState<LabRequest[]>(INITIAL_LAB_REQUESTS);
+  const [invoices, setInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
+  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   const [selectedBranchId, setSelectedBranchId] = useState<number | 'all'>('all');
   const [userRole, setUserRole] = useState<UserRole>('super_admin');
+  const [selectedLandingConceptId, setSelectedLandingConceptIdState] = useState<number>(7);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
-  const [selectedLandingConceptId, setSelectedLandingConceptIdState] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('medix_landing_concept');
-      if (saved) try { return parseInt(saved, 10); } catch (e) {}
+  const toggleMobileSidebar = () => setIsMobileSidebarOpen(prev => !prev);
+
+  // 1. Initial Load from localStorage after mount (Prevents SSR hydration mismatch)
+  React.useEffect(() => {
+    try {
+      const schemaVer = localStorage.getItem('medix_db_schema_version');
+      if (schemaVer !== '2026_realtime_zero_state_v3') {
+        // Clear out old demo data keys and initialize fresh production zero state data
+        localStorage.setItem('medix_super_admin_profile', JSON.stringify(DEFAULT_SUPER_ADMIN_PROFILE));
+        localStorage.setItem('medix_branches', JSON.stringify(INITIAL_BRANCHES));
+        localStorage.setItem('medix_branch_admins', JSON.stringify(INITIAL_BRANCH_ADMINS));
+        localStorage.setItem('medix_doctors', JSON.stringify(INITIAL_DOCTORS));
+        localStorage.setItem('medix_patients', JSON.stringify(INITIAL_PATIENTS));
+        localStorage.setItem('medix_beds', JSON.stringify(INITIAL_BEDS));
+        localStorage.setItem('medix_medicines', JSON.stringify(INITIAL_MEDICINES));
+        localStorage.setItem('medix_appointments', JSON.stringify(INITIAL_APPOINTMENTS));
+        localStorage.setItem('medix_admin_applications', JSON.stringify(INITIAL_ADMIN_APPLICATIONS));
+        localStorage.setItem('medix_marketing_representatives', JSON.stringify(INITIAL_MARKETING_REPRESENTATIVES));
+        localStorage.setItem('medix_marketing_join_requests', JSON.stringify(INITIAL_MARKETING_JOIN_REQUESTS));
+        localStorage.setItem('medix_marketing_email_logs', JSON.stringify(INITIAL_MARKETING_EMAIL_LOGS));
+        localStorage.setItem('medix_db_schema_version', '2026_realtime_zero_state_v3');
+        
+        setSuperAdminProfile(DEFAULT_SUPER_ADMIN_PROFILE);
+        setBranches(INITIAL_BRANCHES);
+        setBranchAdmins(INITIAL_BRANCH_ADMINS);
+        setDoctors(INITIAL_DOCTORS);
+        setPatients(INITIAL_PATIENTS);
+        setBeds(INITIAL_BEDS);
+        setMedicines(INITIAL_MEDICINES);
+        setAppointments(INITIAL_APPOINTMENTS);
+      } else {
+        const sap = localStorage.getItem('medix_super_admin_profile');
+        if (sap) setSuperAdminProfile(JSON.parse(sap));
+        const b = localStorage.getItem('medix_branches');
+        if (b) setBranches(JSON.parse(b));
+        const ba = localStorage.getItem('medix_branch_admins');
+        if (ba) setBranchAdmins(JSON.parse(ba));
+        const aa = localStorage.getItem('medix_admin_applications');
+        if (aa) setAdminApplications(JSON.parse(aa));
+        const mr = localStorage.getItem('medix_marketing_representatives');
+        if (mr) setMarketingRepresentatives(JSON.parse(mr));
+        const mj = localStorage.getItem('medix_marketing_join_requests');
+        if (mj) setMarketingJoinRequests(JSON.parse(mj));
+        const mel = localStorage.getItem('medix_marketing_email_logs');
+        if (mel) setMarketingEmailLogs(JSON.parse(mel));
+        const doc = localStorage.getItem('medix_doctors');
+        if (doc) setDoctors(JSON.parse(doc));
+        const pat = localStorage.getItem('medix_patients');
+        if (pat) setPatients(JSON.parse(pat));
+        const bd = localStorage.getItem('medix_beds');
+        if (bd) setBeds(JSON.parse(bd));
+        const med = localStorage.getItem('medix_medicines');
+        if (med) setMedicines(JSON.parse(med));
+        const appt = localStorage.getItem('medix_appointments');
+        if (appt) setAppointments(JSON.parse(appt));
+      }
+      const savedRole = localStorage.getItem('medix_user_role') as UserRole;
+      if (savedRole) setUserRole(savedRole);
+      const concept = localStorage.getItem('medix_landing_concept');
+      if (concept) setSelectedLandingConceptIdState(parseInt(concept, 10));
+    } catch (e) {
+      console.error('Error loading state from localStorage', e);
+    } finally {
+      isLoadedRef.current = true;
     }
-    return 7;
-  });
+  }, []);
 
   const setSelectedLandingConceptId = (id: number) => {
     setSelectedLandingConceptIdState(id);
@@ -173,54 +209,84 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Sync to localStorage
+  // 2. Persist to localStorage only after initial load completed
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
+      localStorage.setItem('medix_user_role', userRole);
+    }
+  }, [userRole]);
+
+  React.useEffect(() => {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
+      localStorage.setItem('medix_super_admin_profile', JSON.stringify(superAdminProfile));
+    }
+  }, [superAdminProfile]);
+
+  React.useEffect(() => {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_branches', JSON.stringify(branches));
     }
   }, [branches]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_branch_admins', JSON.stringify(branchAdmins));
     }
   }, [branchAdmins]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_admin_applications', JSON.stringify(adminApplications));
     }
   }, [adminApplications]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_marketing_representatives', JSON.stringify(marketingRepresentatives));
     }
   }, [marketingRepresentatives]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_marketing_join_requests', JSON.stringify(marketingJoinRequests));
     }
   }, [marketingJoinRequests]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
+      localStorage.setItem('medix_marketing_email_logs', JSON.stringify(marketingEmailLogs));
+    }
+  }, [marketingEmailLogs]);
+
+  React.useEffect(() => {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_doctors', JSON.stringify(doctors));
     }
   }, [doctors]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_patients', JSON.stringify(patients));
     }
   }, [patients]);
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_appointments', JSON.stringify(appointments));
     }
   }, [appointments]);
+
+  React.useEffect(() => {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
+      localStorage.setItem('medix_beds', JSON.stringify(beds));
+    }
+  }, [beds]);
+
+  React.useEffect(() => {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
+      localStorage.setItem('medix_medicines', JSON.stringify(medicines));
+    }
+  }, [medicines]);
 
   // Direct Super Admin Hire Action
   const hireAdmin = (branchId: number, name: string, email: string, phone?: string) => {
@@ -403,40 +469,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const submitMarketingJoinRequest = (requestData: Omit<MarketingJoinRequest, 'id' | 'appliedDate' | 'status'>) => {
+    // If targeted at Branch 1 (Super Admin HQ), status is 'pending_super_admin_approval'
+    // If targeted at any other branch (Branch 2..9), status is 'pending_branch_review'
+    const initialStatus: MarketingJoinRequest['status'] =
+      requestData.targetBranchId === 1 ? 'pending_super_admin_approval' : 'pending_branch_review';
+
     const newRequest: MarketingJoinRequest = {
       ...requestData,
       id: marketingJoinRequests.length + 1,
       appliedDate: new Date().toISOString().split('T')[0],
-      status: 'pending',
+      status: initialStatus,
     };
     setMarketingJoinRequests(prev => [newRequest, ...prev]);
   };
 
-  const approveMarketingJoinRequest = (requestId: number, approverAdminName?: string, approverAdminEmail?: string): string => {
+  // Step 1 for Branch Hospital: Branch Admin recommends/pre-approves and forwards to Super Admin
+  const branchAdminPreApproveMarketingRequest = (requestId: number, adminName?: string, adminEmail?: string) => {
+    const targetReq = marketingJoinRequests.find(r => r.id === requestId);
+    if (!targetReq) return;
+
+    const branchObj = branches.find(b => b.id === targetReq.targetBranchId);
+    const finalAdminName = adminName || branchObj?.adminName || 'Branch Hospital Administrator';
+    const finalAdminEmail = adminEmail || branchObj?.adminEmail || 'admin@hospital.local';
+
+    setMarketingJoinRequests(prev =>
+      prev.map(r => r.id === requestId ? {
+        ...r,
+        status: 'pending_super_admin_approval',
+        branchAdminApprovedDate: new Date().toISOString().split('T')[0],
+        branchAdminName: finalAdminName,
+        branchAdminEmail: finalAdminEmail,
+      } : r)
+    );
+  };
+
+  // Step 2: Super Admin grants final approval -> Generates Reference ID and dispatches to email
+  const superAdminFinalApproveMarketingRequest = (requestId: number, superAdminName?: string): string => {
     const targetReq = marketingJoinRequests.find(r => r.id === requestId);
     if (!targetReq) return '';
 
-    // Target branch and approver info
-    const branchObj = branches.find(b => b.id === targetReq.targetBranchId);
-    const finalApproverName = approverAdminName || branchObj?.adminName || 'Hospital Administrator';
-    const finalApproverEmail = approverAdminEmail || branchObj?.adminEmail || 'admin@hospital.local';
-
-    // Generate unique Reference ID
+    const finalSuperAdmin = superAdminName || 'Anichul Haque (Super Admin HQ)';
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const generatedRefId = `REF-MKT-B${targetReq.targetBranchId}-${randomSuffix}`;
+    const approvalDate = new Date().toISOString().split('T')[0];
 
-    // Update request status
+    // Update Request Record
     setMarketingJoinRequests(prev =>
       prev.map(r => r.id === requestId ? {
         ...r,
         status: 'approved',
         approvedReferenceId: generatedRefId,
-        approvedByAdminName: finalApproverName,
-        approvedByAdminEmail: finalApproverEmail,
+        superAdminApprovedDate: approvalDate,
+        superAdminName: finalSuperAdmin,
       } : r)
     );
 
-    // Add to active Marketing Representatives
+    // Create Active Marketing Representative Record
     const newRep: MarketingRepresentative = {
       id: marketingRepresentatives.length + 1,
       referenceId: generatedRefId,
@@ -444,14 +532,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       branchCode: targetReq.targetBranchCode,
       branchName: targetReq.targetBranchName,
       name: targetReq.name,
+      gender: targetReq.gender || 'Male',
+      fatherOrMotherName: targetReq.fatherOrMotherName || 'Guardian',
+      dob: targetReq.dob || '1995-01-01',
+      bloodGroup: targetReq.bloodGroup || 'O+',
+      aadharNumber: targetReq.aadharNumber || 'XXXX-XXXX-XXXX',
+      aadharDocUrl: targetReq.aadharDocUrl,
+      panNumber: targetReq.panNumber || 'XXXXX0000X',
+      panDocUrl: targetReq.panDocUrl,
+      drivingLicenceNumber: targetReq.drivingLicenceNumber || 'DL-XXXX-XXXXXXX',
+      drivingLicenceDocUrl: targetReq.drivingLicenceDocUrl,
+      address: targetReq.address || 'Hospital Catchment Area',
+      pinCode: targetReq.pinCode || '400001',
+      district: targetReq.district || 'City Center',
+      state: targetReq.state || 'State',
+      country: targetReq.country || 'India',
       email: targetReq.email,
+      emailVerified: true,
       phone: targetReq.phone,
       territory: targetReq.territory,
       experienceYears: targetReq.experienceYears,
       status: 'active',
-      approvedDate: new Date().toISOString().split('T')[0],
-      approvedByAdminName: finalApproverName,
-      approvedByAdminEmail: finalApproverEmail,
+      approvedDate: approvalDate,
+      branchAdminApprovedDate: targetReq.branchAdminApprovedDate,
+      branchAdminName: targetReq.branchAdminName,
+      branchAdminEmail: targetReq.branchAdminEmail,
+      superAdminApprovedDate: approvalDate,
+      superAdminName: finalSuperAdmin,
       referredPatientsCount: 0,
       totalCommissionEarned: 0,
       pendingPayout: 0,
@@ -459,13 +566,135 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     setMarketingRepresentatives(prev => [newRep, ...prev]);
+
+    // Dispatch Simulated Email and Record in Email Log
+    const newEmailLog: MarketingEmailDispatchLog = {
+      id: `EML-DISPATCH-${Math.floor(1000 + Math.random() * 9000)}`,
+      requestId: targetReq.id,
+      recipientName: targetReq.name,
+      recipientEmail: targetReq.email,
+      referenceId: generatedRefId,
+      targetBranchId: targetReq.targetBranchId,
+      targetBranchCode: targetReq.targetBranchCode,
+      targetBranchName: targetReq.targetBranchName,
+      dispatchedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      dispatchedBySuperAdmin: finalSuperAdmin,
+      deliveryStatus: 'delivered',
+      smtpServer: 'smtp-relay.medix-network.internal:587',
+      emailSubject: `Welcome to Medix: Your Official Marketing Reference ID ${generatedRefId}`,
+      securityToken: `AUTH-SA-HQ-${Math.floor(100000 + Math.random() * 900000)}-SEC`,
+    };
+
+    setMarketingEmailLogs(prev => [newEmailLog, ...prev]);
+
     return generatedRefId;
+  };
+
+  // Direct Approval for Super Admin's Main Hospital (Branch 1)
+  const superAdminDirectApproveMainHospitalRequest = (requestId: number, superAdminName?: string): string => {
+    return superAdminFinalApproveMarketingRequest(requestId, superAdminName);
+  };
+
+  // Backward compatibility alias
+  const approveMarketingJoinRequest = (requestId: number, approverAdminName?: string, approverAdminEmail?: string): string => {
+    const targetReq = marketingJoinRequests.find(r => r.id === requestId);
+    if (!targetReq) return '';
+    if (targetReq.targetBranchId === 1) {
+      return superAdminDirectApproveMainHospitalRequest(requestId, approverAdminName);
+    } else {
+      branchAdminPreApproveMarketingRequest(requestId, approverAdminName, approverAdminEmail);
+      return superAdminFinalApproveMarketingRequest(requestId, 'Super Admin Master Desk');
+    }
   };
 
   const rejectMarketingJoinRequest = (requestId: number) => {
     setMarketingJoinRequests(prev =>
       prev.map(r => r.id === requestId ? { ...r, status: 'rejected' } : r)
     );
+  };
+
+  const directHireMarketingRepresentative = (candidateData: {
+    name: string;
+    email: string;
+    phone: string;
+    targetBranchId: number;
+    territory: string;
+    experienceYears?: number;
+    expectedMonthlyReferrals?: number;
+    qualificationsOrNotes?: string;
+  }) => {
+    const branchObj = branches.find(b => b.id === candidateData.targetBranchId) || branches[0];
+    const newRequest: MarketingJoinRequest = {
+      id: Date.now(),
+      name: candidateData.name,
+      gender: 'Male',
+      fatherOrMotherName: 'Direct Hire Candidate',
+      dob: '1995-01-01',
+      bloodGroup: 'O+',
+      aadharNumber: 'XXXX-XXXX-XXXX',
+      panNumber: 'XXXXX0000X',
+      drivingLicenceNumber: 'DL-XXXX-XXXXXXX',
+      address: branchObj?.address || branchObj?.location || 'Hospital Catchment Area',
+      pinCode: '700001',
+      district: branchObj?.location || 'Kolkata',
+      state: 'West Bengal',
+      country: 'India',
+      email: candidateData.email,
+      emailVerified: true,
+      phone: candidateData.phone,
+      targetBranchId: candidateData.targetBranchId,
+      targetBranchCode: branchObj?.code || 'ARIYAN-HQ',
+      targetBranchName: branchObj?.name || 'ARIYAN HOSPITAL MULTISPECIALITY',
+      territory: candidateData.territory || 'Hospital Catchment Area',
+      experienceYears: candidateData.experienceYears || 2,
+      expectedMonthlyReferrals: candidateData.expectedMonthlyReferrals || 50,
+      qualificationsOrNotes: candidateData.qualificationsOrNotes || 'Directly Onboarded by Super Admin',
+      appliedDate: new Date().toISOString().split('T')[0],
+      source: 'super_admin_hired',
+      status: 'pending_super_admin_approval',
+    };
+    setMarketingJoinRequests(prev => [newRequest, ...prev]);
+  };
+
+  const fireMarketingRepresentative = (repId: number, reason: string = 'Terminated by Central Super Admin Authority') => {
+    const currentDate = new Date().toISOString().split('T')[0];
+    setMarketingRepresentatives(prev =>
+      prev.map(r => r.id === repId ? {
+        ...r,
+        status: 'fired',
+        firedDate: currentDate,
+        firedReason: reason,
+      } : r)
+    );
+  };
+
+  const reinstateMarketingRepresentative = (repId: number) => {
+    setMarketingRepresentatives(prev =>
+      prev.map(r => r.id === repId ? {
+        ...r,
+        status: 'active',
+        firedDate: undefined,
+        firedReason: undefined,
+      } : r)
+    );
+  };
+
+  // Refer patient under marketing code and calculate commissions
+  const referPatientWithMarketingCode = (refId: string, patientName: string, amount: number = 800): boolean => {
+    const targetRep = marketingRepresentatives.find(r => r.referenceId.toLowerCase() === refId.toLowerCase());
+    if (!targetRep || targetRep.status !== 'active') return false;
+
+    const commissionAmount = Math.round(amount * 0.10); // 10%
+
+    setMarketingRepresentatives(prev =>
+      prev.map(r => r.id === targetRep.id ? {
+        ...r,
+        referredPatientsCount: r.referredPatientsCount + 1,
+        totalCommissionEarned: r.totalCommissionEarned + commissionAmount,
+        pendingPayout: r.pendingPayout + commissionAmount,
+      } : r)
+    );
+    return true;
   };
 
   const addMarketingRepresentative = (rep: Omit<MarketingRepresentative, 'id' | 'approvedDate'>) => {
@@ -477,20 +706,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMarketingRepresentatives(prev => [newRep, ...prev]);
   };
 
-  const updateMarketingRepStatus = (id: number, status: 'active' | 'inactive' | 'suspended') => {
+  const updateMarketingRepStatus = (id: number, status: 'active' | 'fired' | 'inactive' | 'suspended') => {
     setMarketingRepresentatives(prev =>
       prev.map(r => r.id === id ? { ...r, status } : r)
     );
   };
 
+  const updateSuperAdminProfile = (updated: Partial<SuperAdminProfile>) => {
+    setSuperAdminProfile(prev => {
+      const merged = { ...prev, ...updated };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('medix_super_admin_profile', JSON.stringify(merged));
+      }
+      return merged;
+    });
+
+    if (updated.hospitalName || updated.govtRegNumber || updated.address || updated.ownerName || updated.managerName || updated.email || updated.ownerContact) {
+      setBranches(prev => prev.map(b => b.id === 1 ? {
+        ...b,
+        name: updated.hospitalName || b.name,
+        govRegNumber: updated.govtRegNumber || b.govRegNumber,
+        address: updated.address || b.address,
+        branchHead: updated.ownerName ? `${updated.ownerName} (Owner & Medical Director)` : b.branchHead,
+        adminName: updated.managerName ? `${updated.managerName} (Manager)` : b.adminName,
+        adminEmail: updated.email || b.adminEmail,
+        adminPhone: updated.ownerContact || b.adminPhone,
+      } : b));
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
+        superAdminProfile,
+        updateSuperAdminProfile,
         branches,
         branchAdmins,
         adminApplications,
         marketingRepresentatives,
         marketingJoinRequests,
+        marketingEmailLogs,
         doctors,
         patients,
         beds,
@@ -511,8 +766,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         rejectAdminApplication,
         submitAdminApplication,
         submitMarketingJoinRequest,
+        branchAdminPreApproveMarketingRequest,
+        superAdminFinalApproveMarketingRequest,
+        superAdminDirectApproveMainHospitalRequest,
         approveMarketingJoinRequest,
         rejectMarketingJoinRequest,
+        directHireMarketingRepresentative,
+        fireMarketingRepresentative,
+        reinstateMarketingRepresentative,
+        referPatientWithMarketingCode,
         addMarketingRepresentative,
         updateMarketingRepStatus,
         addBranchAdmin,
@@ -523,6 +785,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addBranch,
         addAppointment,
         updateAppointmentStatus,
+        isMobileSidebarOpen,
+        setIsMobileSidebarOpen,
+        toggleMobileSidebar,
       }}
     >
       {children}

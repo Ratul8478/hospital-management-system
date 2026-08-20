@@ -18,11 +18,37 @@ import {
   Terminal,
 } from 'lucide-react';
 
+import Link from 'next/link';
+
 export default function SystemAdminPage() {
-  const { auditLogs, branches, branchAdmins, fireAdmin, updateBranchAdminStatus, reassignBranchAdmin } = useApp();
+  const { auditLogs, branches, branchAdmins, doctors, superAdminProfile, fireAdmin, updateBranchAdminStatus, reassignBranchAdmin, userRole } = useApp();
   const [activeSection, setActiveSection] = useState<'branch_admins' | 'audit_logs' | 'rbac' | 'users' | 'settings'>('branch_admins');
   const [searchAudit, setSearchAudit] = useState('');
   const [searchAdminQuery, setSearchAdminQuery] = useState('');
+
+  if (userRole === 'patient') {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
+          <div className="h-16 w-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900">Access Denied: Super Admin Only</h2>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            Administrative settings, audit logs, and branch manager controls can only be accessed by the Super Administrator (<strong>Anichul Haque</strong>).
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/dashboard/patient"
+              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#046a4e] hover:bg-[#03543e] text-white rounded-2xl font-bold text-xs shadow-md transition-all"
+            >
+              Return to Patient Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filtering audit logs
   const filteredLogs = auditLogs.filter(log => {
@@ -71,13 +97,13 @@ export default function SystemAdminPage() {
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">Super Admin Central Control & Branch Supervision</h1>
           <p className="text-sm font-medium text-slate-500">
-            Supervise all Branch Central Admins across 9 hospital branches, inspect access scopes & audit immutable logs.
+            Supervise all Branch Central Admins across hospital network, inspect access scopes & audit immutable logs.
           </p>
         </div>
 
         <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="text-xs font-extrabold text-slate-700 font-mono">SUPER ADMIN ACTIVE • 9 BRANCHES SUPERVISED</span>
+          <span className="text-xs font-extrabold text-slate-700 font-mono">SUPER ADMIN ACTIVE • {branches.length} {branches.length === 1 ? 'BRANCH' : 'BRANCHES'} SUPERVISED</span>
         </div>
       </div>
 
@@ -358,29 +384,39 @@ export default function SystemAdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-sm text-slate-900">Mr. Ratul</span>
+                <span className="font-extrabold text-sm text-slate-900">
+                  {superAdminProfile?.managerName || 'Anichul Haque'}
+                </span>
                 <span className="text-[10px] font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">Super Admin</span>
               </div>
-              <p className="text-xs text-slate-500 font-mono">admin@medix.com</p>
-              <p className="text-[11px] font-bold text-emerald-600">Full System Scope</p>
+              <p className="text-xs text-slate-500 font-mono">{superAdminProfile?.email || 'ariyanhospital9@gmail.com'}</p>
+              <p className="text-[11px] font-bold text-emerald-600">Full System Scope • ARIYAN HOSPITAL HQ</p>
             </div>
 
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-sm text-slate-900">Dr. Jonathan Hayes</span>
+                <span className="font-extrabold text-sm text-slate-900">
+                  {doctors[0]?.name || 'Dr . Jiarul Haque'}
+                </span>
                 <span className="text-[10px] font-bold bg-sky-100 text-sky-800 px-2 py-0.5 rounded">Doctor</span>
               </div>
-              <p className="text-xs text-slate-500 font-mono">dr.hayes@medix.com</p>
-              <p className="text-[11px] font-bold text-sky-600">Cardiology OPD Scope</p>
+              <p className="text-xs text-slate-500 font-mono">{doctors[0]?.contact || 'ariyanhospital9@gmail.com'}</p>
+              <p className="text-[11px] font-bold text-sky-600">
+                {doctors[0]?.specialty || 'General & Cardiology Medicine OPD Scope'}
+              </p>
             </div>
 
             <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-extrabold text-sm text-slate-900">Arthur Pendelton</span>
+                <span className="font-extrabold text-sm text-slate-900">
+                  {branchAdmins[0]?.name || 'Anichul Haque (Branch Admin)'}
+                </span>
                 <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">Branch Admin</span>
               </div>
-              <p className="text-xs text-slate-500 font-mono">admin.main@medix.com</p>
-              <p className="text-[11px] font-bold text-amber-700">Central Branch Scope</p>
+              <p className="text-xs text-slate-500 font-mono">{branchAdmins[0]?.email || 'ariyanhospital9@gmail.com'}</p>
+              <p className="text-[11px] font-bold text-amber-700">
+                {branches[0]?.name || 'ARIYAN HOSPITAL MULTISPECIALITY'}
+              </p>
             </div>
           </div>
         </div>

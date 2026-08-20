@@ -33,4 +33,11 @@ composer.phar
 .env*
 
 
-.vercel
+# Android & JDK build tools
+.gradle
+**/build/
+**/jdk-17*
+**/captures
+.externalNativeBuild
+.cxx
+local.properties

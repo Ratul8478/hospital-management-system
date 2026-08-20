@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
       );
 
     const newLeave = backendStore.createLeaveRequest({
-      doctorId: doctorId ? parseInt(doctorId, 10) : 99,
-      doctorName: doctorName || 'Dr. Sarah Williams',
+      doctorId: doctorId ? parseInt(doctorId, 10) : 1,
+      doctorName: doctorName || 'Dr . Jiarul Haque',
       leaveType: leaveType || 'annual',
       startDate,
       endDate,

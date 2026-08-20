@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/lib/store';
@@ -21,12 +21,21 @@ import {
   Users,
   ShieldCheck,
   Briefcase,
-  KeyRound,
-  FileCheck
+  FileText,
+  UploadCloud,
+  Check,
+  Calendar,
+  MapPin,
+  FileCheck,
+  Info,
+  FileBadge,
+  Phone,
+  MessageSquare
 } from 'lucide-react';
+import { detectSuspiciousPayload } from '@/lib/security';
 import ConceptHeader from '@/components/landing-concepts/ConceptHeader';
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialRoleParam = searchParams.get('role');
@@ -42,35 +51,51 @@ export default function RegisterPage() {
     submitMarketingJoinRequest
   } = useApp();
 
-  // Primary Division: 'super_admin' | 'hospital_admin'
-  const [primaryDivision, setPrimaryDivision] = useState<'super_admin' | 'hospital_admin'>(
-    initialRoleParam === 'super_admin' ? 'super_admin' : 'hospital_admin'
-  );
-
-  // Sub-role within Hospital Admin division
-  const [adminSubRole, setAdminSubRole] = useState<'branch_admin' | 'marketing' | 'doctor' | 'patient' | 'staff'>(
-    initialRoleParam && ['marketing', 'doctor', 'patient', 'staff'].includes(initialRoleParam)
+  // Sub-role within Hospital Admin division - Marketing Man is FIRST / default
+  const [adminSubRole, setAdminSubRole] = useState<'marketing' | 'branch_admin' | 'doctor' | 'patient' | 'staff'>(
+    initialRoleParam && ['branch_admin', 'marketing', 'doctor', 'patient', 'staff'].includes(initialRoleParam)
       ? (initialRoleParam as any)
-      : 'branch_admin'
+      : 'marketing'
   );
 
-  // Facility & Branch State
+  // Facility & Branch State for Hospital Admin
   const [facilityType, setFacilityType] = useState<'Hospital' | 'Nursing Home' | 'Diagnostic Center'>('Hospital');
   const [selectedBranchId, setSelectedBranchIdState] = useState<number>(1);
-  
-  // Super Admin specific fields
-  const [hqMasterKey, setHqMasterKey] = useState('MEDIX-HQ-MASTER-2026');
-  const [networkScope, setNetworkScope] = useState('All 9 Multi-Campus Branches');
-  const [govRegNumber, setGovRegNumber] = useState('GOV-HOSP-2026-HQ9');
-
-  // Branch Admin specific fields
   const [adminRoleTitle, setAdminRoleTitle] = useState('Branch Central Administrator');
 
-  // Marketing Representative specific fields
-  const [territory, setTerritory] = useState('South & West Suburbs Healthcare Hub');
-  const [experienceYears, setExperienceYears] = useState('5');
-  const [expectedMonthlyReferrals, setExpectedMonthlyReferrals] = useState('30');
-  const [marketingNotes, setMarketingNotes] = useState('Tie-ups with local clinics, pharmacies, and corporate health leads');
+  // General registration fields
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // MARKETING MAN REGISTRATION FIELDS (FULL KYC)
+  const [mktFullName, setMktFullName] = useState('');
+  const [mktGender, setMktGender] = useState<'Male' | 'Female' | 'Other'>('Male');
+  const [mktFatherOrMother, setMktFatherOrMother] = useState('');
+  const [mktDob, setMktDob] = useState('1994-06-15');
+  const [mktBloodGroup, setMktBloodGroup] = useState('O+');
+  const [mktAadharNumber, setMktAadharNumber] = useState('');
+  const [mktAadharFileName, setMktAadharFileName] = useState('aadhar_card_front_back.pdf');
+  const [mktPanNumber, setMktPanNumber] = useState('');
+  const [mktPanFileName, setMktPanFileName] = useState('pan_card_copy.jpg');
+  const [mktDlNumber, setMktDlNumber] = useState('');
+  const [mktDlFileName, setMktDlFileName] = useState('driving_licence.pdf');
+  const [mktAddress, setMktAddress] = useState('');
+  const [mktPinCode, setMktPinCode] = useState('');
+  const [mktDistrict, setMktDistrict] = useState('Mumbai Suburban');
+  const [mktState, setMktState] = useState('Maharashtra');
+  const [mktCountry, setMktCountry] = useState('India');
+  const [mktEmail, setMktEmail] = useState('');
+  const [mktEmailVerified, setMktEmailVerified] = useState(true);
+  const [mktIsVerifyingEmail, setMktIsVerifyingEmail] = useState(false);
+  const [mktPhone, setMktPhone] = useState('');
+  const [mktTerritory, setMktTerritory] = useState('South & West Suburbs Healthcare Hub');
+  const [mktExperienceYears, setMktExperienceYears] = useState('5');
+  const [mktMonthlyReferrals, setMktMonthlyReferrals] = useState('30');
+  const [mktNotes, setMktNotes] = useState('Tie-ups with local general physicians, polyclinics, and corporate offices');
 
   // Doctor specific fields
   const [specialty, setSpecialty] = useState('Cardiology & Vascular Medicine');
@@ -79,19 +104,11 @@ export default function RegisterPage() {
   // Patient specific fields
   const [patientAge, setPatientAge] = useState('35');
   const [patientGender, setPatientGender] = useState('Male');
-  const [bloodGroup, setBloodGroup] = useState('O+');
+  const [patientBloodGroup, setPatientBloodGroup] = useState('O+');
   const [medicalCondition, setMedicalCondition] = useState('General OPD Consultation');
 
   // Staff specific fields
   const [staffRole, setStaffRole] = useState<'receptionist' | 'pharmacist' | 'lab_technician' | 'accountant'>('receptionist');
-
-  // Common Form Fields
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
 
   // Status State
   const [isLoading, setIsLoading] = useState(false);
@@ -100,22 +117,44 @@ export default function RegisterPage() {
   const [generatedUhid, setGeneratedUhid] = useState('');
 
   // Handle Primary Division Change
-  const handleSelectDivision = (division: 'super_admin' | 'hospital_admin') => {
-    setPrimaryDivision(division);
-    setError('');
+  const handleSimulateVerifyEmail = () => {
+    if (!mktEmail) {
+      setError('Please enter your marketing email address first.');
+      return;
+    }
+    setMktIsVerifyingEmail(true);
+    setTimeout(() => {
+      setMktIsVerifyingEmail(false);
+      setMktEmailVerified(true);
+    }, 800);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
-      return;
+    // Security Threat Check across form submissions
+    const inputsToCheck = [
+      fullName, email, phone, password,
+      mktFullName, mktEmail, mktPhone,
+    ];
+    for (const inp of inputsToCheck) {
+      if (inp && detectSuspiciousPayload(inp).isSuspicious) {
+        setError('Security Alert: Malicious input pattern detected and blocked by firewall.');
+        return;
+      }
     }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
+
+    // HOSPITAL ADMIN / SUB-ROLES SUBMISSION
+    if (adminSubRole !== 'marketing') {
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters long.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.');
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -123,96 +162,103 @@ export default function RegisterPage() {
       setIsLoading(false);
       const targetBranch = branches.find(b => b.id === selectedBranchId) || branches[0];
 
-      if (primaryDivision === 'super_admin') {
-        // ==========================================
-        // 1. SUPER ADMIN REGISTRATION
-        // ==========================================
-        setUserRole('super_admin');
-        setSelectedBranchId('all');
-        setSuccessMsg(`👑 Super Admin Master Account registered successfully! You have full access to the Main Headquarters Hospital and complete authority to recruit/fire branch admins and audit all hospital operations.`);
-        setTimeout(() => router.push('/dashboard/super-admin'), 1300);
+      if (adminSubRole === 'branch_admin') {
+        addBranchAdmin({
+          branchId: targetBranch.id,
+          branchCode: targetBranch.code,
+          branchName: targetBranch.name,
+          name: fullName,
+          email: email,
+          phone: phone || '+91 98200 11223',
+          status: 'active',
+          roleTitle: adminRoleTitle || 'Branch Central Administrator',
+        });
+        hireAdmin(targetBranch.id, fullName, email, phone);
+        setUserRole('branch_admin');
+        setSelectedBranchId(targetBranch.id);
+        setSuccessMsg(`🏥 Hospital Admin registered for ${targetBranch.name} (${targetBranch.code})! The dedicated Marketing Suite is active on your dashboard.`);
+        setTimeout(() => router.push('/dashboard/branch-admin'), 1300);
+
+      } else if (adminSubRole === 'marketing') {
+        // MARKETING MAN REGISTRATION
+        const isHqBranch = targetBranch.id === 1;
+
+        submitMarketingJoinRequest({
+          name: mktFullName || fullName,
+          gender: mktGender,
+          fatherOrMotherName: mktFatherOrMother,
+          dob: mktDob,
+          bloodGroup: mktBloodGroup,
+          aadharNumber: mktAadharNumber,
+          aadharDocUrl: mktAadharFileName,
+          panNumber: mktPanNumber,
+          panDocUrl: mktPanFileName,
+          drivingLicenceNumber: mktDlNumber,
+          drivingLicenceDocUrl: mktDlFileName,
+          address: mktAddress,
+          pinCode: mktPinCode,
+          district: mktDistrict,
+          state: mktState,
+          country: mktCountry,
+          email: mktEmail || email,
+          emailVerified: mktEmailVerified,
+          phone: mktPhone || phone || '+91 98200 45678',
+          targetBranchId: targetBranch.id,
+          targetBranchCode: targetBranch.code,
+          targetBranchName: targetBranch.name,
+          territory: mktTerritory,
+          experienceYears: parseInt(mktExperienceYears) || 4,
+          expectedMonthlyReferrals: parseInt(mktMonthlyReferrals) || 25,
+          qualificationsOrNotes: mktNotes || 'Application submitted with full KYC verification documents.',
+          source: 'self_registered',
+          password: password,
+        });
+
+        if (isHqBranch) {
+          setSuccessMsg(`📢 Marketing Man Registered for Headquarters Main Hospital (${targetBranch.name})! Request queued for direct Super Admin approval. Once approved, your Reference ID will be dispatched to ${mktEmail || email}.`);
+        } else {
+          setSuccessMsg(`📢 Marketing Man Registered for ${targetBranch.name}! Your request has been queued for Hospital Admin pre-approval, which will then be forwarded to Super Admin for final Reference ID dispatch to ${mktEmail || email}.`);
+        }
+        setTimeout(() => router.push('/login'), 2500);
+
+      } else if (adminSubRole === 'doctor') {
+        addDoctor({
+          branchId: targetBranch.id,
+          name: fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`,
+          specialty: specialty,
+          fee: parseFloat(consultFee) || 800,
+          status: 'available',
+          contact: phone || '+91 98200 99887',
+        });
+        setUserRole('doctor');
+        setSelectedBranchId(targetBranch.id);
+        setSuccessMsg(`🩺 Medical Consultant Profile created for ${targetBranch.code}!`);
+        setTimeout(() => router.push('/dashboard/doctor'), 1200);
+
+      } else if (adminSubRole === 'patient') {
+        const newUhid = `UHID-B${targetBranch.id}-20260814-${Math.floor(1000 + Math.random() * 9000)}`;
+        setGeneratedUhid(newUhid);
+        addPatient({
+          branchId: targetBranch.id,
+          uhid: newUhid,
+          name: fullName,
+          age: parseInt(patientAge) || 30,
+          gender: patientGender,
+          bloodGroup: patientBloodGroup,
+          phone: phone || '+91 98200 55443',
+          condition: medicalCondition || 'General OPD Consultation',
+          status: 'opd',
+        });
+        setUserRole('patient');
+        setSelectedBranchId(targetBranch.id);
+        setSuccessMsg(`👤 Patient Registered! Universal Health ID: ${newUhid}`);
+        setTimeout(() => router.push(`/dashboard/patient?name=${encodeURIComponent(fullName)}&uhid=${encodeURIComponent(newUhid)}`), 1400);
 
       } else {
-        // ==========================================
-        // 2. HOSPITAL ADMIN / BRANCH ROLES
-        // ==========================================
-        if (adminSubRole === 'branch_admin') {
-          // Branch Central Admin
-          addBranchAdmin({
-            branchId: targetBranch.id,
-            branchCode: targetBranch.code,
-            branchName: targetBranch.name,
-            name: fullName,
-            email: email,
-            phone: phone || '+91 98200 11223',
-            status: 'active',
-            roleTitle: adminRoleTitle || 'Branch Central Administrator',
-          });
-          hireAdmin(targetBranch.id, fullName, email, phone);
-          setUserRole('branch_admin');
-          setSelectedBranchId(targetBranch.id);
-          setSuccessMsg(`🏥 Hospital Admin registered for ${targetBranch.name} (${targetBranch.code})! The dedicated Marketing Suite and Reference ID generator is now active on your dashboard.`);
-          setTimeout(() => router.push('/dashboard/branch-admin'), 1300);
-
-        } else if (adminSubRole === 'marketing') {
-          // Field Marketing Partner
-          submitMarketingJoinRequest({
-            name: fullName,
-            email: email,
-            phone: phone || '+91 98200 45678',
-            targetBranchId: targetBranch.id,
-            targetBranchCode: targetBranch.code,
-            targetBranchName: targetBranch.name,
-            territory: territory,
-            experienceYears: parseInt(experienceYears) || 3,
-            expectedMonthlyReferrals: parseInt(expectedMonthlyReferrals) || 20,
-            qualificationsOrNotes: marketingNotes || 'Application submitted via Online Portal',
-          });
-          setSuccessMsg(`📢 Marketing Partner Application submitted for ${targetBranch.name}! Your request is queued for Hospital Admin approval. A unique Reference ID will be generated upon approval.`);
-          setTimeout(() => router.push('/login'), 2200);
-
-        } else if (adminSubRole === 'doctor') {
-          // Doctor Profile
-          addDoctor({
-            branchId: targetBranch.id,
-            name: fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`,
-            specialty: specialty,
-            fee: parseFloat(consultFee) || 800,
-            status: 'available',
-            contact: phone || '+91 98200 99887',
-          });
-          setUserRole('doctor');
-          setSelectedBranchId(targetBranch.id);
-          setSuccessMsg(`🩺 Medical Consultant Profile created for ${targetBranch.code}!`);
-          setTimeout(() => router.push('/dashboard/doctor'), 1200);
-
-        } else if (adminSubRole === 'patient') {
-          // Patient Registration
-          const newUhid = `UHID-B${targetBranch.id}-20260814-${Math.floor(1000 + Math.random() * 9000)}`;
-          setGeneratedUhid(newUhid);
-          addPatient({
-            branchId: targetBranch.id,
-            uhid: newUhid,
-            name: fullName,
-            age: parseInt(patientAge) || 30,
-            gender: patientGender,
-            bloodGroup: bloodGroup,
-            phone: phone || '+91 98200 55443',
-            condition: medicalCondition || 'General OPD Consultation',
-            status: 'opd',
-          });
-          setUserRole('patient');
-          setSelectedBranchId(targetBranch.id);
-          setSuccessMsg(`👤 Patient Registered! Universal Health ID: ${newUhid}`);
-          setTimeout(() => router.push(`/dashboard/patient?name=${encodeURIComponent(fullName)}&uhid=${encodeURIComponent(newUhid)}`), 1400);
-
-        } else {
-          // Department Staff
-          setUserRole(staffRole);
-          setSelectedBranchId(targetBranch.id);
-          setSuccessMsg(`💼 Registered as ${staffRole.toUpperCase()} for ${targetBranch.code}!`);
-          setTimeout(() => router.push('/appointments'), 1200);
-        }
+        setUserRole(staffRole);
+        setSelectedBranchId(targetBranch.id);
+        setSuccessMsg(`💼 Registered as ${staffRole.toUpperCase()} for ${targetBranch.code}!`);
+        setTimeout(() => router.push('/appointments'), 1200);
       }
     }, 700);
   };
@@ -227,20 +273,20 @@ export default function RegisterPage() {
       <section className="pt-10 pb-6 px-4 sm:px-6 max-w-4xl mx-auto text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#d1fae5] border border-[#a7f3d0] text-[#046a4e] text-xs font-extrabold shadow-xs">
           <Heart className="w-4 h-4 text-[#046a4e] fill-[#046a4e]" />
-          <span>MEDIX ENTERPRISE HEALTHCARE • REGISTRATION PORTAL</span>
+          <span>MEDIX ENTERPRISE HEALTHCARE • ONBOARDING & REGISTRATION</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-[#062c21] tracking-tight leading-tight">
-          Hospital & Network Administration Registration
+          Hospital, Admin & Marketing Registration
         </h1>
 
         <p className="text-sm sm:text-base text-[#046a4e] max-w-xl mx-auto font-medium leading-relaxed">
-          Select your registration division: <strong className="text-[#062c21]">Super Admin</strong> (Multi-Hospital Master Control) or <strong className="text-[#062c21]">Hospital Admin</strong> (Facility Administration & Roles).
+          Select <strong className="text-[#062c21]">Super Admin</strong> (HQ Master Hospital) or <strong className="text-[#062c21]">Hospital Admin</strong> (Facility Admin, Marketing Force, Doctor, Patient, Staff).
         </p>
       </section>
 
       {/* MAIN REGISTRATION CARD */}
-      <main className="max-w-2xl mx-auto px-4 z-10">
+      <main className="max-w-3xl mx-auto px-4 z-10">
         <div className="bg-white p-6 sm:p-10 shadow-2xl rounded-3xl border border-[#d1fae5] space-y-6">
 
           {/* DUAL MODE SELECTOR TABS (SIGN IN / REGISTER) */}
@@ -261,131 +307,45 @@ export default function RegisterPage() {
           </div>
 
           {/* ========================================================================= */}
-          {/* PRIMARY TWO DIVISIONS SELECTOR: SUPER ADMIN vs HOSPITAL ADMIN */}
+          {/* REGISTRATION ROLE SELECTOR (MARKETING MAN 1ST PRIORITY) */}
           {/* ========================================================================= */}
-          <div className="space-y-3">
+          <div className="p-4 bg-[#f0fdf4] border border-[#a7f3d0] rounded-2xl space-y-2.5 animate-in fade-in">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-black text-[#062c21] uppercase tracking-wider">
-                Select Administrative Division:
-              </label>
-              <span className="text-[11px] font-bold text-[#046a4e]">2 Primary Divisions</span>
+              <span className="text-[11px] font-extrabold text-[#046a4e] uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Select Registration Role / Profile:</span>
+              </span>
+              <span className="text-[10px] text-slate-500 font-bold">5 Available Roles</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              
-              {/* DIVISION 1: SUPER ADMIN */}
-              <button
-                type="button"
-                onClick={() => handleSelectDivision('super_admin')}
-                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer relative overflow-hidden ${
-                  primaryDivision === 'super_admin'
-                    ? 'bg-gradient-to-br from-[#062c21] to-[#046a4e] border-[#046a4e] text-white shadow-lg ring-2 ring-[#046a4e]/40 scale-[1.02]'
-                    : 'bg-[#f0fdf4] border-[#d1fae5] text-[#062c21] hover:bg-[#d1fae5]/50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className={`w-9 h-9 rounded-xl flex items-center justify-center font-black ${
-                    primaryDivision === 'super_admin'
-                      ? 'bg-amber-400 text-slate-950 shadow-md'
-                      : 'bg-[#d1fae5] text-[#046a4e]'
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-bold">
+              {[
+                { id: 'marketing', icon: Share2, label: '📢 Marketing Man (Field Partner)', badge: 'Direct Super Admin HQ Link' },
+                { id: 'branch_admin', icon: Building2, label: '🏬 Hospital Admin', badge: 'Branch Operations' },
+                { id: 'doctor', icon: Stethoscope, label: '🩺 Doctor / Consultant', badge: 'OPD Queue' },
+                { id: 'patient', icon: Users, label: '👤 Patient Register', badge: 'Universal UHID' },
+                { id: 'staff', icon: Briefcase, label: '💼 Dept Staff', badge: 'Pharmacy/Lab' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setAdminSubRole(item.id as any)}
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    adminSubRole === item.id
+                      ? 'bg-[#046a4e] border-[#046a4e] text-white shadow-xs'
+                      : 'bg-white border-[#d1fae5] text-[#062c21] hover:bg-[#d1fae5]/60'
+                  }`}
+                >
+                  <p className="font-black text-xs leading-tight">{item.label}</p>
+                  <span className={`text-[9px] font-bold block mt-0.5 ${
+                    adminSubRole === item.id ? 'text-emerald-200' : 'text-emerald-700'
                   }`}>
-                    <Crown className="w-5 h-5" />
+                    {item.badge}
                   </span>
-                  <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
-                    primaryDivision === 'super_admin'
-                      ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                      : 'bg-emerald-100 text-emerald-800'
-                  }`}>
-                    HQ MASTER
-                  </span>
-                </div>
-                <h3 className="font-black text-sm sm:text-base">1. Super Admin</h3>
-                <p className={`text-[11px] mt-1 leading-snug ${
-                  primaryDivision === 'super_admin' ? 'text-emerald-100' : 'text-slate-600'
-                }`}>
-                  Main hospital full operations, recruit/fire branch admins, view global vital metrics & audit marketing approvals.
-                </p>
-              </button>
-
-              {/* DIVISION 2: HOSPITAL ADMIN */}
-              <button
-                type="button"
-                onClick={() => handleSelectDivision('hospital_admin')}
-                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer relative overflow-hidden ${
-                  primaryDivision === 'hospital_admin'
-                    ? 'bg-gradient-to-br from-[#046a4e] to-[#022c22] border-[#046a4e] text-white shadow-lg ring-2 ring-[#046a4e]/40 scale-[1.02]'
-                    : 'bg-[#f0fdf4] border-[#d1fae5] text-[#062c21] hover:bg-[#d1fae5]/50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className={`w-9 h-9 rounded-xl flex items-center justify-center font-black ${
-                    primaryDivision === 'hospital_admin'
-                      ? 'bg-emerald-400 text-slate-950 shadow-md'
-                      : 'bg-[#d1fae5] text-[#046a4e]'
-                  }`}>
-                    <Building2 className="w-5 h-5" />
-                  </span>
-                  <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
-                    primaryDivision === 'hospital_admin'
-                      ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/40'
-                      : 'bg-emerald-100 text-emerald-800'
-                  }`}>
-                    WITH MARKETING
-                  </span>
-                </div>
-                <h3 className="font-black text-sm sm:text-base">2. Hospital Admin</h3>
-                <p className={`text-[11px] mt-1 leading-snug ${
-                  primaryDivision === 'hospital_admin' ? 'text-emerald-100' : 'text-slate-600'
-                }`}>
-                  Individual hospital facility administration with full Marketing Requests & Reference ID generation suite.
-                </p>
-              </button>
-
+                </button>
+              ))}
             </div>
           </div>
-
-          {/* ========================================================================= */}
-          {/* DIVISION 2 SUB-ROLES SELECTOR (REVEALED WHEN HOSPITAL ADMIN IS ACTIVE) */}
-          {/* ========================================================================= */}
-          {primaryDivision === 'hospital_admin' && (
-            <div className="p-4 bg-[#f0fdf4] border border-[#a7f3d0] rounded-2xl space-y-2.5 animate-in fade-in">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold text-[#046a4e] uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Select Hospital Role / Profile:</span>
-                </span>
-                <span className="text-[10px] text-slate-500 font-bold">Scoped to Target Hospital</span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-bold">
-                {[
-                  { id: 'branch_admin', icon: Building2, label: '🏬 Hospital Admin', badge: 'Marketing Hub' },
-                  { id: 'marketing', icon: Share2, label: '📢 Marketing Partner', badge: 'Get Reference ID' },
-                  { id: 'doctor', icon: Stethoscope, label: '🩺 Doctor / Consultant', badge: 'OPD Queue' },
-                  { id: 'patient', icon: Users, label: '👤 Patient Register', badge: 'Universal UHID' },
-                  { id: 'staff', icon: Briefcase, label: '💼 Dept Staff', badge: 'Pharmacy/Lab' },
-                ].map(item => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setAdminSubRole(item.id as any)}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                      adminSubRole === item.id
-                        ? 'bg-[#046a4e] border-[#046a4e] text-white shadow-xs'
-                        : 'bg-white border-[#d1fae5] text-[#062c21] hover:bg-[#d1fae5]/60'
-                    }`}
-                  >
-                    <p className="font-black text-xs leading-tight">{item.label}</p>
-                    <span className={`text-[9px] font-bold block mt-0.5 ${
-                      adminSubRole === item.id ? 'text-emerald-200' : 'text-emerald-700'
-                    }`}>
-                      {item.badge}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* ALERTS */}
           {error && (
@@ -410,64 +370,14 @@ export default function RegisterPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* REGISTRATION FORM FIELDS */}
+          {/* FORM BODY */}
           {/* ========================================================================= */}
           <form onSubmit={handleSubmit} className="space-y-4 text-xs font-medium">
 
-            {/* 1. SUPER ADMIN SPECIFIC FIELDS */}
-            {primaryDivision === 'super_admin' && (
-              <div className="p-4 bg-[#f0fdf4] border-2 border-emerald-500/40 rounded-2xl space-y-3">
-                <div className="flex items-center gap-2 text-[#046a4e] font-black text-xs uppercase tracking-wider">
-                  <Crown className="w-4 h-4 text-amber-500" />
-                  <span>Super Admin Master Privileges Configuration</span>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-extrabold text-[#062c21] mb-1">Network Access Scope</label>
-                    <input
-                      type="text"
-                      disabled
-                      value={networkScope}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-slate-700 font-bold rounded-xl outline-none text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-extrabold text-[#062c21] mb-1">HQ Master Authorization Key</label>
-                    <input
-                      type="text"
-                      required
-                      value={hqMasterKey}
-                      onChange={e => setHqMasterKey(e.target.value)}
-                      placeholder="MEDIX-HQ-MASTER-2026"
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-mono font-bold rounded-xl outline-none text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-extrabold text-[#062c21] mb-1">Govt Hospital License Reg Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={govRegNumber}
-                    onChange={e => setGovRegNumber(e.target.value)}
-                    placeholder="GOV-HOSP-2026-HQ9"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-mono font-bold rounded-xl outline-none text-xs"
-                  />
-                </div>
-
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-[#046a4e] font-bold space-y-1">
-                  <p>✓ Complete operational access to Main Headquarters Hospital ({branches[0]?.name}).</p>
-                  <p>✓ Hire & Fire authority over Branch Central Admins of all other branches.</p>
-                  <p>✓ Cross-hospital vital telemetry (Revenue, Bed Occupancy, Doctors, Patients).</p>
-                  <p>✓ Comprehensive Marketing Approver Audit Log tracking which hospital admin approved which marketing rep.</p>
-                </div>
-              </div>
-            )}
-
-            {/* 2. HOSPITAL ADMIN (BRANCH ADMIN) SPECIFIC FIELDS */}
-            {primaryDivision === 'hospital_admin' && adminSubRole === 'branch_admin' && (
+            {/* ========================================================================= */}
+            {/* 1. HOSPITAL ADMIN (BRANCH ADMIN) SPECIFIC FIELDS */}
+            {/* ========================================================================= */}
+            {adminSubRole === 'branch_admin' && (
               <div className="p-4 bg-[#f0fdf4] border-2 border-[#046a4e]/40 rounded-2xl space-y-3">
                 <div className="flex items-center gap-2 text-[#046a4e] font-black text-xs uppercase tracking-wider">
                   <Building2 className="w-4 h-4 text-emerald-600" />
@@ -517,43 +427,307 @@ export default function RegisterPage() {
 
                 <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#046a4e] text-[11px] font-bold flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Includes built-in Marketing Hub to approve field marketing reps and generate Reference IDs.</span>
+                  <span>Includes built-in Marketing Hub to review field marketing applicants and recommend them to Super Admin.</span>
                 </div>
               </div>
             )}
 
-            {/* 3. MARKETING REPRESENTATIVE SPECIFIC FIELDS */}
-            {primaryDivision === 'hospital_admin' && adminSubRole === 'marketing' && (
-              <div className="p-4 bg-purple-50 border-2 border-purple-300 rounded-2xl space-y-3">
-                <div className="flex items-center gap-2 text-purple-900 font-black text-xs uppercase tracking-wider">
-                  <Share2 className="w-4 h-4 text-purple-600" />
-                  <span>Field Marketing Partner Join Application</span>
+            {/* ========================================================================= */}
+            {/* 2. FULL MARKETING MAN REGISTRATION FORM (DETAILED KYC & UPLOADS) */}
+            {/* ========================================================================= */}
+            {adminSubRole === 'marketing' && (
+              <div className="p-5 bg-purple-50/70 border-2 border-purple-300 rounded-3xl space-y-4 animate-in fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-purple-200 pb-3 gap-2">
+                  <div className="flex items-center gap-2 text-purple-900 font-black text-sm uppercase tracking-wider">
+                    <Share2 className="w-5 h-5 text-purple-700" />
+                    <span>Marketing Man Official Registration Form</span>
+                  </div>
+                  <span className="text-[10px] font-bold bg-purple-200 text-purple-900 px-2.5 py-0.5 rounded-full">
+                    KYC & Reference ID Issuance
+                  </span>
                 </div>
 
+                {/* Direct Connection to Super Admin Main Hospital Banner */}
+                <div className="p-3 bg-purple-100 border border-purple-300 rounded-2xl text-[11px] text-purple-950 font-bold flex items-start gap-2.5">
+                  <Crown className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-extrabold block text-purple-900">Direct Link to Main Hospital HQ (Super Admin):</span>
+                    Aapka registration form seedha Main Hospital ({branches[0]?.name || 'Aryan Hospital Multi Speciality HQ'}) pe connect hoga jahan Super Admin baitha hua hai. Super Admin ke final master review ke baad aapko official Reference ID aur commission portal access milega.
+                  </div>
+                </div>
+
+                {/* Target Hospital Selector */}
                 <div>
-                  <label className="block font-extrabold text-purple-950 mb-1">Apply for Target Hospital Branch</label>
+                  <label className="block font-extrabold text-purple-950 mb-1">
+                    Select Target Hospital Facility *
+                  </label>
                   <select
                     value={selectedBranchId}
                     onChange={e => setSelectedBranchIdState(Number(e.target.value))}
-                    className="w-full px-4 py-3 bg-white border border-purple-200 text-purple-950 rounded-xl font-bold outline-none cursor-pointer text-xs"
+                    className="w-full px-4 py-3 bg-white border border-purple-200 text-purple-950 rounded-2xl font-bold outline-none cursor-pointer text-xs"
                   >
                     {branches.map(b => (
                       <option key={b.id} value={b.id}>
-                        🏥 {b.name} ({b.code}) — {b.location}
+                        {b.id === 1 ? '👑 [HQ MAIN HOSPITAL]' : '🏬 [BRANCH HOSPITAL]'} {b.name} ({b.code}) — {b.location}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Full Name & Gender */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-extrabold text-purple-950 mb-1">Covered Territory / City</label>
+                    <label className="block font-extrabold text-purple-950 mb-1">Full Legal Name *</label>
                     <input
                       type="text"
                       required
-                      value={territory}
-                      onChange={e => setTerritory(e.target.value)}
-                      placeholder="e.g. South Mumbai Clinics"
+                      placeholder="e.g. Sameer Sen"
+                      value={mktFullName}
+                      onChange={e => setMktFullName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Gender *</label>
+                    <select
+                      value={mktGender}
+                      onChange={e => setMktGender(e.target.value as any)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs cursor-pointer"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Father / Mother Name & Date of Birth & Blood Group */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Father / Mother Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Ramesh Sen"
+                      value={mktFatherOrMother}
+                      onChange={e => setMktFatherOrMother(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Date of Birth *</label>
+                    <input
+                      type="date"
+                      required
+                      value={mktDob}
+                      onChange={e => setMktDob(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Blood Group *</label>
+                    <select
+                      value={mktBloodGroup}
+                      onChange={e => setMktBloodGroup(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs cursor-pointer"
+                    >
+                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                        <option key={bg} value={bg}>{bg}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Government ID Section with Simulated File Uploads */}
+                <div className="p-4 bg-white rounded-2xl border border-purple-200 space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-purple-900 uppercase tracking-wider">
+                    <FileBadge className="w-4 h-4 text-purple-700" />
+                    <span>Government ID Verification & Document Uploads</span>
+                  </div>
+
+                  {/* 1. Aadhar Number & Upload */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-extrabold text-purple-950 mb-1">Aadhar Number (12 Digits) *</label>
+                      <input
+                        type="text"
+                        required
+                        maxLength={14}
+                        placeholder="XXXX-XXXX-XXXX"
+                        value={mktAadharNumber}
+                        onChange={e => setMktAadharNumber(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-purple-50/50 border border-purple-200 text-purple-950 font-mono font-bold rounded-xl outline-none text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-extrabold text-purple-950 mb-1">Aadhar Card Upload</label>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-purple-50/50 border border-purple-200 rounded-xl text-[11px] text-purple-900">
+                        <UploadCloud className="w-4 h-4 text-purple-600 shrink-0" />
+                        <span className="truncate font-semibold">{mktAadharFileName}</span>
+                        <span className="ml-auto text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-black">Attached</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. PAN Number & Upload */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-extrabold text-purple-950 mb-1">PAN Card Number *</label>
+                      <input
+                        type="text"
+                        required
+                        maxLength={10}
+                        placeholder="ABCDE1234F"
+                        value={mktPanNumber}
+                        onChange={e => setMktPanNumber(e.target.value.toUpperCase())}
+                        className="w-full px-3.5 py-2 bg-purple-50/50 border border-purple-200 text-purple-950 font-mono font-bold rounded-xl outline-none text-xs uppercase"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-extrabold text-purple-950 mb-1">PAN Card Photo Upload</label>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-purple-50/50 border border-purple-200 rounded-xl text-[11px] text-purple-900">
+                        <UploadCloud className="w-4 h-4 text-purple-600 shrink-0" />
+                        <span className="truncate font-semibold">{mktPanFileName}</span>
+                        <span className="ml-auto text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-black">Attached</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Driving Licence & Upload */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-extrabold text-purple-950 mb-1">Driving Licence Number *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="DL-1420110012345"
+                        value={mktDlNumber}
+                        onChange={e => setMktDlNumber(e.target.value.toUpperCase())}
+                        className="w-full px-3.5 py-2 bg-purple-50/50 border border-purple-200 text-purple-950 font-mono font-bold rounded-xl outline-none text-xs uppercase"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-extrabold text-purple-950 mb-1">Driving Licence Upload</label>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-purple-50/50 border border-purple-200 rounded-xl text-[11px] text-purple-900">
+                        <UploadCloud className="w-4 h-4 text-purple-600 shrink-0" />
+                        <span className="truncate font-semibold">{mktDlFileName}</span>
+                        <span className="ml-auto text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-black">Attached</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Residential Address Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block font-extrabold text-purple-950 mb-1">Full Residential Address *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Street, Building, Flat No."
+                      value={mktAddress}
+                      onChange={e => setMktAddress(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Pin Code *</label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      placeholder="400053"
+                      value={mktPinCode}
+                      onChange={e => setMktPinCode(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* District, State, Country */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">District *</label>
+                    <input
+                      type="text"
+                      required
+                      value={mktDistrict}
+                      onChange={e => setMktDistrict(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">State *</label>
+                    <input
+                      type="text"
+                      required
+                      value={mktState}
+                      onChange={e => setMktState(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Country *</label>
+                    <input
+                      type="text"
+                      required
+                      value={mktCountry}
+                      onChange={e => setMktCountry(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Email Verification & Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">
+                      Email (Reference ID will be sent here) *
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        required
+                        placeholder="sameer.marketing@gmail.com"
+                        value={mktEmail}
+                        onChange={e => {
+                          setMktEmail(e.target.value);
+                          setMktEmailVerified(true);
+                        }}
+                        className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSimulateVerifyEmail}
+                        className="px-3 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-[10px] rounded-xl shrink-0 cursor-pointer shadow-xs"
+                      >
+                        {mktIsVerifyingEmail ? 'Verifying...' : mktEmailVerified ? '✓ Verified' : 'Verify'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Mobile / WhatsApp Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98200 45678"
+                      value={mktPhone}
+                      onChange={e => setMktPhone(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Territory, Experience & Monthly Patients */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Assigned Territory *</label>
+                    <input
+                      type="text"
+                      required
+                      value={mktTerritory}
+                      onChange={e => setMktTerritory(e.target.value)}
                       className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
                     />
                   </div>
@@ -561,54 +735,39 @@ export default function RegisterPage() {
                     <label className="block font-extrabold text-purple-950 mb-1">Experience (Years)</label>
                     <input
                       type="number"
-                      required
-                      value={experienceYears}
-                      onChange={e => setExperienceYears(e.target.value)}
-                      placeholder="5"
-                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-mono font-bold rounded-xl outline-none text-xs"
+                      value={mktExperienceYears}
+                      onChange={e => setMktExperienceYears(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-purple-950 mb-1">Expected Monthly Referrals</label>
+                    <input
+                      type="number"
+                      value={mktMonthlyReferrals}
+                      onChange={e => setMktMonthlyReferrals(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-bold rounded-xl outline-none text-xs"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block font-extrabold text-purple-950 mb-1">Expected Monthly Patient Referrals</label>
-                  <input
-                    type="number"
-                    required
-                    value={expectedMonthlyReferrals}
-                    onChange={e => setExpectedMonthlyReferrals(e.target.value)}
-                    placeholder="25"
-                    className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-mono font-bold rounded-xl outline-none text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-extrabold text-purple-950 mb-1">Background / Doctor Network Tie-ups</label>
-                  <textarea
-                    rows={2}
-                    value={marketingNotes}
-                    onChange={e => setMarketingNotes(e.target.value)}
-                    placeholder="Describe your medical referral network, clinic tie-ups, or corporate health lead sources..."
-                    className="w-full px-3.5 py-2.5 bg-white border border-purple-200 text-purple-950 font-medium rounded-xl outline-none text-xs"
-                  />
-                </div>
               </div>
             )}
 
-            {/* 4. DOCTOR SPECIFIC FIELDS */}
-            {primaryDivision === 'hospital_admin' && adminSubRole === 'doctor' && (
+            {/* ========================================================================= */}
+            {/* 3. DOCTOR SPECIFIC FIELDS */}
+            {/* ========================================================================= */}
+            {adminSubRole === 'doctor' && (
               <div className="p-4 bg-[#f0fdf4] border border-[#d1fae5] rounded-2xl space-y-3">
                 <div>
-                  <label className="block font-extrabold text-[#062c21] mb-1">Select Hospital Branch</label>
+                  <label className="block font-extrabold text-[#062c21] mb-1">Assigned Hospital Branch</label>
                   <select
                     value={selectedBranchId}
                     onChange={e => setSelectedBranchIdState(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl font-bold outline-none cursor-pointer"
+                    className="w-full px-3.5 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none cursor-pointer font-bold"
                   >
                     {branches.map(b => (
-                      <option key={b.id} value={b.id}>
-                        🏥 {b.name} ({b.code})
-                      </option>
+                      <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
                     ))}
                   </select>
                 </div>
@@ -619,10 +778,9 @@ export default function RegisterPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Cardiology & Surgery"
                       value={specialty}
                       onChange={e => setSpecialty(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
+                      className="w-full px-3.5 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
                     />
                   </div>
                   <div>
@@ -630,18 +788,19 @@ export default function RegisterPage() {
                     <input
                       type="number"
                       required
-                      placeholder="800"
                       value={consultFee}
                       onChange={e => setConsultFee(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none font-mono"
+                      className="w-full px-3.5 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
                     />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 5. PATIENT SPECIFIC FIELDS */}
-            {primaryDivision === 'hospital_admin' && adminSubRole === 'patient' && (
+            {/* ========================================================================= */}
+            {/* 4. PATIENT SPECIFIC FIELDS */}
+            {/* ========================================================================= */}
+            {adminSubRole === 'patient' && (
               <div className="p-4 bg-[#f0fdf4] border border-[#d1fae5] rounded-2xl space-y-3">
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -649,10 +808,9 @@ export default function RegisterPage() {
                     <input
                       type="number"
                       required
-                      placeholder="35"
                       value={patientAge}
                       onChange={e => setPatientAge(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none font-mono"
+                      className="w-full px-3 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
                     />
                   </div>
                   <div>
@@ -670,8 +828,8 @@ export default function RegisterPage() {
                   <div>
                     <label className="block font-extrabold text-[#062c21] mb-1">Blood Group</label>
                     <select
-                      value={bloodGroup}
-                      onChange={e => setBloodGroup(e.target.value)}
+                      value={patientBloodGroup}
+                      onChange={e => setPatientBloodGroup(e.target.value)}
                       className="w-full px-3 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none cursor-pointer font-bold"
                     >
                       {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
@@ -686,7 +844,6 @@ export default function RegisterPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Hypertension, Joint Pain, Fever"
                     value={medicalCondition}
                     onChange={e => setMedicalCondition(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
@@ -695,8 +852,10 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* 6. STAFF SPECIFIC FIELDS */}
-            {primaryDivision === 'hospital_admin' && adminSubRole === 'staff' && (
+            {/* ========================================================================= */}
+            {/* 5. STAFF SPECIFIC FIELDS */}
+            {/* ========================================================================= */}
+            {adminSubRole === 'staff' && (
               <div className="p-4 bg-[#f0fdf4] border border-[#d1fae5] rounded-2xl space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -729,76 +888,96 @@ export default function RegisterPage() {
             )}
 
             {/* ========================================================================= */}
-            {/* COMMON CONTACT & AUTHENTICATION FIELDS */}
+            {/* COMMON CONTACT & PASSWORD FIELDS */}
             {/* ========================================================================= */}
-            <div>
-              <label className="block font-extrabold text-[#062c21] mb-1">Full Legal Name</label>
-              <input
-                type="text"
-                required
-                placeholder={primaryDivision === 'super_admin' ? "e.g. Dr. Robert Sullivan" : "e.g. Dr. Jane Smith"}
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-bold rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
-              />
-            </div>
+            {adminSubRole !== 'marketing' && (
+              <>
+                <div>
+                  <label className="block font-extrabold text-[#062c21] mb-1">Full Legal Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dr. Jane Smith"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-bold rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-extrabold text-[#062c21] mb-1">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="admin@hospital.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block font-extrabold text-[#062c21] mb-1">Phone Number</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="+91 98200 12345"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-[#062c21] mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="admin@hospital.com"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-[#062c21] mb-1">Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98200 12345"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-extrabold text-[#062c21] mb-1">Password</label>
-                <div className="relative">
+            {/* PORTAL ACCESS PASSWORD & CONFIRMATION */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+              <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 uppercase tracking-wider">
+                <Lock className="w-4 h-4 text-emerald-700" />
+                <span>
+                  {adminSubRole === 'marketing'
+                    ? 'Marketing Access Password & Security Credentials'
+                    : 'Portal Access Password'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-extrabold text-[#062c21] mb-1">
+                    {adminSubRole === 'marketing'
+                      ? 'Marketing Access Password *'
+                      : 'Password *'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-3.5 text-[#046a4e] hover:text-[#062c21]"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block font-extrabold text-[#062c21] mb-1">Confirm Password *</label>
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-white border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-[#046a4e] hover:text-[#062c21]"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
                 </div>
-              </div>
-              <div>
-                <label className="block font-extrabold text-[#062c21] mb-1">Confirm Password</label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-medium rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none"
-                />
               </div>
             </div>
 
@@ -806,18 +985,20 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 rounded-2xl text-sm font-black bg-gradient-to-r from-[#046a4e] to-[#022c22] text-white shadow-xl hover:from-[#03523c] hover:to-[#011a14] transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+              className={`w-full py-4 rounded-2xl text-sm font-black text-white shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 ${
+                adminSubRole === 'marketing'
+                  ? 'bg-gradient-to-r from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950'
+                  : 'bg-gradient-to-r from-[#046a4e] to-[#022c22] hover:from-[#03523c] hover:to-[#011a14]'
+              }`}
             >
               {isLoading ? (
-                <span>Creating Account & Provisioning Workspace...</span>
+                <span>Registering & Initializing Medix Security Profile...</span>
               ) : (
                 <>
                   <UserPlus className="h-4 w-4" />
                   <span>
-                    {primaryDivision === 'super_admin'
-                      ? 'Register Super Admin HQ Master Account'
-                      : adminSubRole === 'marketing'
-                      ? 'Submit Marketing Partner Application'
+                    {adminSubRole === 'marketing'
+                      ? 'Submit Marketing KYC & Application'
                       : `Register as ${adminSubRole.toUpperCase().replace('_', ' ')}`}
                   </span>
                 </>
@@ -830,5 +1011,13 @@ export default function RegisterPage() {
       </main>
 
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-emerald-400 font-bold">Loading Registration Portal...</div>}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

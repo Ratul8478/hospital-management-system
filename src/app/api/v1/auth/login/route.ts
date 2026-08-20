@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { detectSuspiciousPayload } from '@/lib/security';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -16,21 +17,36 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, identifier, username, password } = body || {};
-    const loginIdentifier = email || identifier || username;
+    const rawIdentifier = email || identifier || username;
 
-    if (!loginIdentifier || typeof loginIdentifier !== 'string') {
+    if (!rawIdentifier || typeof rawIdentifier !== 'string') {
       return apiError('Missing required field: email or identifier', 422, {
         field: 'email',
         message: 'A valid email or username is required for login',
       });
     }
 
+    // Security Check: Block injection attacks & malicious payloads
+    const threatCheck = detectSuspiciousPayload(rawIdentifier);
+    if (threatCheck.isSuspicious) {
+      return apiError('Malicious input sequence rejected by security engine', 400);
+    }
+
+    if (password && typeof password === 'string') {
+      const passThreatCheck = detectSuspiciousPayload(password);
+      if (passThreatCheck.isSuspicious) {
+        return apiError('Malicious input sequence rejected by security engine', 400);
+      }
+    }
+
+    const loginIdentifier = rawIdentifier.trim().toLowerCase();
+
     // Authenticate doctor
     const result = backendStore.authenticateDoctor(loginIdentifier, password);
 
     if (!result) {
       return apiError('Invalid email/credentials. Please check your doctor login details.', 401, {
-        hint: 'Use a registered doctor email such as sarah.williams@medix.com or doctor@medix.local',
+        hint: 'Use your registered doctor email or mobile number.',
       });
     }
 

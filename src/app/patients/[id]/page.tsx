@@ -30,6 +30,29 @@ export default function PatientProfilePage() {
 
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'prescriptions' | 'labs' | 'ipd' | 'billing'>('overview');
 
+  if (!patient) {
+    return (
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-sky-600 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Patients Directory
+        </button>
+
+        <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center space-y-3 shadow-xs">
+          <div className="h-16 w-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mx-auto">
+            <User className="h-8 w-8" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">No Patient Record Selected</h3>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+            This patient record does not exist or has not been registered yet. Please visit the Patients directory to register new patients.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const patientInvoices = invoices.filter(i => i.patientName.toLowerCase().includes(patient.name.toLowerCase()));
   const patientLabs = labRequests.filter(l => l.patientName.toLowerCase().includes(patient.name.toLowerCase()));
   const patientBed = beds.find(b => b.patientName?.toLowerCase().includes(patient.name.toLowerCase()));
@@ -185,7 +208,7 @@ export default function PatientProfilePage() {
                 <tr key={inv.id}>
                   <td className="px-4 py-3 font-bold text-sky-700">{inv.invoiceNumber}</td>
                   <td className="px-4 py-3 font-sans text-slate-600">{inv.date}</td>
-                  <td className="px-4 py-3 font-black text-slate-900">${inv.amount.toFixed(2)}</td>
+                  <td className="px-4 py-3 font-black text-slate-900">₹{inv.amount.toFixed(2)}</td>
                   <td className="px-4 py-3 font-sans">
                     <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[11px]">
                       {inv.status.toUpperCase()}

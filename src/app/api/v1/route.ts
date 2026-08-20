@@ -25,6 +25,13 @@ export async function GET() {
           followups: { method: 'GET, POST', path: '/api/v1/doctor/followups', description: 'Scheduled patient follow-ups tracker' },
           earnings: { method: 'GET', path: '/api/v1/doctor/earnings', description: 'Doctor revenue analytics (today, week, month)' },
           leaveManagement: { method: 'GET, POST', path: '/api/v1/doctor/leave', description: 'Doctor leave applications and duty roster balances' },
+          referrals: { method: 'GET, POST', path: '/api/v1/doctor/referrals', description: 'Inter-hospital patient referral dispatch & tracking' },
+        },
+        hospitals: {
+          directory: { method: 'GET, POST', path: '/api/v1/hospitals', description: 'Web-registered and approved hospitals/branches directory' },
+        },
+        doctors: {
+          directory: { method: 'GET, POST', path: '/api/v1/doctors', description: 'Web-registered doctors, specializations & availability roster' },
         },
         patients: {
           directory: { method: 'GET, POST', path: '/api/v1/patients', description: 'Searchable patient directory by name, UHID, phone' },

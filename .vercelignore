@@ -1,4 +1,8 @@
 /node_modules
 /vendor
 /.git
-/.env
+/.env*
+/android-doctor
+/.gradle
+/.next
+/coverage

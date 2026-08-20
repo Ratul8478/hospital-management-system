@@ -12,42 +12,21 @@ import {
   Settings,
   Plus,
   Bell,
-  ChevronDown,
   Activity,
   X,
-  Heart,
-  TrendingUp,
-  AlertTriangle,
   Clock,
   CheckCircle2,
-  MoreHorizontal,
   Search,
   FileCheck2,
   Pill,
-  ShieldCheck,
   Stethoscope,
-  Building2,
-  QrCode,
-  Thermometer,
-  Zap,
-  Sparkles,
-  Download,
-  Share2,
-  UserCheck,
-  Sliders,
   HelpCircle,
   LogOut,
   ArrowRight,
-  ChevronRight,
-  Filter,
-  Play,
   UserPlus,
-  DollarSign,
   User,
   CalendarDays,
-  FileSpreadsheet,
-  Moon,
-  Footprints,
+  IndianRupee,
 } from "lucide-react";
 
 type PersonalHealthRecordCardProps = {
@@ -61,7 +40,7 @@ export function PersonalHealthRecordCard({
   registeredName = "",
   registeredPhone = "",
 }: PersonalHealthRecordCardProps) {
-  const { patients, doctors, branches, selectedBranchId } = useApp();
+  const { patients, doctors, branches, appointments, addAppointment, selectedBranchId } = useApp();
   
   const [activeTab, setActiveTab] = useState<
     | "dashboard"
@@ -78,13 +57,12 @@ export function PersonalHealthRecordCard({
   >("dashboard");
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeToken, setActiveToken] = useState(12);
+  const [activeToken, setActiveToken] = useState<number | null>(null);
 
   // Modals state
   const [isConsultModalOpen, setIsConsultModalOpen] = useState(false);
   const [isNewApptModalOpen, setIsNewApptModalOpen] = useState(false);
   const [isRxModalOpen, setIsRxModalOpen] = useState(false);
-  const [selectedPatientModal, setSelectedPatientModal] = useState<any | null>(null);
 
   // Consultation Form State
   const [consultDiagnosis, setConsultDiagnosis] = useState("");
@@ -93,41 +71,59 @@ export function PersonalHealthRecordCard({
 
   // New Appt Form State
   const [newPtName, setNewPtName] = useState("");
-  const [newPtTime, setNewPtTime] = useState("11:30 AM");
-  const [newPtType, setNewPtType] = useState("Post-Op Review");
+  const [newPtTime, setNewPtTime] = useState("10:30 AM");
+  const [newPtType, setNewPtType] = useState("General OPD Consult");
   const [newPtMsg, setNewPtMsg] = useState("");
 
+  // Doctor Local Token Queue & Prescriptions (Clean Zero-State Initial)
+  const [tokenPatients, setTokenPatients] = useState<Array<{
+    token: number;
+    name: string;
+    uhid: string;
+    time: string;
+    status: string;
+    type: string;
+  }>>([]);
+
+  const [prescriptionsList, setPrescriptionsList] = useState<Array<{
+    id: number;
+    pt: string;
+    uhid: string;
+    rx: string;
+    diagnosis: string;
+    date: string;
+  }>>([]);
+
   const targetBranch = useMemo(() => {
-    return branches.find(b => b.id === selectedBranchId) || branches[0];
+    return branches.find(b => b.id === selectedBranchId) || branches[0] || { name: 'ARIYAN HOSPITAL HQ', code: 'ARIYAN-HQ' };
   }, [branches, selectedBranchId]);
 
-  // Names
+  // Doctor details from store / props
   const doctorName = useMemo(() => {
     if (registeredName.trim()) {
       return registeredName.startsWith("Dr.") ? registeredName : `Dr. ${registeredName}`;
     }
-    return "Dr. Sarah Williams";
-  }, [registeredName]);
+    return doctors[0]?.name || "Dr . Jiarul Haque";
+  }, [registeredName, doctors]);
+
+  const doctorSpecialty = useMemo(() => {
+    return doctors[0]?.specialty || "General & Cardiology Medicine";
+  }, [doctors]);
+
+  const doctorFee = useMemo(() => {
+    return doctors[0]?.fee || 800;
+  }, [doctors]);
 
   const patientName = useMemo(() => {
     if (registeredName.trim()) {
       return registeredName.replace(/^Dr\.\s*/i, "");
     }
-    return "Alex";
+    return "Patient";
   }, [registeredName]);
 
-  // Doctor Token Patients List
-  const [tokenPatients, setTokenPatients] = useState([
-    { token: 10, name: "Robert Harrison", uhid: "UHID-20260812-0040", time: "09:30 AM", status: "Completed", type: "Cardiology Consult" },
-    { token: 11, name: "Elena Jenkins", uhid: "UHID-20260812-0041", time: "10:00 AM", status: "Completed", type: "ECG Review" },
-    { token: 12, name: "John Anderson", uhid: "UHID-20260812-0042", time: "10:30 AM", status: "In Progress", type: "Post-Op Review" },
-    { token: 13, name: "Sarah Miller", uhid: "UHID-20260812-0043", time: "11:00 AM", status: "Pending", type: "Follow-up" },
-    { token: 14, name: "David Wilson", uhid: "UHID-20260812-0044", time: "11:30 AM", status: "Pending", type: "Routine Checkup" },
-    { token: 15, name: "Michael Brown", uhid: "UHID-20260812-0045", time: "02:00 PM", status: "Pending", type: "Lipid Profile Consult" },
-  ]);
-
   const currentTokenPatient = useMemo(() => {
-    return tokenPatients.find(p => p.token === activeToken) || tokenPatients[2];
+    if (tokenPatients.length === 0) return null;
+    return tokenPatients.find(p => p.token === activeToken) || tokenPatients[0];
   }, [tokenPatients, activeToken]);
 
   // Filtered Appointments
@@ -142,17 +138,33 @@ export function PersonalHealthRecordCard({
   // Handle consultation save
   const handleSaveConsultation = (e: React.FormEvent) => {
     e.preventDefault();
-    setConsultSuccessMessage(`Consultation completed for ${currentTokenPatient.name}! Prescriptions & Notes saved.`);
+    if (!currentTokenPatient) return;
+
+    const completedPatient = currentTokenPatient;
+    const newRx = {
+      id: Date.now(),
+      pt: completedPatient.name,
+      uhid: completedPatient.uhid,
+      rx: consultMedication,
+      diagnosis: consultDiagnosis,
+      date: `Today, ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+    };
+
+    setPrescriptionsList(prev => [newRx, ...prev]);
+    setConsultSuccessMessage(`Consultation completed for ${completedPatient.name}! Prescriptions & Notes saved.`);
+
     setTimeout(() => {
       setConsultSuccessMessage("");
       setIsConsultModalOpen(false);
       setIsRxModalOpen(false);
+      setConsultDiagnosis("");
+      setConsultMedication("");
+
       // Mark token completed
       setTokenPatients(prev =>
-        prev.map(p => p.token === activeToken ? { ...p, status: "Completed" } : p)
+        prev.map(p => p.token === completedPatient.token ? { ...p, status: "Completed" } : p)
       );
-      if (activeToken < 15) setActiveToken(activeToken + 1);
-    }, 1500);
+    }, 1200);
   };
 
   // Handle New Appt Save
@@ -160,68 +172,87 @@ export function PersonalHealthRecordCard({
     e.preventDefault();
     if (!newPtName.trim()) return;
 
-    const nextToken = tokenPatients.length + 10;
+    const nextToken = tokenPatients.length + 1;
+    const generatedUhid = `UHID-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(nextToken).padStart(4, '0')}`;
+    
     const newEntry = {
       token: nextToken,
       name: newPtName,
-      uhid: `UHID-20260812-00${nextToken}`,
+      uhid: generatedUhid,
       time: newPtTime,
-      status: "Pending",
+      status: "Waiting",
       type: newPtType,
     };
 
-    setTokenPatients([...tokenPatients, newEntry]);
+    setTokenPatients(prev => [...prev, newEntry]);
+    if (!activeToken) setActiveToken(nextToken);
+
     setNewPtMsg(`Appointment scheduled for ${newPtName} (Token #${nextToken})!`);
     setTimeout(() => {
       setNewPtMsg("");
       setIsNewApptModalOpen(false);
       setNewPtName("");
-    }, 1500);
+    }, 1200);
   };
 
-  // ═══════════ PATIENT DASHBOARD VIEW ═══════════
+  // ═══════════ PATIENT DASHBOARD VIEW (Redirects to full Patient Portal) ═══════════
   if (role === "patient") {
     return (
       <div className="fixed inset-0 z-50 bg-[#eef3f9] overflow-y-auto font-sans flex text-slate-800">
-        <aside className="w-64 bg-[#f4f7fb] border-r border-slate-200/80 p-5 flex flex-col justify-between shrink-0 min-h-screen">
+        <aside className="w-64 bg-[#046a4e] text-white p-5 flex flex-col justify-between shrink-0 min-h-screen">
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="h-14 w-14 rounded-full bg-white border-2 border-blue-500/20 p-1 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform overflow-hidden shrink-0">
-                <Image src="/images/logo.png" alt="Medix Logo" width={56} height={56} className="h-full w-full object-cover rounded-full" />
+              <div className="h-12 w-12 rounded-full bg-white p-1 flex items-center justify-center shadow-md shrink-0">
+                <Image src="/logo.png" alt="Medix Logo" width={48} height={48} className="h-full w-full object-contain rounded-full" />
               </div>
               <div>
-                <h1 className="text-xl font-extrabold text-[#1d5bbd] tracking-tight leading-none">Medix</h1>
-                <p className="text-[11px] font-semibold text-slate-400 mt-0.5">Premium Care</p>
+                <h1 className="text-xl font-extrabold text-white tracking-tight leading-none">Medix</h1>
+                <p className="text-[10px] font-semibold text-emerald-200 mt-0.5">Patient Care Portal</p>
               </div>
             </Link>
 
-            <nav className="space-y-1 text-xs font-bold text-slate-600">
-              <button className="w-full text-left px-4 py-3 rounded-xl bg-[#dce8f5] text-[#1d5bbd] border-l-4 border-[#1d5bbd] flex items-center gap-3">
-                <LayoutDashboard className="h-4 w-4 text-[#1d5bbd]" /> Dashboard
-              </button>
+            <nav className="space-y-1 text-xs font-bold text-emerald-100">
+              <Link href="/dashboard/patient" className="w-full text-left px-4 py-3 rounded-xl bg-emerald-800 text-white flex items-center gap-3">
+                <LayoutDashboard className="h-4 w-4 text-emerald-300" /> My Health Passport
+              </Link>
+              <Link href="/appointments" className="w-full text-left px-4 py-3 rounded-xl hover:bg-emerald-800/60 text-emerald-100 flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-emerald-300" /> My Appointments
+              </Link>
+              <Link href="/pharmacy" className="w-full text-left px-4 py-3 rounded-xl hover:bg-emerald-800/60 text-emerald-100 flex items-center gap-3">
+                <Pill className="h-4 w-4 text-emerald-300" /> Prescriptions
+              </Link>
             </nav>
           </div>
-          <div className="space-y-2 pt-6 border-t border-slate-200/70 text-xs font-semibold text-slate-500">
-            <Link href="/" className="flex items-center gap-3 px-4 py-2.5 hover:bg-rose-50 text-rose-600 rounded-xl transition-colors">
-              <LogOut className="h-4 w-4 text-rose-500" /> Logout
+          <div className="space-y-2 pt-6 border-t border-emerald-700 text-xs font-semibold text-emerald-200">
+            <Link href="/" className="flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-800 text-white rounded-xl transition-colors">
+              <LogOut className="h-4 w-4 text-rose-300" /> Sign Out
             </Link>
           </div>
         </aside>
 
         <div className="flex-1 p-8 space-y-6 overflow-y-auto">
-          <div className="bg-gradient-to-r from-[#e3effc] via-[#ebf4fd] to-white/90 rounded-3xl p-8 border border-sky-100 shadow-sm space-y-3">
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-3 py-1 rounded-full border border-emerald-200">
-              ● Status: Optimal
+          <div className="bg-gradient-to-r from-[#046a4e] via-emerald-800 to-teal-900 rounded-3xl p-8 text-white shadow-sm space-y-3">
+            <span className="bg-emerald-500/20 text-emerald-200 text-[10px] font-extrabold px-3 py-1 rounded-full border border-emerald-400/30">
+              ● Status: Verified Active Patient
             </span>
-            <h2 className="text-3xl font-black text-[#1e3a8a]">Good morning, {patientName}.</h2>
-            <p className="text-xs text-slate-600 font-medium">Your vitals are stable, and you&apos;re making excellent progress on your wellness goals.</p>
+            <h2 className="text-3xl font-black text-white">Welcome back, {patientName}.</h2>
+            <p className="text-xs text-emerald-100 font-medium">Your personal health records, OPD appointment bookings, and e-prescriptions are securely managed here.</p>
+            <div className="pt-3">
+              <Link href="/dashboard/patient" className="inline-flex items-center gap-2 bg-emerald-400 text-emerald-950 px-6 py-2.5 rounded-full font-black text-xs shadow-md hover:bg-emerald-300 transition-all">
+                Open Full Patient EHR Portal <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // ═══════════ DOCTOR DASHBOARD VIEW (Matching Provided Screenshot 100%) ═══════════
+  // ═══════════ DOCTOR DASHBOARD VIEW (Clean Zero-State Data Binding) ═══════════
+  const completedCount = tokenPatients.filter(p => p.status === 'Completed').length;
+  const todayEarnings = completedCount * doctorFee;
+  const todayDateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
   return (
     <div className="fixed inset-0 z-50 bg-[#f8fafc] overflow-y-auto font-sans flex text-slate-800">
       
@@ -233,11 +264,11 @@ export function PersonalHealthRecordCard({
           <div className="flex items-center gap-3 pb-2 border-b border-purple-400/20">
             <div className="h-12 w-12 rounded-full bg-white border-2 border-purple-300/40 p-0.5 shadow-md flex items-center justify-center overflow-hidden shrink-0">
               <Image
-                src="/images/logo.png"
+                src="/logo.png"
                 alt="Doctor Profile"
                 width={48}
                 height={48}
-                className="h-full w-full object-cover rounded-full"
+                className="h-full w-full object-contain rounded-full"
               />
             </div>
             <div className="min-w-0">
@@ -245,7 +276,7 @@ export function PersonalHealthRecordCard({
                 {doctorName}
               </h1>
               <p className="text-[11px] font-medium text-purple-200 truncate mt-0.5">
-                Cardiology Specialist
+                {doctorSpecialty}
               </p>
             </div>
           </div>
@@ -269,7 +300,7 @@ export function PersonalHealthRecordCard({
               { id: "medical_reports", label: "Medical Reports", icon: FileText },
               { id: "admissions", label: "Admissions", icon: Stethoscope },
               { id: "followups", label: "Follow-ups", icon: CheckCircle2 },
-              { id: "earnings", label: "Earnings", icon: DollarSign },
+              { id: "earnings", label: "Earnings", icon: IndianRupee },
               { id: "profile", label: "Profile", icon: User },
               { id: "leave_mgmt", label: "Leave Management", icon: CalendarDays },
             ].map((item) => {
@@ -297,7 +328,7 @@ export function PersonalHealthRecordCard({
         <div className="space-y-1 pt-4 border-t border-purple-400/20 text-xs font-bold text-purple-200">
           <button
             onClick={() => setActiveTab("settings")}
-            className="w-full flex items-center gap-3 px-3.5 py-2 hover:bg-white/10 rounded-xl transition-colors text-left"
+            className="w-full flex items-center gap-3 px-3.5 py-2 hover:bg-white/10 rounded-xl transition-colors text-left cursor-pointer"
           >
             <Settings className="h-4 w-4 text-purple-200" />
             <span>Settings</span>
@@ -317,14 +348,14 @@ export function PersonalHealthRecordCard({
         
         {/* Top Header Bar */}
         <header className="bg-white py-4 px-6 sm:px-8 flex items-center justify-between gap-4 border-b border-slate-200 shadow-xs">
-          <h1 className="text-xl font-black text-slate-900">Doctor Dashboard</h1>
+          <h1 className="text-xl font-black text-slate-900">Doctor OPD Workspace</h1>
 
           {/* Search Box */}
           <div className="relative w-72 sm:w-96">
             <Search className="h-4 w-4 absolute left-3.5 top-2.5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search patients, appointments, reports..."
+              placeholder="Search patients, tokens, prescriptions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00a8cc]"
@@ -335,13 +366,13 @@ export function PersonalHealthRecordCard({
           <div className="flex items-center gap-3">
             <button className="relative p-2.5 bg-slate-50 border border-slate-200 rounded-full text-slate-600 hover:bg-slate-100 transition-colors">
               <Bell className="h-4 w-4" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose-500" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-emerald-500" />
             </button>
             <button className="p-2.5 bg-slate-50 border border-slate-200 rounded-full text-slate-600 hover:bg-slate-100 transition-colors">
               <HelpCircle className="h-4 w-4" />
             </button>
             <div className="h-9 w-9 rounded-full bg-purple-900 text-white font-black text-xs flex items-center justify-center border border-white shadow-xs">
-              SW
+              {doctorName.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase() || 'DR'}
             </div>
           </div>
         </header>
@@ -356,12 +387,12 @@ export function PersonalHealthRecordCard({
               {/* HERO GREETING BANNER */}
               <div className="bg-gradient-to-r from-[#1746a2] via-[#0077b6] to-[#00b4d8] rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden space-y-4">
                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold">
-                  <span className="bg-white/20 px-3 py-1 rounded-md uppercase tracking-wider">CARDIOLOGY</span>
+                  <span className="bg-white/20 px-3 py-1 rounded-md uppercase tracking-wider">{doctorSpecialty}</span>
                   <span className="bg-white/20 px-3 py-1 rounded-md flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Oct 26, 2023
+                    <Calendar className="h-3 w-3" /> {todayDateStr}
                   </span>
                   <span className="bg-white/20 px-3 py-1 rounded-md flex items-center gap-1 text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Online
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> OPD Active
                   </span>
                 </div>
 
@@ -370,16 +401,22 @@ export function PersonalHealthRecordCard({
                 </h2>
 
                 <p className="text-xs sm:text-sm text-blue-100 font-medium leading-relaxed max-w-2xl">
-                  Here&apos;s your clinical overview for today. You have a full schedule focusing on post-operative reviews.
+                  {targetBranch.name} • Registered OPD Chamber. When patients arrive and tokens are assigned, you can conduct digital consultations and generate instant e-prescriptions.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3 pt-2">
                   <button
-                    onClick={() => setIsConsultModalOpen(true)}
+                    onClick={() => {
+                      if (currentTokenPatient) {
+                        setIsConsultModalOpen(true);
+                      } else {
+                        setIsNewApptModalOpen(true);
+                      }
+                    }}
                     className="bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs px-6 py-3 rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-98"
                   >
-                    <Play className="h-4 w-4 text-[#0077b6] fill-[#0077b6]" />
-                    <span>Start Consultation</span>
+                    <Activity className="h-4 w-4 text-[#0077b6]" />
+                    <span>{currentTokenPatient ? "Start Consultation" : "+ New Patient Token"}</span>
                   </button>
 
                   <button
@@ -387,7 +424,7 @@ export function PersonalHealthRecordCard({
                     className="border border-white/40 hover:bg-white/10 text-white font-bold text-xs px-6 py-3 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                   >
                     <Calendar className="h-4 w-4" />
-                    <span>View Schedule</span>
+                    <span>View OPD Queue</span>
                   </button>
                 </div>
               </div>
@@ -401,13 +438,13 @@ export function PersonalHealthRecordCard({
                     <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                       <Calendar className="h-5 w-5" />
                     </div>
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
-                      📈 +12%
+                    <span className="bg-blue-100 text-blue-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                      Live
                     </span>
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-500">Today&apos;s Appts</p>
-                    <p className="text-3xl font-black text-slate-900 mt-1">24</p>
+                    <p className="text-3xl font-black text-slate-900 mt-1">{tokenPatients.length}</p>
                   </div>
                 </div>
 
@@ -417,42 +454,44 @@ export function PersonalHealthRecordCard({
                     <div className="h-10 w-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
                       <Users className="h-5 w-5" />
                     </div>
-                    <span className="text-[10px] font-semibold text-slate-400">vs yesterday</span>
+                    <span className="text-[10px] font-semibold text-slate-400">Completed</span>
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-500">Patients Seen</p>
                     <p className="text-3xl font-black text-slate-900 mt-1">
-                      18 <span className="text-xs font-bold text-emerald-600 ml-1">+5 today</span>
+                      {completedCount} <span className="text-xs font-bold text-emerald-600 ml-1">consulted</span>
                     </p>
                   </div>
                 </div>
 
-                {/* Card 3: Pending Reports */}
+                {/* Card 3: Prescriptions Issued */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200/70 shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="h-10 w-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5" />
+                      <Pill className="h-5 w-5" />
                     </div>
+                    <span className="text-[10px] font-semibold text-slate-400">E-Rx</span>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-500">Pending Reports</p>
+                    <p className="text-xs font-bold text-slate-500">Prescriptions</p>
                     <p className="text-3xl font-black text-slate-900 mt-1">
-                      05 <span className="text-xs font-bold text-blue-600 ml-1">3 ready</span>
+                      {prescriptionsList.length} <span className="text-xs font-bold text-purple-600 ml-1">issued</span>
                     </p>
                   </div>
                 </div>
 
-                {/* Card 4: Follow-ups */}
+                {/* Card 4: Today's OPD Fees */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200/70 shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                      <CalendarDays className="h-5 w-5" />
+                    <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <IndianRupee className="h-5 w-5" />
                     </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">₹{doctorFee}/pt</span>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-500">Follow-ups</p>
+                    <p className="text-xs font-bold text-slate-500">Consultation Revenue</p>
                     <p className="text-3xl font-black text-slate-900 mt-1">
-                      08 <span className="text-xs font-bold text-rose-600 ml-1">2 due today</span>
+                      ₹{todayEarnings.toLocaleString('en-IN')}
                     </p>
                   </div>
                 </div>
@@ -464,65 +503,79 @@ export function PersonalHealthRecordCard({
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-black text-slate-900">Current & Queue</h3>
                   <span className="inline-flex items-center gap-1.5 text-emerald-600 font-extrabold text-xs">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" /> Live Queue
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" /> Real-time Queue
                   </span>
                 </div>
 
-                {/* Active Token Patient Card */}
-                <div className="bg-slate-50 p-5 rounded-2xl border-l-4 border-[#00a8cc] border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-full border-2 border-[#00a8cc] bg-cyan-50 text-[#00a8cc] font-black text-lg flex items-center justify-center shrink-0">
-                      #{currentTokenPatient.token}
+                {currentTokenPatient ? (
+                  <div className="bg-slate-50 p-5 rounded-2xl border-l-4 border-[#00a8cc] border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-14 w-14 rounded-full border-2 border-[#00a8cc] bg-cyan-50 text-[#00a8cc] font-black text-lg flex items-center justify-center shrink-0">
+                        #{currentTokenPatient.token}
+                      </div>
+                      <div>
+                        <h4 className="text-base font-black text-slate-900">{currentTokenPatient.name}</h4>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                          {currentTokenPatient.uhid} • {currentTokenPatient.time} • {currentTokenPatient.type}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-base font-black text-slate-900">{currentTokenPatient.name}</h4>
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        {currentTokenPatient.uhid} • {currentTokenPatient.time} • {currentTokenPatient.type}
-                      </p>
-                    </div>
-                  </div>
 
-                  <button
-                    onClick={() => setIsConsultModalOpen(true)}
-                    className="bg-[#00a8cc] hover:bg-cyan-600 text-white font-extrabold text-xs py-3 px-6 rounded-xl shadow-md shadow-cyan-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-98"
-                  >
-                    <span>Start Consultation</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
+                    <button
+                      onClick={() => setIsConsultModalOpen(true)}
+                      className="bg-[#00a8cc] hover:bg-cyan-600 text-white font-extrabold text-xs py-3 px-6 rounded-xl shadow-md shadow-cyan-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-98"
+                    >
+                      <span>Start Consultation</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+                    <Clock className="h-8 w-8 text-slate-400 mx-auto" />
+                    <h4 className="font-bold text-slate-800 text-sm">No Active Patients in OPD Queue</h4>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      There are currently no patients waiting in the consultation queue for {doctorName}. Click below to schedule a new patient appointment.
+                    </p>
+                    <button
+                      onClick={() => setIsNewApptModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#00a8cc] text-white rounded-xl font-bold text-xs shadow-xs hover:bg-cyan-600 transition-all cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" /> Schedule OPD Appointment
+                    </button>
+                  </div>
+                )}
 
                 {/* Tokens Row */}
-                <div className="flex items-center gap-2.5 flex-wrap pt-1 text-xs font-bold">
-                  {tokenPatients.map((p) => {
-                    const isCurrent = p.token === activeToken;
-                    const isDone = p.status === "Completed";
-                    return (
-                      <button
-                        key={p.token}
-                        onClick={() => setActiveToken(p.token)}
-                        className={`px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
-                          isCurrent
-                            ? "bg-[#00a8cc] text-white border-[#00a8cc] shadow-xs"
-                            : isDone
-                            ? "bg-slate-100 text-slate-600 border-slate-200"
-                            : "bg-white text-slate-700 border-slate-200 hover:border-[#00a8cc]"
-                        }`}
-                      >
-                        {isDone ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                        ) : isCurrent ? (
-                          <span className="h-2 w-2 rounded-full bg-white" />
-                        ) : (
-                          <Clock className="h-3.5 w-3.5 text-slate-400" />
-                        )}
-                        <span>#{p.token}</span>
-                      </button>
-                    );
-                  })}
-                  <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full font-semibold text-xs">
-                    +8 more
-                  </span>
-                </div>
+                {tokenPatients.length > 0 && (
+                  <div className="flex items-center gap-2.5 flex-wrap pt-1 text-xs font-bold">
+                    {tokenPatients.map((p) => {
+                      const isCurrent = p.token === activeToken;
+                      const isDone = p.status === "Completed";
+                      return (
+                        <button
+                          key={p.token}
+                          onClick={() => setActiveToken(p.token)}
+                          className={`px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
+                            isCurrent
+                              ? "bg-[#00a8cc] text-white border-[#00a8cc] shadow-xs"
+                              : isDone
+                              ? "bg-slate-100 text-slate-600 border-slate-200"
+                              : "bg-white text-slate-700 border-slate-200 hover:border-[#00a8cc]"
+                          }`}
+                        >
+                          {isDone ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                          ) : isCurrent ? (
+                            <span className="h-2 w-2 rounded-full bg-white" />
+                          ) : (
+                            <Clock className="h-3.5 w-3.5 text-slate-400" />
+                          )}
+                          <span>#{p.token} {p.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* BOTTOM SECTION: 2 COLUMNS (Today's Appointments & Right Quick Widgets) */}
@@ -540,59 +593,65 @@ export function PersonalHealthRecordCard({
                     </button>
                   </div>
 
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50 text-slate-500 uppercase font-extrabold text-[10px]">
-                        <tr>
-                          <th className="p-3.5">PATIENT</th>
-                          <th className="p-3.5">TIME / TOKEN</th>
-                          <th className="p-3.5">STATUS</th>
-                          <th className="p-3.5">ACTION</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 font-medium">
-                        {filteredAppts.map((p) => (
-                          <tr key={p.token} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="p-3.5 font-bold text-slate-900 flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                                {p.name.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-bold text-slate-900">{p.name}</p>
-                                <p className="text-[10px] text-slate-400 font-mono">{p.uhid}</p>
-                              </div>
-                            </td>
-                            <td className="p-3.5">
-                              <p className="font-bold text-slate-900">{p.time}</p>
-                              <p className="text-[10px] font-bold text-[#00a8cc]">Token #{p.token}</p>
-                            </td>
-                            <td className="p-3.5">
-                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                                p.status === "Completed"
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : p.status === "In Progress"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-slate-100 text-slate-600"
-                              }`}>
-                                {p.status}
-                              </span>
-                            </td>
-                            <td className="p-3.5">
-                              <button
-                                onClick={() => {
-                                  setActiveToken(p.token);
-                                  setIsConsultModalOpen(true);
-                                }}
-                                className="px-3.5 py-1.5 bg-[#00a8cc] hover:bg-cyan-600 text-white font-bold rounded-xl text-[10px] shadow-xs cursor-pointer"
-                              >
-                                {p.status === "In Progress" ? "Consult" : "Call Patient"}
-                              </button>
-                            </td>
+                  {filteredAppts.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl border border-slate-100">
+                      No appointments scheduled yet for today.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 text-slate-500 uppercase font-extrabold text-[10px]">
+                          <tr>
+                            <th className="p-3.5">PATIENT</th>
+                            <th className="p-3.5">TIME / TOKEN</th>
+                            <th className="p-3.5">STATUS</th>
+                            <th className="p-3.5">ACTION</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          {filteredAppts.map((p) => (
+                            <tr key={p.token} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="p-3.5 font-bold text-slate-900 flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-sky-400 to-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                                  {p.name.slice(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-slate-900">{p.name}</p>
+                                  <p className="text-[10px] text-slate-400 font-mono">{p.uhid}</p>
+                                </div>
+                              </td>
+                              <td className="p-3.5">
+                                <p className="font-bold text-slate-900">{p.time}</p>
+                                <p className="text-[10px] font-bold text-[#00a8cc]">Token #{p.token}</p>
+                              </td>
+                              <td className="p-3.5">
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                  p.status === "Completed"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : p.status === "In Progress"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-amber-100 text-amber-700"
+                                }`}>
+                                  {p.status}
+                                </span>
+                              </td>
+                              <td className="p-3.5">
+                                <button
+                                  onClick={() => {
+                                    setActiveToken(p.token);
+                                    setIsConsultModalOpen(true);
+                                  }}
+                                  className="px-3.5 py-1.5 bg-[#00a8cc] hover:bg-cyan-600 text-white font-bold rounded-xl text-[10px] shadow-xs cursor-pointer"
+                                >
+                                  {p.status === "Completed" ? "View Rx" : "Consult"}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
 
                 {/* RIGHT 1 COLUMN: QUICK ACTIONS GRID & PENDING REPORTS WIDGET */}
@@ -601,26 +660,23 @@ export function PersonalHealthRecordCard({
                   {/* Quick Actions 4 Grid */}
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      onClick={() => setIsRxModalOpen(true)}
+                      onClick={() => setIsNewApptModalOpen(true)}
                       className="bg-white p-4 rounded-2xl border border-slate-200/70 shadow-xs hover:border-[#00a8cc] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group"
                     >
                       <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FileCheck2 className="h-5 w-5" />
+                        <UserPlus className="h-5 w-5" />
                       </div>
-                      <span className="text-xs font-bold text-slate-800">New Rx</span>
+                      <span className="text-xs font-bold text-slate-800">+ New Appt</span>
                     </button>
 
                     <button
-                      onClick={() => {
-                        const inputEl = document.querySelector("header input") as HTMLInputElement;
-                        if (inputEl) inputEl.focus();
-                      }}
+                      onClick={() => setActiveTab("prescriptions")}
                       className="bg-white p-4 rounded-2xl border border-slate-200/70 shadow-xs hover:border-[#00a8cc] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group"
                     >
                       <div className="h-10 w-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <UserPlus className="h-5 w-5" />
+                        <FileCheck2 className="h-5 w-5" />
                       </div>
-                      <span className="text-xs font-bold text-slate-800">Search</span>
+                      <span className="text-xs font-bold text-slate-800">E-Rx History</span>
                     </button>
 
                     <button
@@ -634,64 +690,27 @@ export function PersonalHealthRecordCard({
                     </button>
 
                     <button
-                      onClick={() => setActiveTab("todays_appts")}
+                      onClick={() => setActiveTab("earnings")}
                       className="bg-white p-4 rounded-2xl border border-slate-200/70 shadow-xs hover:border-[#00a8cc] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group"
                     >
-                      <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Calendar className="h-5 w-5" />
+                      <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <IndianRupee className="h-5 w-5" />
                       </div>
-                      <span className="text-xs font-bold text-slate-800">Schedule</span>
+                      <span className="text-xs font-bold text-slate-800">Revenue</span>
                     </button>
                   </div>
 
-                  {/* Pending Reports Widget */}
+                  {/* Doctor Info Widget */}
                   <div className="bg-white rounded-3xl border border-slate-200/70 shadow-xs overflow-hidden">
                     <div className="bg-[#f4f3f8] px-5 py-3 border-b border-slate-200/60">
-                      <h4 className="text-xs font-extrabold text-[#50377e]">Pending Reports</h4>
+                      <h4 className="text-xs font-extrabold text-[#50377e]">OPD Chamber Info</h4>
                     </div>
                     
-                    <div className="p-4 space-y-3 text-xs">
-                      {/* Report 1 */}
-                      <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-                            <FileText className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">CBC & Lipid Profile</p>
-                            <p className="text-[10px] text-slate-400 font-medium">Michael Brown • 09:00 AM</p>
-                          </div>
-                        </div>
-                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      </div>
-
-                      {/* Report 2 */}
-                      <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                            <FileText className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">Chest X-Ray</p>
-                            <p className="text-[10px] text-slate-400 font-medium">Sarah Miller • 11:00 AM</p>
-                          </div>
-                        </div>
-                        <span className="h-2 w-2 rounded-full bg-amber-500" />
-                      </div>
-
-                      {/* Report 3 */}
-                      <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                            <Activity className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">ECG Report</p>
-                            <p className="text-[10px] text-slate-400 font-medium">David Wilson • 02:30 PM</p>
-                          </div>
-                        </div>
-                        <span className="h-2 w-2 rounded-full bg-blue-500" />
-                      </div>
+                    <div className="p-4 space-y-2 text-xs">
+                      <p className="text-slate-700">Doctor: <strong>{doctorName}</strong></p>
+                      <p className="text-slate-700">Specialty: <strong>{doctorSpecialty}</strong></p>
+                      <p className="text-slate-700">Hospital: <strong>{targetBranch.name}</strong></p>
+                      <p className="text-slate-700">Fee: <strong className="text-emerald-700">₹{doctorFee} per visit</strong></p>
                     </div>
                   </div>
 
@@ -709,54 +728,64 @@ export function PersonalHealthRecordCard({
                 <h2 className="text-lg font-black text-slate-900">Today&apos;s OPD Appointments & Token Queue</h2>
                 <button
                   onClick={() => setIsNewApptModalOpen(true)}
-                  className="px-4 py-2 bg-[#00a8cc] hover:bg-cyan-600 text-white rounded-xl font-bold text-xs shadow-xs"
+                  className="px-4 py-2 bg-[#00a8cc] hover:bg-cyan-600 text-white rounded-xl font-bold text-xs shadow-xs cursor-pointer"
                 >
                   + Add Appointment
                 </button>
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-500 uppercase font-extrabold text-[10px]">
-                    <tr>
-                      <th className="p-3.5">TOKEN</th>
-                      <th className="p-3.5">TIME</th>
-                      <th className="p-3.5">PATIENT</th>
-                      <th className="p-3.5">CONSULT TYPE</th>
-                      <th className="p-3.5">STATUS</th>
-                      <th className="p-3.5">ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {tokenPatients.map((p) => (
-                      <tr key={p.token} className="hover:bg-slate-50">
-                        <td className="p-3.5 font-bold text-[#00a8cc]">#{p.token}</td>
-                        <td className="p-3.5 font-bold text-slate-900">{p.time}</td>
-                        <td className="p-3.5 font-bold text-slate-900">{p.name} ({p.uhid})</td>
-                        <td className="p-3.5 text-slate-600">{p.type}</td>
-                        <td className="p-3.5">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            p.status === "Completed" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
-                          }`}>
-                            {p.status}
-                          </span>
-                        </td>
-                        <td className="p-3.5">
-                          <button
-                            onClick={() => {
-                              setActiveToken(p.token);
-                              setIsConsultModalOpen(true);
-                            }}
-                            className="px-3.5 py-1.5 bg-[#00a8cc] hover:bg-cyan-600 text-white font-bold rounded-xl text-[10px]"
-                          >
-                            Open Consultation
-                          </button>
-                        </td>
+              {tokenPatients.length === 0 ? (
+                <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <Calendar className="h-8 w-8 text-slate-400 mx-auto" />
+                  <h3 className="font-bold text-slate-800 text-sm">No OPD Appointments Queued</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    There are no patient appointments scheduled under your OPD today. Click &quot;+ Add Appointment&quot; to queue a patient.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-500 uppercase font-extrabold text-[10px]">
+                      <tr>
+                        <th className="p-3.5">TOKEN</th>
+                        <th className="p-3.5">TIME</th>
+                        <th className="p-3.5">PATIENT</th>
+                        <th className="p-3.5">CONSULT TYPE</th>
+                        <th className="p-3.5">STATUS</th>
+                        <th className="p-3.5">ACTION</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {tokenPatients.map((p) => (
+                        <tr key={p.token} className="hover:bg-slate-50">
+                          <td className="p-3.5 font-bold text-[#00a8cc]">#{p.token}</td>
+                          <td className="p-3.5 font-bold text-slate-900">{p.time}</td>
+                          <td className="p-3.5 font-bold text-slate-900">{p.name} ({p.uhid})</td>
+                          <td className="p-3.5 text-slate-600">{p.type}</td>
+                          <td className="p-3.5">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              p.status === "Completed" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
+                            }`}>
+                              {p.status}
+                            </span>
+                          </td>
+                          <td className="p-3.5">
+                            <button
+                              onClick={() => {
+                                setActiveToken(p.token);
+                                setIsConsultModalOpen(true);
+                              }}
+                              className="px-3.5 py-1.5 bg-[#00a8cc] hover:bg-cyan-600 text-white font-bold rounded-xl text-[10px] cursor-pointer"
+                            >
+                              {p.status === "Completed" ? "View Rx" : "Open Consultation"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -764,30 +793,40 @@ export function PersonalHealthRecordCard({
           {activeTab === "patients" && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs space-y-4">
               <h2 className="text-lg font-black text-slate-900">Patient Directory & Clinical History</h2>
-              <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-500 uppercase font-extrabold text-[10px]">
-                    <tr>
-                      <th className="p-3.5">UHID</th>
-                      <th className="p-3.5">PATIENT NAME</th>
-                      <th className="p-3.5">AGE / GENDER</th>
-                      <th className="p-3.5">BLOOD GROUP</th>
-                      <th className="p-3.5">CONTACT</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {patients.map((p) => (
-                      <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="p-3.5 font-mono font-bold text-blue-600">{p.uhid}</td>
-                        <td className="p-3.5 font-bold text-slate-900">{p.name}</td>
-                        <td className="p-3.5">{p.age} yrs / {p.gender}</td>
-                        <td className="p-3.5 font-bold text-rose-600">{p.bloodGroup}</td>
-                        <td className="p-3.5 font-mono">{p.phone}</td>
+              {patients.length === 0 ? (
+                <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <Users className="h-8 w-8 text-slate-400 mx-auto" />
+                  <h3 className="font-bold text-slate-800 text-sm">No Patients Registered Yet</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    When patients register at the reception desk or portal, their longitudinal electronic health records (EHR) will appear here.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-500 uppercase font-extrabold text-[10px]">
+                      <tr>
+                        <th className="p-3.5">UHID</th>
+                        <th className="p-3.5">PATIENT NAME</th>
+                        <th className="p-3.5">AGE / GENDER</th>
+                        <th className="p-3.5">BLOOD GROUP</th>
+                        <th className="p-3.5">CONTACT</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {patients.map((p) => (
+                        <tr key={p.id} className="hover:bg-slate-50">
+                          <td className="p-3.5 font-mono font-bold text-blue-600">{p.uhid}</td>
+                          <td className="p-3.5 font-bold text-slate-900">{p.name}</td>
+                          <td className="p-3.5">{p.age} yrs / {p.gender}</td>
+                          <td className="p-3.5 font-bold text-rose-600">{p.bloodGroup}</td>
+                          <td className="p-3.5 font-mono">{p.phone}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
 
@@ -797,30 +836,44 @@ export function PersonalHealthRecordCard({
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-black text-slate-900">E-Prescription Management</h2>
                 <button
-                  onClick={() => setIsRxModalOpen(true)}
-                  className="px-4 py-2 bg-[#00a8cc] text-white font-bold rounded-xl hover:bg-cyan-600"
+                  onClick={() => {
+                    if (currentTokenPatient) {
+                      setIsRxModalOpen(true);
+                    } else {
+                      setIsNewApptModalOpen(true);
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#00a8cc] text-white font-bold rounded-xl hover:bg-cyan-600 cursor-pointer"
                 >
                   + Issue New Prescription
                 </button>
               </div>
-              <div className="space-y-3">
-                {[
-                  { pt: "John Anderson", rx: "Lisinopril 10mg (OD), Aspirin 75mg (OD)", date: "Today 10:30 AM" },
-                  { pt: "Elena Jenkins", rx: "Paracetamol 500mg (TDS), Cetirizine 10mg (OD)", date: "Today 10:00 AM" },
-                  { pt: "Robert Harrison", rx: "Atorvastatin 20mg (HS)", date: "Today 09:30 AM" },
-                ].map((item, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-slate-900 text-sm">{item.pt}</p>
-                      <p className="text-slate-600 mt-1">Rx: {item.rx}</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">{item.date}</p>
+
+              {prescriptionsList.length === 0 ? (
+                <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                  <Pill className="h-8 w-8 text-slate-400 mx-auto" />
+                  <h3 className="font-bold text-slate-800 text-sm">No Prescriptions Issued Yet</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    When you consult a patient and submit medication orders, digitized e-prescriptions with hospital stamps will be stored here.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {prescriptionsList.map((item) => (
+                    <div key={item.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-slate-900 text-sm">{item.pt} <span className="text-xs font-normal text-slate-500 font-mono">({item.uhid})</span></p>
+                        <p className="text-slate-700 mt-1 font-medium"><span className="font-bold text-purple-900">Rx:</span> {item.rx}</p>
+                        {item.diagnosis && <p className="text-xs text-slate-500 mt-0.5"><span className="font-bold">Diagnosis:</span> {item.diagnosis}</p>}
+                        <p className="text-[10px] text-slate-400 mt-1">{item.date} • Prescribed by {doctorName}</p>
+                      </div>
+                      <span className="px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl text-[10px]">
+                        ✓ Dispensed to Pharmacy
+                      </span>
                     </div>
-                    <button className="px-3.5 py-1.5 bg-[#50377e] text-white font-bold rounded-xl hover:bg-purple-900">
-                      Print Prescription
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -828,22 +881,12 @@ export function PersonalHealthRecordCard({
           {activeTab === "medical_reports" && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs space-y-4 text-xs">
               <h2 className="text-lg font-black text-slate-900">Medical & Diagnostic Reports</h2>
-              <div className="space-y-3">
-                {[
-                  { title: "CBC & Lipid Profile • Michael Brown", status: "Ready", date: "Today 09:00 AM" },
-                  { title: "Chest X-Ray • Sarah Miller", status: "Pending", date: "Today 11:00 AM" },
-                  { title: "ECG Report • David Wilson", status: "Ready", date: "Today 02:30 PM" },
-                ].map((rep, idx) => (
-                  <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-slate-900 text-sm">{rep.title}</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">{rep.date}</p>
-                    </div>
-                    <button className="px-4 py-2 bg-[#00a8cc] text-white font-bold rounded-xl hover:bg-cyan-600">
-                      View Report
-                    </button>
-                  </div>
-                ))}
+              <div className="p-12 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                <FileText className="h-8 w-8 text-slate-400 mx-auto" />
+                <h3 className="font-bold text-slate-800 text-sm">No Diagnostic Lab Reports Pending</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  When pathology or radiology investigations are ordered for patients under your care, the certified lab results will appear here.
+                </p>
               </div>
             </div>
           )}
@@ -852,10 +895,10 @@ export function PersonalHealthRecordCard({
           {activeTab === "admissions" && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs space-y-4 text-xs">
               <h2 className="text-lg font-black text-slate-900">Inpatient Admissions & Bed Allocation</h2>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                <p className="font-bold text-slate-900">Active Inpatients under Dr. Sarah Williams</p>
-                <p className="text-slate-600">• Room 302-A: Robert Harrison (Post-Op Recovery)</p>
-                <p className="text-slate-600">• Room 405-B: James Wilson (Cardiac Observation)</p>
+              <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-center">
+                <Stethoscope className="h-8 w-8 text-slate-400 mx-auto" />
+                <h3 className="font-bold text-slate-800 text-sm">No Active IPD Inpatients</h3>
+                <p className="text-slate-500 max-w-sm mx-auto">All inpatient beds under {targetBranch.name} are sanitized and ready for admissions when required.</p>
               </div>
             </div>
           )}
@@ -864,10 +907,10 @@ export function PersonalHealthRecordCard({
           {activeTab === "followups" && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs space-y-4 text-xs">
               <h2 className="text-lg font-black text-slate-900">Follow-up Patient Tracker</h2>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                <p className="font-bold text-slate-900">8 Follow-ups Due Today</p>
-                <p className="text-slate-600">• Token #12 John Anderson — Post-Op Cardiology Review</p>
-                <p className="text-slate-600">• Token #13 Sarah Miller — Blood Pressure Check</p>
+              <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-center">
+                <CheckCircle2 className="h-8 w-8 text-slate-400 mx-auto" />
+                <h3 className="font-bold text-slate-800 text-sm">No Follow-ups Due Today</h3>
+                <p className="text-slate-500 max-w-sm mx-auto">Scheduled post-treatment review visits will automatically appear here on their target dates.</p>
               </div>
             </div>
           )}
@@ -879,15 +922,18 @@ export function PersonalHealthRecordCard({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                   <p className="font-bold text-emerald-800">Today&apos;s Consult Fees</p>
-                  <p className="text-2xl font-black text-slate-900">$2,700</p>
+                  <p className="text-2xl font-black text-slate-900 mt-1">₹{todayEarnings.toLocaleString('en-IN')}</p>
+                  <p className="text-[10px] text-emerald-700 mt-1">{completedCount} consultation(s) completed</p>
                 </div>
                 <div className="p-4 bg-sky-50 rounded-2xl border border-sky-100">
-                  <p className="font-bold text-sky-800">This Week</p>
-                  <p className="text-2xl font-black text-slate-900">$13,500</p>
+                  <p className="font-bold text-sky-800">Doctor Rate</p>
+                  <p className="text-2xl font-black text-slate-900 mt-1">₹{doctorFee.toLocaleString('en-IN')}</p>
+                  <p className="text-[10px] text-sky-700 mt-1">Per patient consultation</p>
                 </div>
                 <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
-                  <p className="font-bold text-indigo-800">This Month</p>
-                  <p className="text-2xl font-black text-slate-900">$54,000</p>
+                  <p className="font-bold text-indigo-800">Settlement Status</p>
+                  <p className="text-2xl font-black text-slate-900 mt-1">Active</p>
+                  <p className="text-[10px] text-indigo-700 mt-1">Direct hospital branch payroll</p>
                 </div>
               </div>
             </div>
@@ -897,11 +943,25 @@ export function PersonalHealthRecordCard({
           {activeTab === "profile" && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs space-y-4 text-xs">
               <h2 className="text-lg font-black text-slate-900">Doctor Profile & Medical License</h2>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                <p className="text-slate-700">Doctor Name: <strong>{doctorName}</strong></p>
-                <p className="text-slate-700">Specialty: <strong>Cardiology Specialist</strong></p>
-                <p className="text-slate-700">License ID: <strong className="font-mono">MD-CARD-2026-873091</strong></p>
-                <p className="text-slate-700">Assigned Branch: <strong>{targetBranch.name}</strong></p>
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-slate-500 font-medium">Doctor Name</p>
+                    <p className="text-sm font-bold text-slate-900 mt-0.5">{doctorName}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 font-medium">Clinical Specialty</p>
+                    <p className="text-sm font-bold text-slate-900 mt-0.5">{doctorSpecialty}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 font-medium">Assigned Facility</p>
+                    <p className="text-sm font-bold text-slate-900 mt-0.5">{targetBranch.name} ({targetBranch.code})</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 font-medium">Consultation Fee</p>
+                    <p className="text-sm font-bold text-emerald-700 mt-0.5">₹{doctorFee} INR</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -910,8 +970,9 @@ export function PersonalHealthRecordCard({
           {activeTab === "leave_mgmt" && (
             <div className="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs space-y-4 text-xs">
               <h2 className="text-lg font-black text-slate-900">Doctor Leave & Duty Roster</h2>
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                 <p className="font-bold text-slate-900">Duty Roster Status: On Active Shift</p>
+                <p className="text-slate-600">Branch Location: <strong>{targetBranch.name}</strong></p>
                 <p className="text-slate-600">Available Annual Leaves: <strong>14 Days Remaining</strong></p>
               </div>
             </div>
@@ -923,12 +984,12 @@ export function PersonalHealthRecordCard({
               <h2 className="text-lg font-black text-slate-900">Doctor Account & OPD Settings</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                  <p className="font-bold text-slate-900">Consultation Fee</p>
-                  <p className="text-slate-600">Fee per patient: <strong>$150 USD</strong></p>
+                  <p className="font-bold text-slate-900">Consultation Rate</p>
+                  <p className="text-slate-600">Standard OPD Fee: <strong>₹{doctorFee} INR</strong></p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                   <p className="font-bold text-slate-900">Facility Assignment</p>
-                  <p className="text-slate-600">Branch: <strong>{targetBranch.name}</strong></p>
+                  <p className="text-slate-600">Primary Branch: <strong>{targetBranch.name}</strong></p>
                 </div>
               </div>
             </div>
@@ -938,7 +999,7 @@ export function PersonalHealthRecordCard({
       </div>
 
       {/* ═══════════ START CONSULTATION MODAL ═══════════ */}
-      {(isConsultModalOpen || isRxModalOpen) && (
+      {(isConsultModalOpen || isRxModalOpen) && currentTokenPatient && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 p-6 w-full max-w-lg space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -956,7 +1017,7 @@ export function PersonalHealthRecordCard({
                   setIsConsultModalOpen(false);
                   setIsRxModalOpen(false);
                 }}
-                className="p-1 text-slate-400 hover:text-slate-700"
+                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -973,7 +1034,7 @@ export function PersonalHealthRecordCard({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Post-Op Cardiac Recovery, Normal BP..."
+                    placeholder="e.g. Mild Hypertension, Routine Health Review..."
                     value={consultDiagnosis}
                     onChange={(e) => setConsultDiagnosis(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00a8cc]"
@@ -985,7 +1046,7 @@ export function PersonalHealthRecordCard({
                   <textarea
                     rows={3}
                     required
-                    placeholder="e.g. Lisinopril 10mg (OD Morning), Aspirin 75mg (OD)..."
+                    placeholder="e.g. Paracetamol 650mg (1-0-1 after food), Multivitamin (0-1-0)..."
                     value={consultMedication}
                     onChange={(e) => setConsultMedication(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00a8cc]"
@@ -999,13 +1060,13 @@ export function PersonalHealthRecordCard({
                       setIsConsultModalOpen(false);
                       setIsRxModalOpen(false);
                     }}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#00a8cc] hover:bg-cyan-600 text-white rounded-xl font-bold shadow-md"
+                    className="px-5 py-2 bg-[#00a8cc] hover:bg-cyan-600 text-white rounded-xl font-bold shadow-md cursor-pointer"
                   >
                     Complete Consultation & Issue Rx
                   </button>
@@ -1024,7 +1085,7 @@ export function PersonalHealthRecordCard({
               <h3 className="font-black text-slate-900 text-base flex items-center gap-2">
                 <Plus className="h-5 w-5 text-[#00a8cc]" /> Schedule New OPD Appointment
               </h3>
-              <button onClick={() => setIsNewApptModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-700">
+              <button onClick={() => setIsNewApptModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1054,11 +1115,13 @@ export function PersonalHealthRecordCard({
                     onChange={(e) => setNewPtTime(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00a8cc]"
                   >
+                    <option>10:00 AM</option>
                     <option>10:30 AM</option>
                     <option>11:00 AM</option>
                     <option>11:30 AM</option>
                     <option>02:00 PM</option>
                     <option>02:30 PM</option>
+                    <option>03:00 PM</option>
                   </select>
                 </div>
 
@@ -1066,7 +1129,7 @@ export function PersonalHealthRecordCard({
                   <label className="block text-slate-700 font-bold mb-1">Consultation Type</label>
                   <input
                     type="text"
-                    placeholder="e.g. Post-Op Review, Cardiology Follow-up..."
+                    placeholder="e.g. General OPD, Cardiology Review..."
                     value={newPtType}
                     onChange={(e) => setNewPtType(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00a8cc]"
@@ -1077,13 +1140,13 @@ export function PersonalHealthRecordCard({
                   <button
                     type="button"
                     onClick={() => setIsNewApptModalOpen(false)}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#00a8cc] hover:bg-cyan-600 text-white rounded-xl font-bold shadow-md"
+                    className="px-5 py-2 bg-[#00a8cc] hover:bg-cyan-600 text-white rounded-xl font-bold shadow-md cursor-pointer"
                   >
                     Schedule Appointment
                   </button>

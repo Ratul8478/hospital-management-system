@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { INITIAL_MARKETING_REPRESENTATIVES } from '@/lib/data';
+import { INITIAL_MARKETING_REPRESENTATIVES, MarketingRepresentative } from '@/lib/data';
 
-let marketingReps = [...INITIAL_MARKETING_REPRESENTATIVES];
+let marketingReps: MarketingRepresentative[] = [...INITIAL_MARKETING_REPRESENTATIVES];
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,7 +38,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, phone, branchId, branchCode, branchName, territory, experienceYears, commissionRate } = body;
+    const {
+      name,
+      gender,
+      fatherOrMotherName,
+      dob,
+      bloodGroup,
+      aadharNumber,
+      panNumber,
+      drivingLicenceNumber,
+      address,
+      pinCode,
+      district,
+      state,
+      country,
+      email,
+      phone,
+      branchId,
+      branchCode,
+      branchName,
+      territory,
+      experienceYears,
+      commissionRate
+    } = body;
 
     if (!name || !phone || !branchId) {
       return NextResponse.json(
@@ -50,20 +72,36 @@ export async function POST(request: NextRequest) {
     // Auto-generate reference ID
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const generatedRefId = `REF-MKT-B${branchId}-${randomSuffix}`;
+    const approvalDate = new Date().toISOString().split('T')[0];
 
-    const newRep = {
+    const newRep: MarketingRepresentative = {
       id: marketingReps.length + 1,
       referenceId: generatedRefId,
       branchId: Number(branchId),
       branchCode: branchCode || `BRANCH-${branchId}`,
       branchName: branchName || 'Hospital Branch',
       name,
+      gender: gender || 'Male',
+      fatherOrMotherName: fatherOrMotherName || 'Guardian',
+      dob: dob || '1995-01-01',
+      bloodGroup: bloodGroup || 'O+',
+      aadharNumber: aadharNumber || 'XXXX-XXXX-XXXX',
+      panNumber: panNumber || 'XXXXX0000X',
+      drivingLicenceNumber: drivingLicenceNumber || 'DL-XXXXX',
+      address: address || 'Hospital Catchment Area',
+      pinCode: pinCode || '400001',
+      district: district || 'City Center',
+      state: state || 'State',
+      country: country || 'India',
       email: email || `${name.toLowerCase().replace(/\s+/g, '.')}@partner.local`,
+      emailVerified: true,
       phone,
       territory: territory || 'City Wide Healthcare Coverage',
       experienceYears: Number(experienceYears) || 3,
-      status: 'active' as const,
-      approvedDate: new Date().toISOString().split('T')[0],
+      status: 'active',
+      approvedDate: approvalDate,
+      superAdminApprovedDate: approvalDate,
+      superAdminName: 'Anichul Haque (Super Admin HQ)',
       referredPatientsCount: 0,
       totalCommissionEarned: 0,
       pendingPayout: 0,

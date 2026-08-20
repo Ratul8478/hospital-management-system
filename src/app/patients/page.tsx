@@ -22,6 +22,20 @@ function PatientListContent() {
     );
   }
 
+  if (filtered.length === 0) {
+    return (
+      <div className="bg-white p-10 sm:p-14 rounded-2xl border border-slate-200 text-center space-y-3 shadow-xs">
+        <div className="h-16 w-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mx-auto">
+          <Users className="h-8 w-8" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900">No Patient Records Found</h3>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+          No registered patients exist in this branch yet. When patients register through the portal or are admitted by the hospital reception, their EHR passports will appear here.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
       <table className="w-full text-left text-xs text-slate-700">

@@ -48,8 +48,8 @@ export default function PatientDashboardPage({ searchParams }: DashboardPageProp
 
   const { doctors, branches, patients, addPatient, selectedBranchId, setSelectedBranchId } = useApp();
 
-  const patientName = paramName || "James Wilson";
-  const patientUhid = paramUhid || "UHID-B1-20260814-4891";
+  const patientName = paramName || "Patient";
+  const patientUhid = paramUhid || "UHID-CARE-PORTAL";
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"appointments" | "doctors" | "hospitals" | "records">("appointments");
@@ -65,40 +65,25 @@ export default function PatientDashboardPage({ searchParams }: DashboardPageProp
   const [bookingReason, setBookingReason] = useState("General Health Checkup & Consultation");
   const [bookingSuccessMsg, setBookingSuccessMsg] = useState("");
 
-  // Patient's Booked Appointments List
-  const [myAppointments, setMyAppointments] = useState([
-    {
-      id: "APT-2026-901",
-      token: 14,
-      doctorName: "Dr. Sarah Williams",
-      specialty: "Cardiology & Vascular Surgery",
-      branchName: "Medix City Hospital — Main Central",
-      branchCode: "MAIN-01",
-      date: "Today, Aug 14",
-      time: "10:30 AM",
-      status: "Confirmed",
-      type: "In-Person Consultation",
-      fee: "$150",
-    },
-    {
-      id: "APT-2026-884",
-      token: 8,
-      doctorName: "Dr. Robert Chen",
-      specialty: "Neurology & Spine Care",
-      branchName: "Medix South Super Specialty",
-      branchCode: "SOUTH-02",
-      date: "Aug 18, 2026",
-      time: "02:15 PM",
-      status: "Scheduled",
-      type: "Telehealth Video Consult",
-      fee: "$180",
-    },
-  ]);
+  // Patient's Booked Appointments List (Production Real-time Queue)
+  const [myAppointments, setMyAppointments] = useState<Array<{
+    id: string;
+    token: number;
+    doctorName: string;
+    specialty: string;
+    branchName: string;
+    branchCode: string;
+    date: string;
+    time: string;
+    status: string;
+    type: string;
+    fee: string;
+  }>>([]);
 
   // Handle New Booking Submission
   const handleConfirmBooking = (e: React.FormEvent) => {
     e.preventDefault();
-    const targetDoc = selectedDoctorForBooking || doctors[0];
+    const targetDoc = selectedDoctorForBooking || doctors[0] || { name: 'Dr . Jiarul Haque', specialty: 'General & Cardiology Medicine', fee: 800 };
     const targetBranchObj = branches.find(b => b.id === bookingBranchId) || branches[0];
     const newToken = Math.floor(15 + Math.random() * 20);
     const newApt = {
@@ -106,13 +91,13 @@ export default function PatientDashboardPage({ searchParams }: DashboardPageProp
       token: newToken,
       doctorName: targetDoc.name,
       specialty: targetDoc.specialty,
-      branchName: targetBranchObj.name,
-      branchCode: targetBranchObj.code,
+      branchName: targetBranchObj?.name || 'ARIYAN HOSPITAL MULTISPECIALITY',
+      branchCode: targetBranchObj?.code || 'ARIYAN-HQ',
       date: bookingDate,
       time: bookingTime,
       status: "Confirmed",
       type: "OPD Consultation",
-      fee: `$${targetDoc.fee || 150}`,
+      fee: `₹${targetDoc.fee || 800}`,
     };
 
     setMyAppointments(prev => [newApt, ...prev]);
@@ -437,11 +422,11 @@ export default function PatientDashboardPage({ searchParams }: DashboardPageProp
                         </div>
                         <div className="flex items-center justify-between text-slate-600">
                           <span>Consult Fee:</span>
-                          <span className="font-bold text-emerald-800">${doc.fee || 150}</span>
+                          <span className="font-bold text-emerald-800">₹{doc.fee || 800}</span>
                         </div>
                         <div className="flex items-center justify-between text-slate-600">
                           <span>Contact:</span>
-                          <span className="font-mono text-slate-700">{doc.contact || '+1 (555) 019-8800'}</span>
+                          <span className="font-mono text-slate-700">{doc.contact || '+91 7003831600'}</span>
                         </div>
                       </div>
                     </div>

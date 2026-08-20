@@ -27,7 +27,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import ConceptHeader from './ConceptHeader';
-import ScrollVideoStory from '../ScrollVideoStory';
+import HeroScrollCanvasBackground from '../HeroScrollCanvasBackground';
 
 export default function Concept7() {
   // FAQ Accordion State
@@ -79,15 +79,7 @@ export default function Concept7() {
   ];
 
   const campusLocations = [
-    { name: 'Medix Central Multispecialty Hospital', city: 'Mumbai (Central Campus)', type: 'Tertiary Care Hospital' },
-    { name: 'Medix Specialty & Trauma Center', city: 'Bengaluru (South Campus)', type: 'Trauma & Ortho Super-Specialty' },
-    { name: 'Medix Mother & Child Super-Specialty', city: 'New Delhi (North Campus)', type: 'Pediatric & Maternity Center' },
-    { name: 'Medix Daycare & Diagnostic Satellite Hub', city: 'Pune (West Campus)', type: 'Daycare & Pathology Center' },
-    { name: 'Medix Advanced Oncology Care Center', city: 'Hyderabad (Central Campus II)', type: 'Cancer Care Institute' },
-    { name: 'Medix Cardiac & Neuro Institute', city: 'Kolkata (East Campus)', type: 'Super-Specialty Hospital' },
-    { name: 'Medix Regional Wellness Clinic', city: 'Guwahati (North-East Campus)', type: 'Nephrology & Wellness Clinic' },
-    { name: 'Medix Coastal Orthopedic Institute', city: 'Chennai (Coastal Campus)', type: 'Orthopedic Specialty' },
-    { name: 'Medix Emergency Poly-Clinic', city: 'Ahmedabad (West Corridor)', type: 'Emergency & Satellite Care' },
+    { name: 'ARIYAN HOSPITAL MULTISPECIALITY', city: 'Kolkata, West Bengal (HQ Campus)', type: 'Multispeciality Hospital & Diagnostic Center' },
   ];
 
   const careSteps = [
@@ -99,7 +91,7 @@ export default function Concept7() {
     {
       step: '02',
       title: 'Select Doctor or Specialty',
-      desc: 'Browse verified faculty across our 9 hospital campuses. Choose between In-Clinic OPD or encrypted HD Telehealth.',
+      desc: 'Browse verified medical specialists across our multispeciality facility. Choose between In-Clinic OPD or encrypted HD Telehealth.',
     },
     {
       step: '03',
@@ -110,24 +102,24 @@ export default function Concept7() {
 
   const testimonials = [
     {
-      patient: 'Anjali Deshmukh',
-      city: 'Mumbai',
+      patient: 'Verified Patient Care Feedback',
+      city: 'Kolkata',
       condition: 'Cardiology Care',
-      quote: 'The digital check-in and instantaneous token dispatch saved hours. Dr. Sullivan took complete time to explain the diagnosis with empathy.',
+      quote: 'The digital check-in and instantaneous token dispatch saved hours. The doctors took complete time to explain the diagnosis with empathy.',
       rating: 5,
     },
     {
-      patient: 'Vikramaditya Sen',
-      city: 'Bengaluru',
+      patient: 'Verified Patient Care Feedback',
+      city: 'Kolkata',
       condition: 'Orthopedic Rehabilitation',
-      quote: 'My entire electronic health history was already loaded when I visited the Bengaluru trauma campus. World-class experience and super clean facility.',
+      quote: 'My entire electronic health history was instantly accessible during my consultation. World-class experience and super clean facility.',
       rating: 5,
     },
     {
-      patient: 'Pooja Kashyap',
-      city: 'New Delhi',
-      condition: 'Maternity Care',
-      quote: 'Telehealth booking made remote consults so simple during my pregnancy. The prescription link arrived on WhatsApp in 10 seconds!',
+      patient: 'Verified Patient Care Feedback',
+      city: 'Kolkata',
+      condition: 'Mother & Child Care',
+      quote: 'Telehealth booking made consultation so simple. The digital prescription and lab reports were immediately accessible on my care portal!',
       rating: 5,
     },
   ];
@@ -157,65 +149,21 @@ export default function Concept7() {
       {/* MANDATORY UNIFIED HEADER */}
       <ConceptHeader theme="pastels" />
 
-      {/* HERO SECTION: ULTRA-PREMIUM MINIMALISM & CLINICAL EMPOWERMENT */}
-      <section className="pt-12 sm:pt-16 pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* HERO SECTION: PINNED SCROLL-DRIVEN VIDEO STORY (Full-Screen Crystal-Clear Animation) */}
+      <section className="relative h-[220vh] sm:h-[260vh] lg:h-[280vh] w-full bg-[#f0fdf4] overflow-clip">
+        
+        {/* Sticky Pinned Viewport */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden">
           
-          {/* Left Column: Headline & Value Proposition */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100/90 border border-emerald-300 text-emerald-900 text-xs font-black shadow-xs">
-              <span className="h-2 w-2 rounded-full bg-emerald-600 live-pulse"></span>
-              <Heart className="w-4 h-4 text-emerald-600 fill-emerald-500" />
-              <span>HEALTH GROW INDIA • CERTIFIED DIGITAL CARE PLATFORM</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-emerald-950 tracking-tight leading-[1.08]">
-              Gentle, human-centered care management for clinics.
-            </h1>
-
-            <p className="text-lg sm:text-xl text-emerald-800 leading-relaxed max-w-2xl font-medium">
-              Medix Pastel offers a serene, comforting design system that puts patient peace of mind, unified EHR, and effortless doctor consultations first.
-            </p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              <Link
-                href="/register"
-                className="px-8 py-4 rounded-full bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-sm shadow-xl shadow-emerald-950/20 transition-all flex items-center gap-2 cursor-pointer btn-premium-3d"
-              >
-                Join Care Portal <ArrowRight className="w-4 h-4" />
-              </Link>
-              
-              <Link
-                href="/login"
-                className="px-8 py-4 rounded-full bg-white border border-emerald-300 text-emerald-950 font-extrabold text-sm hover:bg-emerald-50 transition-all shadow-xs"
-              >
-                Sign In to Dashboard
-              </Link>
-            </div>
-
-            {/* Micro Live Trust Badges */}
-            <div className="grid grid-cols-3 gap-3 pt-6 border-t border-emerald-200/80">
-              <div className="space-y-0.5">
-                <span className="text-xl sm:text-2xl font-black text-[#046a4e] block">9 Campuses</span>
-                <span className="text-xs text-emerald-800 font-bold">Unified Network</span>
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-xl sm:text-2xl font-black text-[#046a4e] block">99.4%</span>
-                <span className="text-xs text-emerald-800 font-bold">Patient Trust Score</span>
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-xl sm:text-2xl font-black text-[#046a4e] block">24 / 7</span>
-                <span className="text-xs text-emerald-800 font-bold">Helpline & OPD Care</span>
-              </div>
-            </div>
-
+          {/* Full Screen Crystal Clear Canvas Video Layer */}
+          <div className="absolute inset-0 z-0">
+            <HeroScrollCanvasBackground totalFrames={102} framePrefix="/hero-frames/" />
           </div>
 
-          {/* Right Column: Interactive Scroll-Scrubbed Video Storyboard */}
-          <div className="lg:col-span-5">
-            <ScrollVideoStory />
+          {/* Minimal Floating Scroll Guidance */}
+          <div className="absolute bottom-5 right-6 z-20 pointer-events-none hidden sm:flex items-center gap-1.5 text-emerald-950 font-extrabold text-[11px] bg-white/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-300/80 shadow-md">
+            <span>Scroll to explore</span>
+            <ChevronDown className="w-3.5 h-3.5 text-[#046a4e] animate-bounce" />
           </div>
 
         </div>
@@ -446,16 +394,16 @@ export default function Concept7() {
                   <PhoneCall className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#046a4e] font-extrabold uppercase tracking-wider">Direct Call Helpline</div>
-                  <div className="text-base font-black text-emerald-950">+91 91443 76971</div>
+                  <div className="text-xs text-[#046a4e] font-extrabold uppercase tracking-wider">Reception Call Helpline</div>
+                  <div className="text-base font-black text-emerald-950">+91 70038 31600</div>
                 </div>
               </div>
 
               <a
-                href="tel:+919144376971"
+                href="tel:+917003831600"
                 className="w-full py-3 bg-[#046a4e] hover:bg-[#03523c] text-white font-extrabold text-xs rounded-full shadow-md text-center transition-all flex items-center justify-center gap-2 cursor-pointer btn-premium-3d"
               >
-                <PhoneCall className="w-4 h-4" /> Call +91 91443 76971 Now
+                <PhoneCall className="w-4 h-4" /> Call +91 70038 31600 Now
               </a>
             </div>
 
@@ -466,13 +414,13 @@ export default function Concept7() {
                   <MessageSquare className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-emerald-700 font-extrabold uppercase tracking-wider">WhatsApp Support</div>
-                  <div className="text-base font-black text-emerald-950">+91 91443 76971</div>
+                  <div className="text-xs text-emerald-700 font-extrabold uppercase tracking-wider">Reception WhatsApp</div>
+                  <div className="text-base font-black text-emerald-950">+91 97336 62319</div>
                 </div>
               </div>
 
               <a
-                href="https://wa.me/919144376971?text=Hello%20Medix%20Hospital%20System,%20I%20would%20like%20to%20inquire%20about%20services."
+                href="https://wa.me/919733662319?text=Hello%20Ariyan%20Hospital%20Multispeciality,%20I%20would%20like%20to%20inquire%20about%20services."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-full shadow-md text-center transition-all flex items-center justify-center gap-2 cursor-pointer btn-premium-3d"
@@ -484,7 +432,7 @@ export default function Concept7() {
           </div>
 
           <div className="text-center pt-6 border-t border-emerald-200/80 text-xs text-emerald-800 font-bold">
-            © 2026 Medix Hospital Management System • Health Grow India. All Rights Reserved.
+            © 2026 ARIYAN HOSPITAL MULTISPECIALITY • Newtown, Kolkata 700157. All Rights Reserved.
           </div>
         </div>
       </section>
@@ -492,21 +440,21 @@ export default function Concept7() {
       {/* FLOATING DIRECT CONTACT PILLS */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col sm:flex-row gap-3">
         <a
-          href="https://wa.me/919144376971?text=Hello%20Medix%20Hospital%20System,%20I%20would%20like%20to%20inquire%20about%20services."
+          href="https://wa.me/919733662319?text=Hello%20Ariyan%20Hospital%20Multispeciality,%20I%20would%20like%20to%20inquire%20about%20services."
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-2xl transition-all hover:scale-105 cursor-pointer btn-premium-3d"
         >
           <MessageSquare className="w-4 h-4" />
-          <span>WhatsApp: +91 91443 76971</span>
+          <span>WhatsApp: +91 97336 62319</span>
         </a>
 
         <a
-          href="tel:+919144376971"
+          href="tel:+917003831600"
           className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs shadow-2xl transition-all hover:scale-105 cursor-pointer btn-premium-3d"
         >
           <PhoneCall className="w-4 h-4" />
-          <span>Call: +91 91443 76971</span>
+          <span>Call: +91 70038 31600</span>
         </a>
       </div>
 

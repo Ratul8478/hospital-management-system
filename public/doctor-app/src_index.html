@@ -1,0 +1,2464 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HMS Doctor — Calm Clinical Intelligence 2.0</title>
+  
+  <!-- PWA & Mobile Web App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="theme-color" content="#070B11">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HMS Doctor">
+
+  <!-- Modern Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Ambient Luxury Glow Background -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- Studio Top Navigation Toolbar -->
+  <header class="studio-header">
+    <div class="studio-brand">
+      <img src="medix_logo.png" alt="Medix Logo" style="width:42px; height:42px; border-radius:12px; object-fit:contain; background:#FFFFFF; padding:2px; box-shadow:0 4px 16px rgba(37,99,235,0.35);">
+      <div>
+        <div class="studio-title">MEDIX <span class="badge-studio-ver">PRO v2.5</span></div>
+        <div class="studio-sub"><span class="pulse-live"></span> Live Clinical Suite • Connected to Medix Central Backend</div>
+      </div>
+    </div>
+
+    <div class="studio-controls">
+      <!-- Direct Download to Phone Button -->
+      <button class="studio-btn studio-btn-install" id="btn-header-install" onclick="openMobileInstallModal()" title="Download & Run Locally on Phone">
+        <i class="fa-solid fa-mobile-screen-button text-emerald"></i>
+        <span>Download to Phone</span>
+      </button>
+
+      <!-- Direct APK Download Button for Client -->
+      <a href="Medix_Doctor_App_v2.0.0.apk" download="Medix_Doctor_App_v2.0.0.apk" class="studio-btn" id="btn-download-apk" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #ffffff; font-weight: 700; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); padding: 8px 16px; border-radius: 10px;" title="Download Medix Doctor Android App v2.0.0 (APK)">
+        <i class="fa-brands fa-android"></i>
+        <span>Download APK (v2.0.0)</span>
+      </a>
+
+      <!-- Theme Switcher -->
+      <button class="studio-btn" id="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Dark / Light Theme">
+        <i class="fa-solid fa-sun" id="theme-icon"></i>
+        <span id="theme-text">Light Mode</span>
+      </button>
+
+      <!-- Sound Toggle -->
+      <button class="studio-btn" id="btn-sound-toggle" onclick="toggleAudio()" title="Toggle Hospital Audio Chimes">
+        <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+        <span>Audio Chimes</span>
+      </button>
+
+      <!-- Viewport Mode Switcher (Device vs Full Studio) -->
+      <div class="view-mode-group">
+        <button class="mode-pill active" id="mode-phone" onclick="setViewMode('phone')" title="Mobile Device View">
+          <i class="fa-solid fa-mobile-screen"></i> Mobile
+        </button>
+        <button class="mode-pill" id="mode-full" onclick="setViewMode('full')" title="Expanded Clinical Console">
+          <i class="fa-solid fa-tablets"></i> Studio Fullscreen
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace Grid -->
+  <div class="studio-layout" id="studio-layout">
+    
+    <!-- LEFT COLUMN: DOCTOR DESK & REAL-TIME CONTROLS -->
+    <aside class="studio-sidebar" id="studio-sidebar">
+      
+      <!-- Doctor Identification Card -->
+      <div class="glass-card doctor-id-card">
+        <div class="doctor-badge-top">
+          <div class="doc-avatar-wrap">
+            <div class="doc-avatar-initials">SW</div>
+            <span class="doc-online-status" id="sidebar-online-indicator"></span>
+          </div>
+          <div class="doc-details">
+            <h3 id="sidebar-doc-name">Dr. Sarah Williams</h3>
+            <p class="doc-spec">Chief of Interventional Cardiology</p>
+            <div class="doc-tags">
+              <span class="tag-reg">NMC-2024-88412</span>
+              <span class="tag-dept">Cardio Suite 302</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Cardiac ECG Oscilloscope Banner -->
+        <div class="ecg-monitor-card">
+          <div class="ecg-header">
+            <span class="ecg-title"><i class="fa-solid fa-heart-pulse"></i> LIVE TELEMETRY</span>
+            <span class="ecg-bpm"><strong id="telemetry-bpm">78</strong> BPM</span>
+          </div>
+          <div class="ecg-canvas-wrap">
+            <svg class="ecg-svg" viewBox="0 0 400 60" preserveAspectRatio="none">
+              <path class="ecg-path" d="M 0 30 L 60 30 L 70 25 L 80 35 L 90 30 L 110 30 L 115 10 L 122 52 L 130 5 L 138 38 L 145 28 L 155 30 L 220 30 L 230 25 L 240 35 L 250 30 L 270 30 L 275 10 L 282 52 L 290 5 L 298 38 L 305 28 L 315 30 L 400 30"></path>
+            </svg>
+            <div class="ecg-scanline"></div>
+          </div>
+          <div class="ecg-footer">
+            <span>Rhythm: Normal Sinus</span>
+            <span>SpO2: 99% • BP: 120/80</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download & Run Locally Card for Client -->
+      <div class="glass-card download-client-card" onclick="openMobileInstallModal()">
+        <div class="client-card-top">
+          <div class="client-card-icon bg-emerald-subtle">
+            <i class="fa-solid fa-download text-emerald"></i>
+          </div>
+          <div>
+            <h4>Run Locally on Mobile</h4>
+            <p>Save offline app to phone home screen</p>
+          </div>
+        </div>
+        <button class="btn-sidebar-install"><i class="fa-solid fa-mobile-screen"></i> Install App Package</button>
+      </div>
+
+      <!-- Quick Desk Navigation & Direct Actions -->
+      <div class="glass-card desk-actions-card">
+        <div class="card-header-flex">
+          <h4><i class="fa-solid fa-bolt text-amber"></i> Quick Clinical Actions</h4>
+          <span class="badge-mini">Instant</span>
+        </div>
+        <div class="quick-action-grid">
+          <button class="action-tile-btn" onclick="switchTab('appointments')">
+            <i class="fa-solid fa-calendar-check text-blue"></i>
+            <span>OPD Queue</span>
+            <small id="sidebar-queue-count">4 Waiting</small>
+          </button>
+          <button class="action-tile-btn" onclick="switchTab('patients')">
+            <i class="fa-solid fa-folder-open text-teal"></i>
+            <span>Patient EHR</span>
+            <small>Lookup Chart</small>
+          </button>
+          <button class="action-tile-btn primary-glow" onclick="openNewRxModal('Aarav Sharma', 'UHID-2026-0042')">
+            <i class="fa-solid fa-prescription text-emerald"></i>
+            <span>Author Rx</span>
+            <small>Digital Signature</small>
+          </button>
+          <button class="action-tile-btn" onclick="switchTab('reports')">
+            <i class="fa-solid fa-flask-vial text-rose"></i>
+            <span>Lab Reports</span>
+            <small id="sidebar-crit-count">2 Critical</small>
+          </button>
+          <button class="action-tile-btn" onclick="switchTab('admissions')">
+            <i class="fa-solid fa-bed-pulse text-indigo"></i>
+            <span>IPD Inpatients</span>
+            <small>ICU & Wards</small>
+          </button>
+          <button class="action-tile-btn" onclick="switchTab('profile')">
+            <i class="fa-solid fa-id-badge text-cyan"></i>
+            <span>Doctor Profile</span>
+            <small>Credentials & Roster</small>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Broadcast & Critical Lab Alerts Feed -->
+      <div class="glass-card feed-card">
+        <div class="card-header-flex">
+          <h4><i class="fa-solid fa-bell text-rose"></i> Hospital Alerts</h4>
+          <span class="live-pill">LIVE FEED</span>
+        </div>
+        <div class="alert-stream-list" id="sidebar-alerts-stream">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- CENTER COLUMN: DEVICE SIMULATOR / MAIN APP FRAME -->
+    <main class="device-column" id="device-column">
+      
+      <!-- Titanium Device Frame -->
+      <div class="device-chassis" id="device-chassis">
+        
+        <!-- Hardware buttons / screen reflection -->
+        <div class="chassis-lens"></div>
+        <div class="screen-glare"></div>
+
+        <!-- Android / iOS Dynamic Island & Status Bar -->
+        <div class="device-top-island-bar">
+          <div class="dynamic-island" id="dynamic-island" onclick="handleDynamicIslandClick()">
+            <div class="island-left">
+              <span class="island-icon"><i class="fa-solid fa-heart-pulse"></i></span>
+              <span class="island-title" id="island-text">OPD Active • Room 302</span>
+            </div>
+            <div class="island-right">
+              <div class="island-pulse"></div>
+            </div>
+          </div>
+
+          <div class="phone-status-row">
+            <span class="status-clock" id="live-clock">10:30 AM</span>
+            <div class="status-indicators">
+              <i class="fa-solid fa-wifi"></i>
+              <i class="fa-solid fa-signal"></i>
+              <i class="fa-solid fa-battery-full"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- APP INTERNAL VIEWPORT CONTAINER -->
+        <div class="app-viewport" id="app-viewport">
+          
+          <!-- ========================================================
+               APP LAUNCH & SPLASH SCREEN (ANIMATED)
+               ======================================================== -->
+          <div id="app-splash-screen" class="app-splash-overlay">
+            <div class="splash-content-box">
+              <div class="splash-logo-container">
+                <div class="splash-ripple-wave"></div>
+                <div class="splash-ripple-wave wave-2"></div>
+                <img src="medix_logo.png" alt="Medix Logo" class="splash-brand-logo">
+              </div>
+              <h1 class="splash-app-title">MEDIX</h1>
+              <span class="splash-app-subtitle">Inter-Hospital Connected Physician EHR</span>
+              
+              <!-- Live ECG Telemetry Animation Card (Splash) -->
+              <div class="live-telemetry-monitor-box">
+                <div class="telemetry-top-row">
+                  <span class="telemetry-label-glow"><i class="fa-solid fa-heart-pulse"></i> LIVE TELEMETRY</span>
+                  <span class="telemetry-bpm-glow">78 BPM</span>
+                </div>
+                <div class="telemetry-wave-window">
+                  <svg class="telemetry-svg-stream" viewBox="0 0 500 50" preserveAspectRatio="none">
+                    <path class="telemetry-ecg-stroke" d="M 0,25 L 30,25 L 40,8 L 50,42 L 60,6 L 70,36 L 80,25 L 200,25 L 210,18 L 220,32 L 230,25 L 260,25 L 270,9 L 280,44 L 290,4 L 300,38 L 310,25 L 450,25 L 460,18 L 470,32 L 480,25 L 500,25 L 530,25 L 540,8 L 550,42 L 560,6 L 570,36 L 580,25 L 700,25 L 710,18 L 720,32 L 730,25 L 760,25 L 770,9 L 780,44 L 790,4 L 800,38 L 810,25 L 950,25 L 960,18 L 970,32 L 980,25 L 1000,25" />
+                  </svg>
+                  <div class="telemetry-laser-scan"></div>
+                </div>
+                <div class="telemetry-bottom-row">
+                  <span>Rhythm: Normal Sinus</span>
+                  <span>SpO2: 99% • BP: 120/80</span>
+                </div>
+              </div>
+
+              <div class="splash-progress-track">
+                <div class="splash-progress-bar" id="splash-loader-progress"></div>
+              </div>
+              <p class="splash-status-label" id="splash-status-label">Initializing 256-bit encrypted clinical gateway...</p>
+              
+              <div class="splash-footer-trust">
+                <span><i class="fa-solid fa-shield-halved text-emerald"></i> HIPAA Compliant</span>
+                <span>•</span>
+                <span><i class="fa-solid fa-hospital text-blue"></i> City Hospital Network</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================
+               SCREEN 1: SECURE BIOMETRIC CLINICAL LOGIN
+               ======================================================== -->
+          <div id="screen-login" class="screen-view active">
+            <div class="login-scroller">
+              
+              <div class="login-brand-hero">
+                <div class="brand-hero-logo-box">
+                  <img src="medix_logo.png" alt="Medix Logo" class="brand-hero-logo-img">
+                </div>
+                <h2>MEDIX</h2>
+                <p>Clinical Intelligence & Healthcare EHR</p>
+                <div class="hospital-seal"><i class="fa-solid fa-shield-halved"></i> HIPAA & HL7 FHIR Certified Portal</div>
+              </div>
+
+              <!-- Live ECG Telemetry Animation Card (Login Screen) -->
+              <div class="live-telemetry-monitor-box login-telemetry-spacing">
+                <div class="telemetry-top-row">
+                  <span class="telemetry-label-glow"><i class="fa-solid fa-heart-pulse"></i> LIVE TELEMETRY</span>
+                  <span class="telemetry-bpm-glow">78 BPM</span>
+                </div>
+                <div class="telemetry-wave-window">
+                  <svg class="telemetry-svg-stream" viewBox="0 0 500 50" preserveAspectRatio="none">
+                    <path class="telemetry-ecg-stroke" d="M 0,25 L 30,25 L 40,8 L 50,42 L 60,6 L 70,36 L 80,25 L 200,25 L 210,18 L 220,32 L 230,25 L 260,25 L 270,9 L 280,44 L 290,4 L 300,38 L 310,25 L 450,25 L 460,18 L 470,32 L 480,25 L 500,25 L 530,25 L 540,8 L 550,42 L 560,6 L 570,36 L 580,25 L 700,25 L 710,18 L 720,32 L 730,25 L 760,25 L 770,9 L 780,44 L 790,4 L 800,38 L 810,25 L 950,25 L 960,18 L 970,32 L 980,25 L 1000,25" />
+                  </svg>
+                  <div class="telemetry-laser-scan"></div>
+                </div>
+                <div class="telemetry-bottom-row">
+                  <span>Rhythm: Normal Sinus</span>
+                  <span>SpO2: 99% • BP: 120/80</span>
+                </div>
+              </div>
+
+              <div class="login-form-box">
+                <!-- Dual Auth Mode Segment Switcher -->
+                <div class="auth-mode-switcher">
+                  <button type="button" class="auth-mode-btn active" id="btn-auth-tab-register" onclick="switchAuthMode('register')">
+                    <i class="fa-solid fa-user-plus"></i> Doctor Registration
+                  </button>
+                  <button type="button" class="auth-mode-btn" id="btn-auth-tab-login" onclick="switchAuthMode('login')">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                  </button>
+                </div>
+
+                <!-- SECTION A: DOCTOR REGISTRATION FORM -->
+                <div id="auth-section-register">
+                  <div class="form-header">
+                    <h3>Doctor Registration</h3>
+                    <p>Create your practitioner credentials to activate Medix clinical EHR</p>
+                  </div>
+
+                  <div id="register-error" class="login-error-toast hidden">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="register-error-text">Please fill in all required fields</span>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>Full Practitioner Name <span style="color:#EF4444; font-weight:700;">*</span></label>
+                    <div class="input-wrapper">
+                      <i class="fa-solid fa-user-doctor"></i>
+                      <input type="text" id="reg-name" placeholder="Enter Full Practitioner Name (e.g. Dr. Rajesh Kumar)" required>
+                    </div>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="clinical-input-group">
+                      <label>Doctor Gender <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-venus-mars"></i>
+                        <select id="reg-gender" required style="width:100%; border:none; background:transparent; font-size:13px; font-weight:600; color:var(--text-main); outline:none; cursor:pointer;">
+                          <option value="" disabled selected>Select Gender *</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="clinical-input-group">
+                      <label>Medical Reg ID <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper" style="border: 1.5px solid rgba(37, 99, 235, 0.45); background: rgba(37, 99, 235, 0.04);">
+                        <i class="fa-solid fa-id-card text-blue" style="color:#2563EB;"></i>
+                        <input type="text" id="reg-regno" placeholder="NMC Reg No (e.g. NMC-2024-88412)" required>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>Chamber Address <span style="color:#EF4444; font-weight:700;">*</span></label>
+                    <div class="input-wrapper">
+                      <i class="fa-solid fa-hospital-user"></i>
+                      <input type="text" id="reg-chamber-address" placeholder="Enter Chamber Address & Clinic Location" required>
+                    </div>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="clinical-input-group">
+                      <label>Pin Code <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <input type="text" id="reg-pincode" placeholder="Enter 6-digit PIN" required maxlength="10">
+                      </div>
+                    </div>
+
+                    <div class="clinical-input-group">
+                      <label>District <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <input type="text" id="reg-district" placeholder="Enter District" required>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>State <span style="color:#EF4444; font-weight:700;">*</span></label>
+                    <div class="input-wrapper">
+                      <i class="fa-solid fa-landmark"></i>
+                      <input type="text" id="reg-state" placeholder="Enter State" required>
+                    </div>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>Reference ID <span style="color:#EF4444; font-weight:700;">* (Mandatory)</span></label>
+                    <div class="input-wrapper" style="border: 1.5px solid rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.04);">
+                      <i class="fa-solid fa-asterisk text-rose" style="color:#EF4444;"></i>
+                      <input type="text" id="reg-reference-id" placeholder="Enter Doctor Reference ID / Referral Code" required>
+                    </div>
+                    <small style="color: #94A3B8; font-size: 11px; margin-top: 4px; display: block;">
+                      <i class="fa-solid fa-shield-halved" style="color:#10B981;"></i> Medical Reg ID and Reference ID are strictly mandatory for all authorized doctors.
+                    </small>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>Email <span style="color:#EF4444; font-weight:700;">*</span></label>
+                    <div class="input-wrapper">
+                      <i class="fa-regular fa-envelope"></i>
+                      <input type="email" id="reg-email" placeholder="Enter Official Doctor Email" required>
+                    </div>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>Create Master Access Password <span style="color:#EF4444; font-weight:700;">*</span></label>
+                    <div class="input-wrapper">
+                      <i class="fa-solid fa-lock"></i>
+                      <input type="password" id="reg-password" placeholder="Create master access password" required>
+                    </div>
+                  </div>
+
+                  <button class="btn-clinical-primary" id="btn-register" onclick="handleRegister()">
+                    <span id="btn-register-text"><i class="fa-solid fa-user-check"></i> Register & Open Medix Portal</span>
+                    <div id="btn-register-spinner" class="spinner-dot-ring hidden"></div>
+                  </button>
+
+                  <div class="auth-footer-toggle">
+                    Already registered doctor? <a onclick="switchAuthMode('login')">Sign In directly</a>
+                  </div>
+                </div>
+
+                <!-- SECTION B: EXISTING DOCTOR SIGN IN FORM -->
+                <div id="auth-section-login" class="hidden">
+                  <div class="form-header">
+                    <h3>Doctor Sign In</h3>
+                    <p>Enter registered physician credentials or use biometrics</p>
+                  </div>
+
+                  <div id="login-error" class="login-error-toast hidden">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="login-error-text">Invalid physician credentials</span>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>Physician Email / Staff ID</label>
+                    <div class="input-wrapper">
+                      <i class="fa-regular fa-envelope"></i>
+                      <input type="email" id="login-email" placeholder="Enter registered doctor email">
+                    </div>
+                  </div>
+
+                  <div class="clinical-input-group">
+                    <label>Master Security Key / Password</label>
+                    <div class="input-wrapper">
+                      <i class="fa-solid fa-lock"></i>
+                      <input type="password" id="login-password" placeholder="Enter password">
+                      <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility()"><i class="fa-regular fa-eye"></i></button>
+                    </div>
+                  </div>
+
+                  <button class="btn-clinical-primary" id="btn-login" onclick="handleLogin()">
+                    <span id="btn-login-text"><i class="fa-solid fa-right-to-bracket"></i> Secure Sign In</span>
+                    <div id="btn-login-spinner" class="spinner-dot-ring hidden"></div>
+                  </button>
+
+                  <div style="margin-top:14px; text-align:center;">
+                    <span style="font-size:11px; color:#64748B; font-weight:700; display:block; margin-bottom:8px;">QUICK DEMO PHYSICIAN LOGIN</span>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                      <button type="button" onclick="fillDemo('sarah'); handleLogin();" style="padding:8px 6px; border-radius:10px; background:#F3E8FF; border:1px solid #D8B4FE; color:#3B0764; font-size:11px; font-weight:800; cursor:pointer;">
+                        👩‍⚕️ Dr. Sarah (Cardio)
+                      </button>
+                      <button type="button" onclick="fillDemo('jiarul'); handleLogin();" style="padding:8px 6px; border-radius:10px; background:#ECFDF5; border:1px solid #A7F3D0; color:#065F46; font-size:11px; font-weight:800; cursor:pointer;">
+                        👨‍⚕️ Dr. Jiarul (Medicine)
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="auth-footer-toggle">
+                    New Doctor? <a onclick="switchAuthMode('register')">Register New Account</a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ========================================================
+               SCREEN 2: MAIN CLINICAL DASHBOARD & TABBED VIEWS
+               ======================================================== -->
+          <div id="screen-main" class="screen-view hidden">
+            
+            <!-- TABBED SCROLLING VIEW CONTAINER -->
+            <div class="tab-viewport-body" id="tab-viewport-body">
+              
+              <!-- --------------------------------------------------
+                   TAB 1: HOME CLINICAL & HEALTH DIRECTORY VIEW (EXACT MATCH TO IMAGE 1)
+                   Header is inside the tab so it scrolls up naturally with content
+                   -------------------------------------------------- -->
+              <section id="tab-home" class="tab-pane active" style="background:#F8FAFC; padding-bottom: 24px;">
+                
+                <!-- Mobile App Top Bar (Medix Red & Blue Theme - Matching Image 1) -->
+                <header class="varsha-purple-header">
+                  <div class="varsha-top-bar">
+                    <div class="varsha-brand-left">
+                      <div class="varsha-logo-icon">
+                        <img src="medix_logo.png" alt="Medix Logo" style="width:100%; height:100%; object-fit:contain;">
+                      </div>
+                      <div class="varsha-title-wrap">
+                        <h3>Medix</h3>
+                        <div class="varsha-loc-picker" onclick="showToast('Location: Kolkata, West Bengal (HQ)', 'info')">
+                          <i class="fa-solid fa-location-dot" style="color:#EF4444;"></i>
+                          <span>Select Location</span>
+                          <i class="fa-solid fa-chevron-down" style="font-size:9px; margin-left:2px;"></i>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Top Right Header Actions: Light/Dark Mode Switcher + Hospital Alert Bell -->
+                    <div class="varsha-top-right-actions">
+                      <button class="varsha-theme-btn" id="header-theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light / Dark Mode">
+                        <svg id="header-theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                        <svg id="header-theme-icon-sun" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="5"></circle>
+                          <line x1="12" y1="1" x2="12" y2="3"></line>
+                          <line x1="12" y1="21" x2="12" y2="23"></line>
+                          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                          <line x1="1" y1="12" x2="3" y2="12"></line>
+                          <line x1="21" y1="12" x2="23" y2="12"></line>
+                          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                      </button>
+                      <button class="varsha-bell-btn" onclick="openNotificationsModal()" title="Hospital Alerts & Notifications">
+                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="notif-badge-count" id="header-notif-count">2</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Search Bar with Calendar & Search icon -->
+                  <div class="varsha-search-bar">
+                    <i class="fa-solid fa-bars hamburger" onclick="switchTab('hospitals')"></i>
+                    <input type="text" id="main-global-search" placeholder="Let's Find You A Doctor!" oninput="handleGlobalSearch(this.value)">
+                    <div class="search-icons-right">
+                      <i class="fa-regular fa-calendar" onclick="switchTab('appointments')" title="Appointments" style="cursor:pointer;"></i>
+                      <i class="fa-solid fa-magnifying-glass" onclick="switchTab('hospitals')" title="Search" style="cursor:pointer;"></i>
+                    </div>
+                  </div>
+
+                  <!-- 2 Consultation Action Cards in Header (Image 1) -->
+                  <div class="varsha-action-cards-grid">
+                    <div class="varsha-consult-card" onclick="openInstantVideoModal()">
+                      <div class="varsha-card-img-wrap" style="background-image: url('https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=60');"></div>
+                      <div class="varsha-card-title-box">
+                        <h4>Instant Video<br>Consultation</h4>
+                      </div>
+                    </div>
+                    <div class="varsha-consult-card" onclick="switchTab('hospitals')">
+                      <div class="varsha-card-img-wrap" style="background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=400&auto=format&fit=crop&q=60');"></div>
+                      <div class="varsha-card-title-box">
+                        <h4>Book IN-Clinic<br>Appointment</h4>
+                      </div>
+                    </div>
+                  </div>
+                </header>
+
+                <!-- Active Consultation Callout Bar (Dynamic) -->
+                <div id="active-consultation-banner" class="active-consult-banner hidden" style="margin:10px 16px 0;">
+                  <div class="consult-banner-left">
+                    <div class="consult-pulse-dot"></div>
+                    <div>
+                      <strong id="active-consult-patient-name">Priya Patel (Token #15)</strong>
+                      <span id="active-consult-timer">00:00 In Consultation</span>
+                    </div>
+                  </div>
+                  <div class="consult-banner-actions">
+                    <button class="btn-banner-rx" onclick="openNewRxModalForCurrent()"><i class="fa-solid fa-prescription"></i> Rx</button>
+                    <button class="btn-banner-complete" onclick="completeCurrentConsultation()"><i class="fa-solid fa-check"></i> Complete</button>
+                  </div>
+                </div>
+
+                <!-- 1. Our Services Section (Image 1) -->
+                <div class="our-services-section">
+                  <div class="section-headline-dark">
+                    <span>Our Services</span>
+                  </div>
+                  <div class="services-grid-3col">
+                    <div class="service-tile" onclick="openAmbulanceModal()" style="background-image: url('https://images.unsplash.com/photo-1587745416684-47953f16f02f?w=300&auto=format&fit=crop&q=60');">
+                      <span>Ambulance</span>
+                    </div>
+                    <div class="service-tile" onclick="openBloodBankModal()" style="background-image: url('https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=300&auto=format&fit=crop&q=60');">
+                      <span>Blood Bank</span>
+                    </div>
+                    <div class="service-tile" onclick="switchTab('appointments')" style="background-image: url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&auto=format&fit=crop&q=60'); position:relative;">
+                      <span style="position:absolute; top:6px; right:6px; background:#DC2626; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#FFFFFF; z-index:3;">+</span>
+                      <span>Doctor's</span>
+                    </div>
+                    <div class="service-tile" onclick="switchTab('hospitals')" style="background-image: url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=300&auto=format&fit=crop&q=60'); position:relative;">
+                      <span style="position:absolute; top:6px; right:6px; background:#2563EB; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; color:#FFFFFF; z-index:3;"><i class="fa-solid fa-hospital"></i></span>
+                      <span>Hospital</span>
+                    </div>
+                    <div class="service-tile" onclick="switchTab('hospitals')" style="background-image: url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&auto=format&fit=crop&q=60');">
+                      <span>Nursing Home</span>
+                    </div>
+                    <div class="service-tile service-tile-viewall" onclick="switchTab('hospitals')">
+                      <div style="width:36px; height:36px; border-radius:50%; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin-bottom:2px;">
+                        <i class="fa-solid fa-arrow-right" style="font-size:16px; color:#0F172A;"></i>
+                      </div>
+                      <span>View All</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Promotional Medical Career Banner (6-Slide Auto-Sliding Carousel) -->
+                <div class="promo-banner-container" id="promo-banner-slider">
+                  <div class="promo-slider-viewport" id="promo-slider-viewport">
+                    <div class="promo-slides-track" id="promo-slides-track">
+
+                      <!-- SLIDE 1: Hospital Referral Commission (15%) -->
+                      <div class="promo-slide-item">
+                        <div class="promo-banner-card">
+                          <span class="promo-badge-tag"><i class="fa-solid fa-hospital"></i> MEDIX PARTNER NETWORK</span>
+                          <h3 class="promo-title-bold">Earn 15% Referral Commission on Hospital Admissions</h3>
+                          <p class="promo-sub-text">Direct admission credit at Ariyan & Partner Multispeciality Hospitals<br><span class="promo-highlight-red">• INSTANT WALLET SETTLEMENT & LIVE TRACKING</span></p>
+                          <button class="promo-cta-btn" onclick="switchTab('hospitals')">
+                            <i class="fa-solid fa-arrow-right"></i> Explore Partner Hospitals
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- SLIDE 2: Emergency Tele-Health Consultations -->
+                      <div class="promo-slide-item">
+                        <div class="promo-banner-card">
+                          <span class="promo-badge-tag"><i class="fa-solid fa-video"></i> EMERGENCY TELE-HEALTH</span>
+                          <h3 class="promo-title-bold">24/7 Digital OPD & HD Video Consultations</h3>
+                          <p class="promo-sub-text">Live triage queue, instant audio chimes & smart patient vitals sync<br><span class="promo-highlight-red">• ON-DEMAND CLINICAL SESSIONS</span></p>
+                          <button class="promo-cta-btn" onclick="openInstantVideoModal()">
+                            <i class="fa-solid fa-video"></i> Launch Video Consult
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- SLIDE 3: Medix Educare World (Reference Banner) -->
+                      <div class="promo-slide-item">
+                        <div class="promo-banner-card">
+                          <span class="promo-badge-tag"><i class="fa-solid fa-graduation-cap"></i> MEDIX EDUCARE WORLD</span>
+                          <h3 class="promo-title-bold">Your medical career is now within reach</h3>
+                          <p class="promo-sub-text">MBBS. MD. MS. BDS. Courses at low Cost<br><span class="promo-highlight-red">• ADMISSION GOING ON</span></p>
+                          <button class="promo-cta-btn" onclick="openReferHospitalModalFromEhr('UHID-2026-0042')">
+                            <i class="fa-solid fa-paper-plane"></i> Apply / Enquire Now
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- SLIDE 4: Smart Digital Rx & EHR Generator -->
+                      <div class="promo-slide-item">
+                        <div class="promo-banner-card">
+                          <span class="promo-badge-tag"><i class="fa-solid fa-file-prescription"></i> SMART DIGITAL RX</span>
+                          <h3 class="promo-title-bold">Instant Paperless e-Prescriptions & EHR Sync</h3>
+                          <p class="promo-sub-text">Create digital Rx with auto-dosage calculator & instant pharmacy dispatch<br><span class="promo-highlight-red">• 100% REGULATORY COMPLIANT</span></p>
+                          <button class="promo-cta-btn" onclick="openNewRxModal('Aarav Sharma', 'UHID-2026-0042')">
+                            <i class="fa-solid fa-prescription-bottle-medical"></i> Author Digital Rx
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- SLIDE 5: 24/7 Critical Ambulance & Bed Booking -->
+                      <div class="promo-slide-item">
+                        <div class="promo-banner-card">
+                          <span class="promo-badge-tag"><i class="fa-solid fa-truck-medical"></i> EMERGENCY DISPATCH</span>
+                          <h3 class="promo-title-bold">Priority Critical Care Ambulance Dispatch</h3>
+                          <p class="promo-sub-text">Real-time GPS tracker, ALS oxygen ventilator & rapid ICU booking<br><span class="promo-highlight-red">• 24x7 RAPID RESPONSE UNIT</span></p>
+                          <button class="promo-cta-btn" onclick="showToast('Connecting to 24/7 Medix Emergency Ambulance Dispatch Hub...', 'info')">
+                            <i class="fa-solid fa-ambulance"></i> Request Ambulance
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- SLIDE 6: Doctor Smart ID & Leaderboard Badges -->
+                      <div class="promo-slide-item">
+                        <div class="promo-banner-card">
+                          <span class="promo-badge-tag"><i class="fa-solid fa-award"></i> DOCTOR REWARDS</span>
+                          <h3 class="promo-title-bold">Verified Doctor Smart ID & Leaderboard Badges</h3>
+                          <p class="promo-sub-text">NMC verified credentials, OPD milestones & top consultant badge<br><span class="promo-highlight-red">• TIER-1 RECOGNIZED PRACTITIONER</span></p>
+                          <button class="promo-cta-btn" onclick="switchTab('profile')">
+                            <i class="fa-solid fa-user-doctor"></i> View Smart ID Profile
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <!-- Slide Controls / Indicator Bottom Bar -->
+                    <div class="promo-carousel-controls">
+                      <div class="promo-carousel-dots" id="promo-carousel-dots">
+                        <div class="promo-dot" onclick="goToPromoSlide(0)"></div>
+                        <div class="promo-dot" onclick="goToPromoSlide(1)"></div>
+                        <div class="promo-dot active" onclick="goToPromoSlide(2)"></div>
+                        <div class="promo-dot" onclick="goToPromoSlide(3)"></div>
+                        <div class="promo-dot" onclick="goToPromoSlide(4)"></div>
+                        <div class="promo-dot" onclick="goToPromoSlide(5)"></div>
+                      </div>
+                      <span class="promo-index-badge" id="promo-slide-index-badge">3/6</span>
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+
+              <!-- --------------------------------------------------
+                   TAB: INTERNATIONAL HOSPITALS FULL DIRECTORY (Images 4 & 5)
+                   -------------------------------------------------- -->
+              <section id="tab-hospitals" class="tab-pane" style="background:#F8FAFC;">
+                
+                <div class="filter-sticky-bar" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0;">
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <button onclick="switchTab('home')" style="width:36px; height:36px; border-radius:10px; background:#F1F5F9; border:1px solid #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F172A;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+                    <h3 style="font-size:15px; font-weight:900; color:#0F172A; margin:0; text-transform:uppercase;">INTERNATIONAL HOSPITALS</h3>
+                  </div>
+
+                  <div class="varsha-search-bar" style="margin-bottom:0; box-shadow:none; border:1px solid #E2E8F0;">
+                    <i class="fa-solid fa-magnifying-glass" style="color:#94A3B8;"></i>
+                    <input type="text" id="hosp-directory-search" placeholder="Search providers..." oninput="filterHospitalDirectory(this.value)">
+                    <i class="fa-solid fa-paper-plane" style="color:#0D5C58; cursor:pointer;"></i>
+                  </div>
+                </div>
+
+                <!-- Dynamic Hospital Cards Feed -->
+                <div class="inter-hosp-list-section" id="hospital-directory-cards-container">
+                  <!-- Injected via JavaScript -->
+                </div>
+              </section>
+
+              <!-- --------------------------------------------------
+                   TAB 2: REFER PATIENT / REFERRED PATIENTS DIRECTORY
+                   -------------------------------------------------- -->
+              <section id="tab-refer-patients" class="tab-pane" style="background:#F8FAFC;">
+                
+                <div class="filter-sticky-bar" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0; padding:12px 16px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <button onclick="switchTab('home')" style="width:36px; height:36px; border-radius:10px; background:#F1F5F9; border:1px solid #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F172A;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                      </button>
+                      <div>
+                        <h3 style="font-size:15px; font-weight:900; color:#0F172A; margin:0; text-transform:uppercase;">REFER PATIENTS</h3>
+                        <small style="color:#64748B; font-size:10px; font-weight:600;">Track referred patients & 15% hospital commission</small>
+                      </div>
+                    </div>
+                    <button class="btn-refer-new-action" onclick="openReferHospitalModalFromEhr()" style="background:linear-gradient(135deg, #1E40AF 0%, #DC2626 100%); color:#FFFFFF; border:none; padding:7px 12px; border-radius:8px; font-size:11px; font-weight:800; display:flex; align-items:center; gap:6px; cursor:pointer; box-shadow:0 2px 8px rgba(30,58,138,0.3);">
+                      <i class="fa-solid fa-user-plus"></i> Refer New
+                    </button>
+                  </div>
+
+                  <div class="modern-search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="refer-patient-search" placeholder="Search referred patients by name, UHID, hospital..." oninput="filterReferredPatients(this.value)">
+                    <button class="search-clear-btn hidden" id="refer-search-clear-btn" onclick="clearReferPatientSearch()"><i class="fa-solid fa-circle-xmark"></i></button>
+                  </div>
+
+                  <div class="segmented-filters" id="refer-patient-filter-pills" style="margin-top:10px;">
+                    <button class="seg-pill active" onclick="setReferralFilter('ALL', this)">All (4)</button>
+                    <button class="seg-pill" onclick="setReferralFilter('ADMITTED', this)">Admitted (1)</button>
+                    <button class="seg-pill" onclick="setReferralFilter('IN_TREATMENT', this)">In-Treatment (1)</button>
+                    <button class="seg-pill" onclick="setReferralFilter('DISCHARGED', this)">Discharged (2)</button>
+                  </div>
+                </div>
+
+                <!-- Referred Patients Cards List Container -->
+                <div class="cards-flow-list" id="referred-patients-list-container" style="padding:14px 16px 30px;">
+                  <!-- Populated dynamically via renderReferredPatients() -->
+                </div>
+              </section>
+
+              <!-- --------------------------------------------------
+                   TAB 3: PATIENT DIRECTORY & EHR LOOKUP
+                   -------------------------------------------------- -->
+              <section id="tab-patients" class="tab-pane">
+                
+                <div class="filter-sticky-bar">
+                  <div class="modern-search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="patient-search" placeholder="Search EHR by name, UHID, phone number..." oninput="filterPatients()">
+                  </div>
+                </div>
+
+                <div class="cards-flow-list" id="patient-list-container">
+                  <!-- Populated by JS -->
+                </div>
+              </section>
+
+              <!-- --------------------------------------------------
+                   TAB 4: DIAGNOSTIC LAB REPORTS
+                   -------------------------------------------------- -->
+              <section id="tab-reports" class="tab-pane">
+                
+                <div class="filter-sticky-bar">
+                  <div class="segmented-filters">
+                    <button class="seg-pill active" onclick="setReportFilter('ALL', this)">All (8)</button>
+                    <button class="seg-pill" onclick="setReportFilter('CRITICAL', this)"><i class="fa-solid fa-triangle-exclamation text-rose"></i> Critical (2)</button>
+                    <button class="seg-pill" onclick="setReportFilter('READY', this)">Ready (5)</button>
+                    <button class="seg-pill" onclick="setReportFilter('PENDING', this)">Pending (1)</button>
+                  </div>
+                </div>
+
+                <div class="cards-flow-list" id="report-list-container">
+                  <!-- Populated by JS -->
+                </div>
+              </section>
+
+              <!-- --------------------------------------------------
+                   TAB 5: IPD INPATIENTS & ADMISSIONS
+                   -------------------------------------------------- -->
+              <section id="tab-admissions" class="tab-pane">
+                
+                <div class="filter-sticky-bar">
+                  <div class="segmented-filters">
+                    <button class="seg-pill active" onclick="setWardFilter('ALL', this)">All Wards</button>
+                    <button class="seg-pill" onclick="setWardFilter('ICU', this)">ICU Critical</button>
+                    <button class="seg-pill" onclick="setWardFilter('PRIVATE', this)">Private Suites</button>
+                    <button class="seg-pill" onclick="setWardFilter('GENERAL', this)">General Ward</button>
+                  </div>
+                </div>
+
+                <div class="cards-flow-list" id="admissions-list-container">
+                  <!-- Populated by JS -->
+                </div>
+              </section>
+
+              <!-- --------------------------------------------------
+                   TAB 6: DOCTOR WALLET & 2-TIER COMMISSION CENTER
+                   -------------------------------------------------- -->
+              <section id="tab-wallet" class="tab-pane">
+                
+                <!-- 1. Doctor Wallet Hero Balance Card -->
+                <div class="wallet-hero-glass-card">
+                  <div class="wallet-hero-bg-glow"></div>
+                  <div class="wallet-card-header">
+                    <span class="wallet-badge-active"><i class="fa-solid fa-circle-check"></i> Verified Doctor Wallet</span>
+                    <span class="wallet-kyc-tag"><i class="fa-solid fa-building-columns"></i> Instant Bank Payout</span>
+                  </div>
+                  
+                  <span class="wallet-balance-label">Total Available Wallet Balance</span>
+                  <div class="wallet-balance-row">
+                    <h2 class="wallet-balance-number" id="wallet-balance-val">₹31,000.00</h2>
+                    <button class="btn-wallet-withdraw-action" onclick="openWalletWithdrawModal()">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> Withdraw
+                    </button>
+                  </div>
+                  
+                  <!-- 2 Core Sections Balance Ribbon -->
+                  <div class="wallet-metrics-ribbon" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div class="w-ribbon-col" style="text-align:left; padding:8px 12px; background:rgba(2,132,199,0.12); border-radius:10px; border:1px solid rgba(2,132,199,0.25);">
+                      <span class="w-ribbon-title" style="color:#38BDF8; font-weight:700;"><i class="fa-solid fa-stethoscope"></i> 1. Direct Commission</span>
+                      <strong class="w-ribbon-val text-blue" id="wallet-direct-val" style="font-size:16px; color:#38BDF8; display:block; margin:2px 0;">₹12,500.00</strong>
+                      <small class="w-ribbon-sub" style="color:#94A3B8; font-size:10px;">Direct OPD & Chamber</small>
+                    </div>
+                    <div class="w-ribbon-col" style="text-align:left; padding:8px 12px; background:rgba(16,185,129,0.12); border-radius:10px; border:1px solid rgba(16,185,129,0.25);">
+                      <span class="w-ribbon-title" style="color:#34D399; font-weight:700;"><i class="fa-solid fa-hospital-user"></i> 2. Referral Commission (15%)</span>
+                      <strong class="w-ribbon-val text-emerald" id="wallet-referral-val" style="font-size:16px; color:#34D399; display:block; margin:2px 0;">₹18,500.00</strong>
+                      <small class="w-ribbon-sub" style="color:#94A3B8; font-size:10px;">15% on Hospital Billing</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ========================================================================= -->
+                <!-- SECTION 1: DIRECT COMMISSION (ডাইরেক্ট কমিশন) -->
+                <!-- ========================================================================= -->
+                <div class="glass-card mt-16" style="border:1px solid rgba(2,132,199,0.35); background:rgba(17,34,64,0.92);">
+                  <div class="card-header-flex">
+                    <h4 class="card-subhead" style="color:#38BDF8;"><i class="fa-solid fa-user-doctor"></i> Section 1: Direct Commission (ডাইরেক্ট কমিশন)</h4>
+                    <span class="badge-mini" style="background:rgba(2,132,199,0.2); color:#38BDF8; border:1px solid rgba(2,132,199,0.4);">100% Direct Payout</span>
+                  </div>
+                  <p style="font-size:11px; color:var(--text-sub); margin-bottom:12px;">
+                    Chamber consultations, direct outpatient (OPD) tickets, and personal clinical fees are directly credited to this account.
+                  </p>
+
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:12px;">
+                    <div style="background:rgba(2,132,199,0.08); border:1px solid rgba(2,132,199,0.2); border-radius:10px; padding:10px;">
+                      <span style="font-size:10px; color:#94A3B8; display:block;">Direct OPD Fee Rate</span>
+                      <strong style="color:#FFFFFF; font-size:13px;">₹800.00 / Patient</strong>
+                      <small style="color:#38BDF8; display:block; font-size:10px; margin-top:2px;">100% Retained</small>
+                    </div>
+                    <div style="background:rgba(2,132,199,0.08); border:1px solid rgba(2,132,199,0.2); border-radius:10px; padding:10px;">
+                      <span style="font-size:10px; color:#94A3B8; display:block;">Total Consultations</span>
+                      <strong style="color:#FFFFFF; font-size:13px;">16 Patients</strong>
+                      <small style="color:#10B981; display:block; font-size:10px; margin-top:2px;">Live Verified</small>
+                    </div>
+                  </div>
+
+                  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:#CBD5E1;"><i class="fa-solid fa-wallet text-blue"></i> Accumulated Direct Commission:</span>
+                    <strong style="color:#38BDF8; font-size:14px;" id="sec-direct-comm-amt">₹12,500.00</strong>
+                  </div>
+                </div>
+
+                <!-- ========================================================================= -->
+                <!-- SECTION 2: REFERRAL COMMISSION (রেফারেল কমিশন - ১৫% হসপিটাল বিলিং) -->
+                <!-- ========================================================================= -->
+                <div class="glass-card mt-16" style="border:1px solid rgba(16,185,129,0.35); background:rgba(17,34,64,0.92);">
+                  <div class="card-header-flex">
+                    <h4 class="card-subhead" style="color:#34D399;"><i class="fa-solid fa-handshake-angle"></i> Section 2: Referral Commission (রেফারেল কমিশন)</h4>
+                    <span class="badge-mini" style="background:rgba(16,185,129,0.2); color:#34D399; border:1px solid rgba(16,185,129,0.4); font-weight:800;">15% Hospital Billing</span>
+                  </div>
+                  
+                  <!-- 15% Rule Callout Banner -->
+                  <div style="background:linear-gradient(135deg, rgba(16,185,129,0.18) 0%, rgba(2,132,199,0.18) 100%); border:1px solid rgba(16,185,129,0.4); border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <i class="fa-solid fa-percent" style="color:#10B981; font-size:16px;"></i>
+                      <div>
+                        <strong style="color:#FFFFFF; font-size:12px; display:block;">15% Fixed Referral Commission on Hospital Billing</strong>
+                        <span style="color:#A7F3D0; font-size:11px;">যে হসপিটালে বিলিং হবে, সেই হসপিটালের মোট পেশেন্ট বিলিং অ্যামাউন্টের উপর সরাসরি ১৫% কমিশন ডাক্তারের ওয়ালেটে জমা হবে।</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="commission-rate-list">
+                    <div class="commission-item-card" style="border:1px solid rgba(16,185,129,0.25);">
+                      <div class="comm-hosp-info">
+                        <i class="fa-solid fa-hospital text-emerald"></i>
+                        <div>
+                          <strong>ARIYAN HOSPITAL MULTISPECIALITY (HQ)</strong>
+                          <span>IPD, Cath Lab, Surgery & ICU Admission</span>
+                        </div>
+                      </div>
+                      <div class="comm-payout-badge" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4);">
+                        <strong style="color:#10B981; font-size:13px;">15% Billing</strong>
+                        <small style="color:#94A3B8;">On Total Hospital Bill</small>
+                      </div>
+                    </div>
+
+                    <div class="commission-item-card" style="border:1px solid rgba(16,185,129,0.25);">
+                      <div class="comm-hosp-info">
+                        <i class="fa-solid fa-hospital text-blue"></i>
+                        <div>
+                          <strong>Medix Specialty & Trauma Center</strong>
+                          <span>Level-1 Trauma, Ortho & Emergency</span>
+                        </div>
+                      </div>
+                      <div class="comm-payout-badge" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4);">
+                        <strong style="color:#10B981; font-size:13px;">15% Billing</strong>
+                        <small style="color:#94A3B8;">On Total Hospital Bill</small>
+                      </div>
+                    </div>
+
+                    <div class="commission-item-card" style="border:1px solid rgba(16,185,129,0.25);">
+                      <div class="comm-hosp-info">
+                        <i class="fa-solid fa-hospital text-indigo"></i>
+                        <div>
+                          <strong>Medix Mother & Child Super-Specialty</strong>
+                          <span>Maternity, NICU & Pediatric Surgeries</span>
+                        </div>
+                      </div>
+                      <div class="comm-payout-badge" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4);">
+                        <strong style="color:#10B981; font-size:13px;">15% Billing</strong>
+                        <small style="color:#94A3B8;">On Total Hospital Bill</small>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <span style="font-size:11px; color:#CBD5E1;"><i class="fa-solid fa-hand-holding-dollar text-emerald"></i> Accumulated 15% Referral Commission:</span>
+                    <strong style="color:#34D399; font-size:14px;" id="sec-referral-comm-amt">₹18,500.00</strong>
+                  </div>
+                </div>
+
+              </section>
+
+              <!-- --------------------------------------------------
+                   TAB 7: MY PROFILE (EXACT MATCH TO REFERENCE SCREENSHOT)
+                   -------------------------------------------------- -->
+              <section id="tab-profile" class="tab-pane" style="background:#F8FAFC; padding:0 0 30px;">
+                
+                <!-- 1. Royal Purple Top Navigation Bar -->
+                <div class="varsha-profile-top-bar">
+                  <button class="prof-bar-btn" onclick="switchTab('home')" title="Back to Home">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                  </button>
+                  <h3 class="prof-bar-title">My Profile</h3>
+                  <div class="prof-bar-actions">
+                    <button class="prof-bar-btn" onclick="updateProfileUI(); showToast('Profile Refreshed', 'info');" title="Refresh Profile">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                      </svg>
+                    </button>
+                    <button class="prof-bar-btn" onclick="openEditProfileModal()" title="Edit Profile Details">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 2. Large Orange Avatar with Camera Badge -->
+                <div class="varsha-avatar-container">
+                  <div class="varsha-avatar-circle-wrap">
+                    <div class="varsha-avatar-circle" id="profile-avatar-circle">
+                      <span id="prof-avatar-letter">R</span>
+                    </div>
+                    <div class="varsha-camera-badge" onclick="openEditProfileModal()" title="Change Profile Picture">
+                      <i class="fa-solid fa-camera"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Personal Information Card -->
+                <div class="varsha-info-card">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 class="varsha-card-headline" style="margin:0;">Personal Information</h4>
+                    <button class="prof-action-pill-btn" onclick="openEditProfileModal()" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; padding:4px 10px; border-radius:9999px; font-size:11px; font-weight:700; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                      <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </button>
+                  </div>
+
+                  <!-- Full Name -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Full Name</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-regular fa-user"></i>
+                      <span id="profile-name-field">Dr. Sarah Williams</span>
+                    </div>
+                  </div>
+
+                  <!-- Gender & Role Grid -->
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="varsha-field-group">
+                      <label class="varsha-field-label">Gender</label>
+                      <div class="varsha-pill-field">
+                        <i class="fa-solid fa-venus-mars"></i>
+                        <span id="profile-gender-field">Female</span>
+                      </div>
+                    </div>
+                    <div class="varsha-field-group">
+                      <label class="varsha-field-label">Practitioner Role</label>
+                      <div class="varsha-pill-field">
+                        <i class="fa-solid fa-user-doctor text-blue"></i>
+                        <span id="profile-role-field" style="color:#1E40AF; font-weight:800;">DOCTOR</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Email Address -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Email Address</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-regular fa-envelope"></i>
+                      <span id="profile-email-field">sarah.williams@medix.hospital</span>
+                    </div>
+                  </div>
+
+                  <!-- Phone Number -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Phone Number</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-solid fa-phone"></i>
+                      <span id="profile-phone-field">+91 98042 22142</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. Clinical Qualifications & Education Card -->
+                <div class="varsha-info-card">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 class="varsha-card-headline" style="margin:0;">Clinical & Academic Credentials</h4>
+                    <span style="background:#F0FDF4; color:#166534; font-size:10px; font-weight:800; padding:2px 8px; border-radius:9999px; border:1px solid #BBF7D0;">VERIFIED</span>
+                  </div>
+
+                  <!-- Qualifications / Degrees -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Degrees & Qualifications</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      <span id="profile-titles-field">MBBS, MD (Medicine), DM (Cardiology), FACC</span>
+                    </div>
+                  </div>
+
+                  <!-- Medical College / University (Pass out from) -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Medical College / University (Pass Out From)</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-solid fa-school"></i>
+                      <span id="profile-college-field">All India Institute of Medical Sciences (AIIMS)</span>
+                    </div>
+                  </div>
+
+                  <!-- Specialization -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Specialist In / Specialty Lead</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-solid fa-stethoscope"></i>
+                      <span id="profile-spec-field">Interventional Cardiology & Electrophysiology</span>
+                    </div>
+                  </div>
+
+                  <!-- Years of Experience & Medical Reg No Grid -->
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div class="varsha-field-group">
+                      <label class="varsha-field-label">Experience</label>
+                      <div class="varsha-pill-field">
+                        <i class="fa-solid fa-award"></i>
+                        <span id="profile-exp-field">12+ Years</span>
+                      </div>
+                    </div>
+                    <div class="varsha-field-group">
+                      <label class="varsha-field-label">Medical Reg ID</label>
+                      <div class="varsha-pill-field">
+                        <i class="fa-solid fa-id-card"></i>
+                        <span id="profile-regno-field">NMC-2024-88412</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. Work Experience & Chamber Card -->
+                <div class="varsha-info-card">
+                  <h4 class="varsha-card-headline">Work Experience & Practice</h4>
+
+                  <!-- Work Experience -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Work Experience & Hospital Affiliations</label>
+                    <div class="varsha-pill-field" style="height:auto; min-height:42px; padding:8px 12px;">
+                      <i class="fa-solid fa-briefcase" style="margin-top:2px;"></i>
+                      <span id="profile-work-exp-field">Senior Consultant Cardiologist - Medix Super Specialty, Ex-Resident AIIMS</span>
+                    </div>
+                  </div>
+
+                  <!-- Chamber Address -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Chamber Address & Location</label>
+                    <div class="varsha-pill-field" style="height:auto; min-height:42px; padding:8px 12px;">
+                      <i class="fa-solid fa-hospital-user" style="margin-top:2px;"></i>
+                      <span id="profile-chamber-field">OPD Suite 302, 3rd Floor, Wing A, Kolkata - 700016</span>
+                    </div>
+                  </div>
+
+                  <!-- Consultation Fees -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Consultation Fee Tariff</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-solid fa-indian-rupee-sign text-emerald" style="color:#059669;"></i>
+                      <span id="profile-fees-field">₹800 (Standard OPD) • ₹400 (Follow-up)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. Bank Details Card (Image Match) -->
+                <div class="varsha-info-card">
+                  <h4 class="varsha-card-headline">Bank Details</h4>
+
+                  <div class="varsha-bank-notice" id="prof-bank-notice-box">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <p id="prof-bank-notice-text">
+                      No bank account or UPI details configured. Configure now to enable withdrawals.
+                    </p>
+                  </div>
+
+                  <!-- Linked Bank Summary (Shown when linked) -->
+                  <div id="prof-linked-bank-summary" class="hidden" style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:12px; padding:12px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                      <strong id="prof-linked-bank-name" style="font-size:13px; color:#065F46;">HDFC Bank</strong>
+                      <span style="background:#10B981; color:#FFFFFF; font-size:9px; font-weight:800; padding:2px 8px; border-radius:9999px;">ACTIVE</span>
+                    </div>
+                    <p id="prof-linked-bank-acc" style="font-size:12px; color:#047857; margin:0; font-family:var(--font-mono);">A/C: •••• •••• 4214 • IFSC: HDFC0001245</p>
+                    <p id="prof-linked-bank-upi" style="font-size:11px; color:#059669; margin:4px 0 0;">UPI: doctor@okhdfcbank</p>
+                  </div>
+
+                  <button class="btn-add-bank-purple" onclick="openBankConfigModal()">
+                    <i class="fa-regular fa-credit-card"></i>
+                    <span id="btn-bank-action-text">Add Bank & UPI Details</span>
+                  </button>
+                </div>
+
+                <!-- 5. Practitioner Smart ID & Sign Out -->
+                <div class="varsha-info-card" style="display:flex; flex-direction:column; gap:10px;">
+                  <button class="btn-spotlight-action btn-sp-call" style="width:100%; height:44px; font-size:13px;" onclick="openDoctorBadgeModal()">
+                    <i class="fa-solid fa-id-badge"></i> View Digital Smart ID Badge
+                  </button>
+                  <button class="btn-signout" onclick="handleLogout()" style="margin:0;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                  </button>
+                </div>
+
+              </section>
+
+            </div>
+
+            <!-- Mobile App Bottom Navigation Bar (Medix Red & Blue Theme - Matching Image 1) -->
+            <nav class="varsha-bottom-nav">
+              <button class="varsha-nav-item active" onclick="switchTab('home', null, this)">
+                <div class="nav-sign-icon nav-icon-home">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9.5L12 2.5l9 7V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9.5z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+                <span>Home</span>
+              </button>
+              <button class="varsha-nav-item" onclick="switchTab('refer-patients', null, this)" id="bottom-nav-refer">
+                <div class="nav-sign-icon nav-icon-family" style="background:#0284C7;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <polyline points="16 11 18 13 22 9"/>
+                  </svg>
+                </div>
+                <span>Refer Patient</span>
+              </button>
+              <button class="varsha-nav-item" onclick="switchTab('wallet', null, this)" id="bottom-nav-wallet">
+                <div class="nav-sign-icon nav-icon-wallet">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="5" width="20" height="15" rx="3"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                    <circle cx="16" cy="15" r="1.5" fill="#FFFFFF"/>
+                  </svg>
+                </div>
+                <span>Wallet</span>
+              </button>
+              <button class="varsha-nav-item" onclick="switchTab('hospitals', null, this)">
+                <div class="nav-sign-icon nav-icon-ranking">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                    <path d="M4 22h16"/>
+                    <path d="M10 14.66V17c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-2.34"/>
+                    <path d="M14 14.66V17c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-2.34"/>
+                    <path d="M18 4H6v7a6 6 0 0 0 12 0V4z"/>
+                    <line x1="12" y1="17" x2="12" y2="22"/>
+                  </svg>
+                </div>
+                <span>Ranking</span>
+              </button>
+              <button class="varsha-nav-item" onclick="switchTab('profile', null, this)">
+                <div class="nav-sign-icon nav-icon-account">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M20 21a8 8 0 0 0-16 0"/>
+                  </svg>
+                </div>
+                <span>Account</span>
+              </button>
+            </nav>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 1: DIGITAL PRESCRIPTION AUTHORING (WITH PRESETS & PRINT)
+       ======================================================== -->
+  <div id="modal-prescription" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel">
+      
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-emerald-subtle"><i class="fa-solid fa-prescription text-emerald"></i></div>
+          <div>
+            <h3>Digital Prescription Builder</h3>
+            <p id="rx-modal-patient-info">Aarav Sharma • UHID-2026-0042 • 45 yrs, Male</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-prescription')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body">
+        
+        <div class="rx-vitals-strip">
+          <div class="rx-vital-item"><span>BP:</span> <strong>138/88</strong></div>
+          <div class="rx-vital-item"><span>HR:</span> <strong>78 bpm</strong></div>
+          <div class="rx-vital-item"><span>SpO2:</span> <strong>98%</strong></div>
+          <div class="rx-vital-item"><span>Temp:</span> <strong>36.8°C</strong></div>
+          <div class="rx-vital-item text-amber"><span>Allergies:</span> <strong>Sulfa Drugs (Mild)</strong></div>
+        </div>
+
+        <div class="clinical-input-group">
+          <div class="label-row-flex">
+            <label>Clinical Diagnosis *</label>
+            <span class="dictate-btn" onclick="simulateVoiceDictation('rx-diagnosis')"><i class="fa-solid fa-microphone"></i> Voice Dictate</span>
+          </div>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-disease"></i>
+            <input type="text" id="rx-diagnosis" value="Primary Essential Hypertension, Class I" placeholder="e.g. Hypertension, Unstable Angina">
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Clinical Symptoms & Examination Notes</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-notes-medical"></i>
+            <input type="text" id="rx-symptoms" value="Exertional dyspnea, mild retrosternal chest pressure on brisk walking" placeholder="Symptoms">
+          </div>
+        </div>
+
+        <div class="drug-builder-header">
+          <div>
+            <h4>Prescribed Medications</h4>
+            <p>Add and configure dosage, frequency & duration</p>
+          </div>
+          <button type="button" class="btn-add-drug-pill" onclick="addDrugRow()"><i class="fa-solid fa-plus"></i> Add Drug Row</button>
+        </div>
+
+        <div class="quick-drugs-ribbon">
+          <span>Quick Select:</span>
+          <button type="button" class="quick-drug-tag" onclick="insertQuickDrug('Telmisartan 40mg', '1 Tablet', '30 Days', '1-0-0 After breakfast')">+ Telmisartan 40mg</button>
+          <button type="button" class="quick-drug-tag" onclick="insertQuickDrug('Atorvastatin 20mg', '1 Tablet', '30 Days', '0-0-1 Bedtime')">+ Atorvastatin 20mg</button>
+          <button type="button" class="quick-drug-tag" onclick="insertQuickDrug('Metformin 500mg', '1 Tablet', '30 Days', '1-0-1 With meals')">+ Metformin 500mg</button>
+          <button type="button" class="quick-drug-tag" onclick="insertQuickDrug('Pantoprazole 40mg', '1 Cap', '15 Days', '1-0-0 Empty stomach')">+ Pantoprazole 40mg</button>
+        </div>
+
+        <div id="drug-rows-container" class="drug-cards-container">
+          <!-- Injected via JS -->
+        </div>
+
+        <div class="clinical-input-group mt-14">
+          <label>Lifestyle Advice & Dietary Precautions</label>
+          <textarea id="rx-advice" rows="2" class="clinical-textarea" placeholder="Dietary restrictions, exercise, caution...">Strict low sodium DASH diet, 30 minutes brisk walking daily, avoid strenuous weightlifting, avoid tobacco.</textarea>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Next Review & Follow-up Date</label>
+          <div class="input-wrapper">
+            <i class="fa-regular fa-calendar"></i>
+            <input type="date" id="rx-followup" value="2026-08-25">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-prescription')">Cancel</button>
+        <button class="btn-preview-rx" onclick="openPrintRxPreview()"><i class="fa-solid fa-file-pdf"></i> Preview Rx Slip</button>
+        <button class="btn-sign-rx" onclick="submitPrescription()"><i class="fa-solid fa-signature"></i> Sign & Dispatch to Pharmacy</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 2: OFFICIAL PRINTABLE PRESCRIPTION SLIP / PDF
+       ======================================================== -->
+  <div id="modal-rx-preview" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel rx-print-dialog">
+      <div class="modal-panel-header">
+        <h3><i class="fa-solid fa-print"></i> Official Medical Prescription Slip</h3>
+        <button class="btn-modal-close" onclick="closeModal('modal-rx-preview')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-panel-body print-paper-body">
+        
+        <div class="hospital-letterhead">
+          <div class="hosp-logo-col">
+            <i class="fa-solid fa-hospital-user"></i>
+            <div>
+              <h2>MEDIX SUPER SPECIALITY HOSPITAL</h2>
+              <p>Cardiovascular Institute & Critical Care Centre</p>
+              <small>NABH & JCI Accredited • Hotline: +1 (800) 555-MEDIX</small>
+            </div>
+          </div>
+          <div class="doc-letterhead-info">
+            <strong>Dr. Sarah Williams</strong>
+            <p>MBBS, MD, DM (Cardiology), FACC</p>
+            <small>Reg: NMC-2024-88412</small>
+          </div>
+        </div>
+
+        <hr class="letterhead-divider">
+
+        <div class="rx-patient-meta-grid">
+          <div><span>Patient Name:</span> <strong id="print-pat-name">Aarav Sharma</strong></div>
+          <div><span>UHID / MRN:</span> <strong id="print-pat-uhid">UHID-2026-0042</strong></div>
+          <div><span>Age / Gender:</span> <strong>45 Y / Male</strong></div>
+          <div><span>Date:</span> <strong id="print-rx-date">Aug 17, 2026</strong></div>
+        </div>
+
+        <div class="rx-diag-highlight">
+          <strong>Diagnosis:</strong> <span id="print-pat-diag">Primary Essential Hypertension, Class I</span>
+        </div>
+
+        <div class="rx-symbol-heading"><i class="fa-solid fa-prescription"></i> Rx (Medications)</div>
+        <table class="print-rx-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Medication Name</th>
+              <th>Dosage</th>
+              <th>Frequency & Timing</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody id="print-rx-table-body">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+
+        <div class="print-advice-box">
+          <strong>Advice & Instructions:</strong>
+          <p id="print-pat-advice">Strict low sodium DASH diet, 30 minutes brisk walking daily, avoid strenuous weightlifting.</p>
+        </div>
+
+        <div class="print-footer-row">
+          <div class="qr-verify-col">
+            <div class="fake-qr-code"><i class="fa-solid fa-qrcode"></i></div>
+            <small>Scan to verify Rx validity on Medix Patient Portal</small>
+          </div>
+          <div class="doctor-signature-col">
+            <div class="signature-cursive">Dr. Sarah Williams</div>
+            <div class="sig-line"></div>
+            <strong>Consultant Cardiologist</strong>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-rx-preview')">Close</button>
+        <button class="btn-sign-rx" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 3: COMPREHENSIVE PATIENT 360° EHR CHART
+       ======================================================== -->
+  <div id="modal-patient-ehr" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel ehr-dialog-wide">
+      
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-blue-subtle"><i class="fa-solid fa-folder-open text-blue"></i></div>
+          <div>
+            <h3 id="ehr-patient-name">Patient Electronic Health Record</h3>
+            <p id="ehr-patient-meta">UHID-2026-0042 • 45 yrs, Male • Blood Group B+</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-patient-ehr')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body">
+        
+        <div class="vitals-telemetry-grid">
+          <div class="vital-tile">
+            <div class="vital-top"><i class="fa-solid fa-heart-pulse text-rose"></i> <span>Blood Pressure</span></div>
+            <strong class="vital-val">138/88</strong>
+            <small class="vital-unit">mmHg (Pre-Hypertension)</small>
+          </div>
+          <div class="vital-tile">
+            <div class="vital-top"><i class="fa-solid fa-wave-square text-emerald"></i> <span>Heart Rate</span></div>
+            <strong class="vital-val">78</strong>
+            <small class="vital-unit">BPM (Normal Sinus)</small>
+          </div>
+          <div class="vital-tile">
+            <div class="vital-top"><i class="fa-solid fa-lungs text-blue"></i> <span>SpO2 Oxygen</span></div>
+            <strong class="vital-val">98%</strong>
+            <small class="vital-unit">Room Air</small>
+          </div>
+          <div class="vital-tile">
+            <div class="vital-top"><i class="fa-solid fa-temperature-half text-amber"></i> <span>Body Temp</span></div>
+            <strong class="vital-val">36.8°C</strong>
+            <small class="vital-unit">Afebrile</small>
+          </div>
+        </div>
+
+        <div class="allergy-alert-banner">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>
+            <strong>Known Drug Sensitivity / Risk Alerts:</strong>
+            <span>Sulfa Drugs (mild rash), Penicillin (well-tolerated). No previous anaphylaxis reported.</span>
+          </div>
+        </div>
+
+        <div class="ehr-segmented-nav">
+          <button class="ehr-tab-btn active" onclick="switchEhrSubTab('timeline', this)"><i class="fa-solid fa-clock-rotate-left"></i> Consultation Timeline</button>
+          <button class="ehr-tab-btn" onclick="switchEhrSubTab('meds', this)"><i class="fa-solid fa-pills"></i> Active Prescriptions</button>
+          <button class="ehr-tab-btn" onclick="switchEhrSubTab('labs', this)"><i class="fa-solid fa-flask"></i> Diagnostic Tests</button>
+        </div>
+
+        <div id="ehr-subtab-timeline" class="ehr-subtab-pane active">
+          <div class="clinical-timeline-feed" id="ehr-timeline-feed">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div id="ehr-subtab-meds" class="ehr-subtab-pane hidden">
+          <div class="active-meds-list" id="ehr-meds-feed">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div id="ehr-subtab-labs" class="ehr-subtab-pane hidden">
+          <div class="active-labs-list" id="ehr-labs-feed">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-panel-footer" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-patient-ehr')">Close Chart</button>
+        <button class="btn-sign-rx" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);" onclick="openReferHospitalModalFromEhr()"><i class="fa-solid fa-hospital-user"></i> Refer to City Hospital</button>
+        <button class="btn-sign-rx" onclick="openNewRxFromEhr()"><i class="fa-solid fa-prescription"></i> Author New Rx for Patient</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL: INTER-HOSPITAL PATIENT REFERRAL & TELEMETRY DISPATCH GATEWAY
+       ======================================================== -->
+  <div id="modal-refer-hospital" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel ehr-dialog-wide">
+      
+      <div class="modal-panel-header" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(30, 41, 59, 0.9) 100%);">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge" style="background: rgba(2, 132, 199, 0.2); color: #38BDF8;">
+            <i class="fa-solid fa-hospital"></i>
+          </div>
+          <div>
+            <h3 style="color:#ffffff;">Inter-Hospital Patient Referral & Transfer Gateway</h3>
+            <p style="color:#94A3B8;">Transfer patient clinical records, vitals & dispatch real-time notification to receiving city hospital</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-refer-hospital')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body">
+        
+        <!-- Patient Summary Banner -->
+        <div class="glass-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); margin-bottom: 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <span style="font-size:11px; color:#38BDF8; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;"><i class="fa-solid fa-user"></i> Patient Being Referred</span>
+              <h4 id="refer-patient-name" style="color:#ffffff; font-size:16px; margin-top:2px;">Aarav Sharma</h4>
+              <p id="refer-patient-meta" style="color:#94A3B8; font-size:12px; margin:0;">UHID-2026-0042 • 45 yrs, Male • Blood Group B+ • +91 98765 43210</p>
+            </div>
+            <div style="text-align:right;">
+              <span class="badge-status-pill badge-ready" id="refer-patient-status">OPD In-Consultation</span>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08); font-size:11px; color:#E2E8F0; flex-wrap:wrap;">
+            <span><strong>BP:</strong> <span id="refer-vitals-bp">138/88 mmHg</span></span>
+            <span><strong>Heart Rate:</strong> <span id="refer-vitals-hr">78 BPM</span></span>
+            <span><strong>SpO2:</strong> <span id="refer-vitals-spo2">98%</span></span>
+            <span><strong>Temp:</strong> <span id="refer-vitals-temp">36.8°C</span></span>
+            <span style="color:#FBBF24;"><strong>Diagnosis:</strong> <span id="refer-patient-diag">Primary Essential Hypertension, Class I</span></span>
+          </div>
+        </div>
+
+        <!-- Target City Hospital Selector -->
+        <div class="clinical-input-group">
+          <div class="label-row-flex">
+            <label><i class="fa-solid fa-hospital text-blue"></i> Select Target Receiving Hospital (Super Admin Approved) <span style="color:#EF4444;">*</span></label>
+            <span id="sync-hosp-badge" style="font-size:10px; color:#38BDF8; font-weight:700;"><i class="fa-solid fa-cloud-arrow-down fa-fade"></i> Synced with Web Network</span>
+          </div>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-hospital-user"></i>
+            <select id="refer-target-hospital" onchange="updateReceivingHospitalInfo()">
+              <option value="1" data-code="ARIYAN-HQ" data-dept="General & Cardiology Medicine" data-status="Emergency Cath Lab & ICU Beds Ready (24x7)" data-phone="+91 98042 22142" data-email="ariyanhospital9@gmail.com">🏥 ARIYAN HOSPITAL MULTISPECIALITY — Kolkata Main HQ</option>
+              <option value="2" data-code="MEDIX-SOUTH" data-dept="Trauma & Orthopedic Surgery" data-status="Level-1 Trauma & Emergency Standby Ready" data-phone="+91 98450 33445" data-email="ananya.roy@medix.local">🏥 Medix Specialty & Trauma Center — Bengaluru South</option>
+              <option value="3" data-code="MEDIX-NORTH" data-dept="Obstetrics, Gynecology & Pediatrics" data-status="NICU / PICU Intensive Beds & Maternity Open" data-phone="+91 98110 55667" data-email="vikram.m@medix.local">🏥 Medix Mother & Child Super-Specialty — Delhi North</option>
+              <option value="4" data-code="MEDIX-WEST" data-dept="Pathology & Internal Medicine" data-status="Diagnostic Pathology & Daycare Unit Active" data-phone="+91 98230 77880" data-email="rajesh.p@medix.local">🏥 Medix Daycare & Diagnostic Satellite Hub — Pune West</option>
+              <option value="5" data-code="MEDIX-EAST" data-dept="Neurosurgery & Critical Neuro ICU" data-status="Neurosurgery & Stroke Emergency Unit Ready" data-phone="+91 98300 99001" data-email="debanjan.s@medix.local">🏥 Medix Cardiac & Neuro Institute — Kolkata East</option>
+              <option value="6" data-code="MEDIX-CENTRAL-2" data-dept="Medical & Surgical Oncology" data-status="Surgical Oncology & Radiation Oncology Active" data-phone="+91 98490 22334" data-email="rohan.d@medix.local">🏥 Medix Advanced Oncology Care Center — Hyderabad Central</option>
+              <option value="7" data-code="MEDIX-NORTH-EAST" data-dept="Nephrology & Renal Dialysis Care" data-status="Renal Dialysis & Nephrology Unit Open" data-phone="+91 98640 11223" data-email="priya.b@medix.local">🏥 Medix Regional Wellness & Nephrology Clinic — Guwahati</option>
+              <option value="8" data-code="MEDIX-COASTAL" data-dept="Joint Replacement & Spine Surgery" data-status="Joint Replacement & Emergency Ortho Unit Active" data-phone="+91 98400 44556" data-email="siddharth.i@medix.local">🏥 Medix Coastal Orthopedic & Rehab Institute — Chennai</option>
+              <option value="9" data-code="MEDIX-SATELLITE" data-dept="Emergency Triage & Acute Critical Care" data-status="Satellite Emergency & Ambulance Dispatch Ready" data-phone="+91 98790 66778" data-email="nisha.s@medix.local">🏥 Medix Emergency & Satellite Poly-Clinic — Ahmedabad</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Receiving Hospital Live Desk Preview Banner -->
+        <div id="receiving-hospital-preview" class="glass-card" style="background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.3); margin-bottom: 14px; padding: 10px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <div>
+              <span style="font-size:11px; color:#38BDF8; font-weight:700;"><i class="fa-solid fa-circle-dot fa-fade" style="color:#10B981;"></i> Receiving Desk Status:</span>
+              <strong id="rec-hosp-status" style="color:#ffffff; font-size:12px; display:block; margin-top:2px;">Emergency Cath Lab & ICU Beds Ready (24x7)</strong>
+            </div>
+            <div style="font-size:11px; color:#94A3B8;">
+              <span><i class="fa-solid fa-phone"></i> Hotline: <strong id="rec-hosp-phone" style="color:#E2E8F0;">+91 98042 22142</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-grid-2">
+          <!-- Target Receiving Doctor at Hospital (Filtered by Hospital) -->
+          <div class="clinical-input-group">
+            <label><i class="fa-solid fa-user-doctor text-emerald"></i> Available Specialist Doctor at Hospital <span style="color:#EF4444;">*</span></label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-stethoscope"></i>
+              <select id="refer-target-doctor" onchange="updateReceivingDoctorDetails()">
+                <!-- Populated dynamically based on selected hospital -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Target Department -->
+          <div class="clinical-input-group">
+            <label><i class="fa-solid fa-hospital-user text-teal"></i> Target Department / Ward <span style="color:#EF4444;">*</span></label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-heart-pulse"></i>
+              <select id="refer-target-dept">
+                <option value="Cardiology & Interventional Cath Lab">Cardiology & Interventional Cath Lab</option>
+                <option value="Critical Care & Intensive Care Unit (ICU)">Critical Care & Intensive Care Unit (ICU)</option>
+                <option value="General & Cardiology Medicine">General & Cardiology Medicine</option>
+                <option value="Trauma & Orthopedic Surgery">Trauma & Orthopedic Surgery</option>
+                <option value="Obstetrics, Gynecology & Pediatrics">Obstetrics, Gynecology & Pediatrics</option>
+                <option value="Neurology & Neurosurgery">Neurology & Neurosurgery</option>
+                <option value="Nephrology & Renal Dialysis Unit">Nephrology & Renal Dialysis Unit</option>
+                <option value="Medical & Surgical Oncology">Medical & Surgical Oncology</option>
+                <option value="Gastroenterology & Hepatology">Gastroenterology & Hepatology</option>
+                <option value="Emergency Triage & Acute Critical Care">Emergency Triage & Acute Critical Care</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Referral Urgency Level -->
+        <div class="clinical-input-group" style="margin-bottom:14px;">
+          <label><i class="fa-solid fa-triangle-exclamation text-amber"></i> Referral Urgency Classification <span style="color:#EF4444;">*</span></label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-gauge-high"></i>
+            <select id="refer-urgency" onchange="handleUrgencyChange()">
+              <option value="ROUTINE">🟢 Routine Specialist Consultation (3-5 Days)</option>
+              <option value="URGENT">🟡 Urgent Patient Transfer (24-48 Hours)</option>
+              <option value="EMERGENCY" selected>🔴 Critical Code Red ICU / Emergency Ambulance Transfer</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Clinical Rationale & Transfer Notes -->
+        <div class="clinical-input-group">
+          <div class="label-row-flex">
+            <label><i class="fa-solid fa-notes-medical text-rose"></i> Clinical Referral Rationale & Handover Summary <span style="color:#EF4444;">*</span></label>
+            <span class="dictate-btn" onclick="simulateVoiceDictation('refer-clinical-notes')"><i class="fa-solid fa-microphone"></i> Voice Dictate</span>
+          </div>
+          <div class="input-wrapper" style="height:auto;">
+            <textarea id="refer-clinical-notes" rows="3" style="width:100%; background:transparent; border:none; color:#ffffff; padding:10px 0; font-family:inherit; font-size:13px; outline:none; resize:vertical;" placeholder="State reason for referral, key investigations, emergency interventions performed, and instructions for receiving medical team...">Patient presented with exertional chest heaviness, elevated Cardiac Troponin-I and critical lipid markers. Referred for immediate coronary angiography and higher-level cath lab intervention.</textarea>
+          </div>
+        </div>
+
+        <!-- Attached Data Summary Payload Checklist -->
+        <div class="glass-card" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.08); padding: 12px; margin-top: 10px;">
+          <strong style="font-size:12px; color:#38BDF8; display:block; margin-bottom:8px;"><i class="fa-solid fa-shield-halved"></i> Data Transmitted Securely to Receiving Hospital:</strong>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:6px; font-size:11px; color:#CBD5E1;">
+            <div><i class="fa-solid fa-circle-check text-emerald"></i> Complete Demographics & UHID</div>
+            <div><i class="fa-solid fa-circle-check text-emerald"></i> Real-time Vitals (BP, HR, SpO2)</div>
+            <div><i class="fa-solid fa-circle-check text-emerald"></i> Active Prescriptions & Drug Allergies</div>
+            <div><i class="fa-solid fa-circle-check text-emerald"></i> Attached Pathology & Lab Reports</div>
+            <div><i class="fa-solid fa-circle-check text-emerald"></i> Referring Doctor Digital Signature</div>
+            <div><i class="fa-solid fa-circle-check text-emerald"></i> Receiving Desk Notification Ping</div>
+          </div>
+        </div>
+
+        <!-- Dispatch Live Progress Animation (Hidden by default) -->
+        <div id="refer-dispatch-progress" class="hidden" style="margin-top:16px; padding:16px; border-radius:12px; background:rgba(2, 132, 199, 0.15); border:1px solid rgba(56, 189, 248, 0.5); text-align:center;">
+          <div class="spinner-dot-ring" style="margin: 0 auto 10px; width:32px; height:32px; border-width:3px;"></div>
+          <strong id="refer-progress-status" style="color:#ffffff; font-size:14px; display:block;">Connecting to Receiving Hospital Emergency Gateway...</strong>
+          <p id="refer-progress-detail" style="color:#94A3B8; font-size:12px; margin:4px 0 0;">Transmitting encrypted patient EHR & dispatching alert...</p>
+        </div>
+
+      </div>
+
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-refer-hospital')">Cancel</button>
+        <button class="btn-sign-rx" id="btn-dispatch-referral" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%); box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);" onclick="executeHospitalReferral()">
+          <i class="fa-solid fa-paper-plane"></i> Dispatch Hospital Referral & Send Details
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL: OFFICIAL INTER-HOSPITAL PATIENT REFERRAL & TRANSFER SLIP
+       ======================================================== -->
+  <div id="modal-referral-slip" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel ehr-dialog-wide">
+      
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-emerald-subtle"><i class="fa-solid fa-file-medical text-emerald"></i></div>
+          <div>
+            <h3>Official Inter-Hospital Patient Referral Slip</h3>
+            <p id="slip-token-header">Ref ID: REF-HOSP-2026-88192 • Dispatched Successfully</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-referral-slip')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body print-canvas-area" id="referral-slip-print-content">
+        
+        <!-- Transfer Document Letterhead -->
+        <div class="hospital-letterhead">
+          <div class="hosp-logo-col">
+            <i class="fa-solid fa-hospital" style="color:#0284C7;"></i>
+            <div>
+              <h2>MEDIX SUPER SPECIALITY HOSPITAL</h2>
+              <p>Cardiovascular Sciences & Critical Care Centre</p>
+              <small>NABH Accredited • Emergency Desk: +91 (022) 4500-MEDIX</small>
+            </div>
+          </div>
+          <div class="doc-letterhead-info">
+            <div style="background:#EF4444; color:#ffffff; font-weight:800; font-size:10px; padding:3px 8px; border-radius:4px; text-transform:uppercase; display:inline-block; margin-bottom:4px;" id="slip-urgency-tag">
+              CRITICAL CODE RED TRANSFER
+            </div>
+            <strong id="slip-doc-name">Dr. Sarah Williams</strong>
+            <p id="slip-doc-titles">MD, DM (Cardiology), FACC</p>
+            <small id="slip-doc-reg">Reg: NMC-2024-88412</small>
+          </div>
+        </div>
+
+        <hr class="letterhead-divider">
+
+        <div style="background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <span style="font-size:11px; color:#0284C7; font-weight:700; text-transform:uppercase;">Receiving Hospital:</span>
+            <h3 id="slip-target-hospital" style="margin:2px 0 0; font-size:15px; color:#0F172A;">ARIYAN HOSPITAL MULTISPECIALITY</h3>
+            <p id="slip-target-dept" style="margin:0; font-size:12px; color:#475569;">Target Dept: General & Cardiology Medicine</p>
+            <p id="slip-target-doctor" style="margin:2px 0 0; font-size:12px; color:#0284C7; font-weight:600;"><i class="fa-solid fa-user-doctor"></i> Attending: Dr . Jiarul Haque</p>
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:11px; color:#64748B;">Transfer Tracking Token:</span>
+            <strong id="slip-tracking-id" style="font-size:14px; color:#0284C7; display:block; font-family:monospace;">REF-HOSP-2026-88192</strong>
+            <small style="color:#10B981; font-weight:600;"><i class="fa-solid fa-circle-check"></i> Dispatched & Alert Sent</small>
+          </div>
+        </div>
+
+        <div class="rx-patient-meta-grid">
+          <div><span>Patient Name:</span> <strong id="slip-pat-name">Aarav Sharma</strong></div>
+          <div><span>UHID / MRN:</span> <strong id="slip-pat-uhid">UHID-2026-0042</strong></div>
+          <div><span>Age / Gender:</span> <strong id="slip-pat-age-gender">45 Y / Male</strong></div>
+          <div><span>Transfer Date:</span> <strong id="slip-date">Aug 18, 2026</strong></div>
+        </div>
+
+        <div class="rx-diag-highlight" style="margin-top:10px;">
+          <strong>Primary Diagnosis:</strong> <span id="slip-diagnosis">Primary Essential Hypertension, Class I • Acute Coronary Syndrome (Trop-I +ve)</span>
+        </div>
+
+        <div style="margin-top:12px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px;">
+          <strong style="font-size:12px; color:#1E293B; display:block; margin-bottom:4px;"><i class="fa-solid fa-heart-pulse text-rose"></i> Transmitted Vitals at Time of Transfer:</strong>
+          <div style="display:flex; gap:16px; font-size:12px; color:#334155; flex-wrap:wrap;" id="slip-vitals-row">
+            <span><strong>BP:</strong> 138/88 mmHg</span>
+            <span><strong>HR:</strong> 78 BPM</span>
+            <span><strong>SpO2:</strong> 98%</span>
+            <span><strong>Temp:</strong> 36.8°C</span>
+          </div>
+        </div>
+
+        <div class="print-advice-box" style="margin-top:12px;">
+          <strong style="color:#0284C7;"><i class="fa-solid fa-clipboard-check"></i> Clinical Transfer Rationale & Handover Notes:</strong>
+          <p id="slip-notes" style="color:#1E293B; margin-top:4px;">Patient presented with exertional chest heaviness, elevated Cardiac Troponin-I and critical lipid markers. Referred for immediate coronary angiography and higher-level cath lab intervention.</p>
+        </div>
+
+        <div class="print-footer-row" style="margin-top:20px;">
+          <div class="qr-verify-col">
+            <div class="fake-qr-code" style="color:#0284C7;"><i class="fa-solid fa-qrcode"></i></div>
+            <small>Scan token on Receiving Hospital Gateway to verify encrypted clinical handover packet</small>
+          </div>
+          <div class="doctor-signature-col">
+            <div class="signature-cursive" id="slip-sig-name">Dr. Sarah Williams</div>
+            <div class="sig-line"></div>
+            <strong id="slip-sig-role">Chief of Interventional Cardiology</strong>
+            <small style="display:block; color:#64748B;">Medix Hospital Clinical Handover Desk</small>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-referral-slip')">Close</button>
+        <button class="btn-sign-rx" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save Referral Slip</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 4: NOTIFICATIONS & CRITICAL HOSPITAL ALERTS
+       ======================================================== -->
+  <div id="modal-notifications" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel">
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-rose-subtle"><i class="fa-solid fa-bell text-rose"></i></div>
+          <div>
+            <h3>Hospital Real-Time Alerts</h3>
+            <p>Live alerts, critical lab results & OPD queue updates</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-notifications')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-panel-body">
+        <div class="notif-dialog-list" id="notif-modal-list">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-notifications')">Dismiss</button>
+        <button class="btn-preview-rx" onclick="markAllAlertsRead()"><i class="fa-solid fa-check-double"></i> Mark All as Read</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 5: EDIT PHYSICIAN PROFILE & OPD SETTINGS
+       ======================================================== -->
+  <div id="modal-edit-profile" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel">
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-blue-subtle"><i class="fa-solid fa-user-pen text-blue"></i></div>
+          <div>
+            <h3>Edit Physician Profile & Credentials</h3>
+            <p>Update photo, education, work experience, chamber & fee schedule</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-edit-profile')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-panel-body">
+        
+        <!-- Doctor Profile Photo / Avatar Picker -->
+        <div class="clinical-input-group">
+          <label>Doctor Profile Photo / Avatar</label>
+          <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 8px;">
+            <div id="edit-doc-photo-preview" style="width: 56px; height: 56px; border-radius: 12px; background: #1E3A8A; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; overflow: hidden; border: 2px solid rgba(59, 130, 246, 0.4); flex-shrink: 0;">
+              DR
+            </div>
+            <div style="flex: 1;">
+              <input type="file" id="edit-doc-photo-file" accept="image/*" onchange="handleProfilePhotoUpload(event)" style="display: none;">
+              <button type="button" class="btn-prof-action" onclick="document.getElementById('edit-doc-photo-file').click()" style="padding: 6px 14px; font-size: 12px; margin-bottom: 6px;">
+                <i class="fa-solid fa-camera"></i> Upload Photo File
+              </button>
+              <input type="text" id="edit-doc-avatar-url" placeholder="Or paste image URL (https://...)" oninput="handleProfilePhotoUrlChange()" style="font-size: 11px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); width: 100%;">
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+          <div class="clinical-input-group">
+            <label>Full Practitioner Name</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-user-doctor"></i>
+              <input type="text" id="edit-doc-name" placeholder="e.g. Dr. Rajesh Patel">
+            </div>
+          </div>
+
+          <div class="clinical-input-group">
+            <label>Gender</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-venus-mars"></i>
+              <select id="edit-doc-gender" style="width:100%; border:none; background:transparent; font-size:12px; font-weight:600; color:var(--text-main); outline:none; cursor:pointer;">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="clinical-input-group">
+            <label>Medical Reg No (NMC / State)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-id-card text-blue"></i>
+              <input type="text" id="edit-doc-regno" placeholder="e.g. NMC-2024-88412">
+            </div>
+          </div>
+
+          <div class="clinical-input-group">
+            <label>Years of Clinical Experience</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-award"></i>
+              <input type="text" id="edit-doc-years-exp" placeholder="e.g. 12+ Years">
+            </div>
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Medical College / University (Passed Out From)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-school"></i>
+            <input type="text" id="edit-doc-college" placeholder="e.g. AIIMS New Delhi / Medical College Kolkata">
+          </div>
+          <small style="color: var(--text-sub); font-size: 11px; margin-top: 3px; display: block;">University or Medical College where medical degree was completed</small>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Education & Qualifications / Degrees</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <input type="text" id="edit-doc-titles" placeholder="e.g. MBBS, MD (Medicine), DM (Cardiology), FACC">
+          </div>
+          <small style="color: var(--text-sub); font-size: 11px; margin-top: 3px; display: block;">Add all your academic medical degrees and honors</small>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Work Experience & Hospital Affiliations</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-briefcase"></i>
+            <input type="text" id="edit-doc-experience" placeholder="e.g. Senior Consultant Cardiologist at Medix Hospital, Ex-Resident AIIMS">
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Clinical Specialization & Department</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-stethoscope"></i>
+            <input type="text" id="edit-doc-designation" placeholder="e.g. Cardiovascular Sciences & Interventional Cardiology">
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Chamber Address & Location</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-hospital-user"></i>
+            <input type="text" id="edit-doc-room" placeholder="e.g. Medix PolyClinic, Suite 302, Main Road">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <div class="clinical-input-group">
+            <label>Pin Code</label>
+            <div class="input-wrapper">
+              <input type="text" id="edit-doc-pincode" placeholder="e.g. 700016" maxlength="10">
+            </div>
+          </div>
+          <div class="clinical-input-group">
+            <label>District</label>
+            <div class="input-wrapper">
+              <input type="text" id="edit-doc-district" placeholder="District">
+            </div>
+          </div>
+          <div class="clinical-input-group">
+            <label>State</label>
+            <div class="input-wrapper">
+              <input type="text" id="edit-doc-state" placeholder="State">
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="clinical-input-group">
+            <label>Doctor Phone / Mobile</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-phone"></i>
+              <input type="tel" id="edit-doc-phone" placeholder="e.g. +91 98765 43210">
+            </div>
+          </div>
+
+          <div class="clinical-input-group">
+            <label>Official Email Address</label>
+            <div class="input-wrapper">
+              <i class="fa-regular fa-envelope"></i>
+              <input type="email" id="edit-doc-email" placeholder="doctor@medix.hospital">
+            </div>
+          </div>
+        </div>
+
+        <div class="input-grid-2">
+          <div class="clinical-input-group">
+            <label>Standard OPD Fee (₹ / INR)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-indian-rupee-sign"></i>
+              <input type="number" id="edit-doc-fee-opd" placeholder="800">
+            </div>
+          </div>
+          <div class="clinical-input-group">
+            <label>Follow-up Review Fee (₹ / INR)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-indian-rupee-sign"></i>
+              <input type="number" id="edit-doc-fee-followup" placeholder="400">
+            </div>
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Clinical Philosophy & Bio Summary</label>
+          <textarea id="edit-doc-bio" rows="3" class="clinical-textarea" placeholder="Describe your clinical focus, expertise, patient care philosophy..."></textarea>
+        </div>
+
+      </div>
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-edit-profile')">Cancel</button>
+        <button class="btn-sign-rx" onclick="saveProfileChanges()"><i class="fa-solid fa-floppy-disk"></i> Save Profile Details</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL: PRACTITIONER BANK & UPI CONFIGURATION
+       ======================================================== -->
+  <div id="modal-bank-config" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel" style="max-width:480px;">
+      
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge" style="background:#F3E8FF;"><i class="fa-solid fa-building-columns" style="color:#3B0764;"></i></div>
+          <div>
+            <h3>Bank & UPI Settlement Details</h3>
+            <p>Direct IMPS & UPI integration for instant commission payouts</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-bank-config')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body">
+        
+        <div id="bank-config-error" class="login-error-toast hidden" style="margin-bottom:12px;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="bank-config-error-text">Please fill in all required bank details</span>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Account Holder Full Name <span style="color:#EF4444; font-weight:700;">*</span></label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-user-check"></i>
+            <input type="text" id="bank-cfg-holder" placeholder="Enter Full Name as on Bank Passbook" value="Ratul Das" required>
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Bank Name <span style="color:#EF4444; font-weight:700;">*</span></label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-landmark"></i>
+            <select id="bank-cfg-name" style="width:100%; height:44px; background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:0 12px 0 36px; color:#0F172A; font-size:13px; font-weight:600;">
+              <option value="HDFC Bank">HDFC Bank</option>
+              <option value="State Bank of India (SBI)">State Bank of India (SBI)</option>
+              <option value="ICICI Bank">ICICI Bank</option>
+              <option value="Axis Bank">Axis Bank</option>
+              <option value="Punjab National Bank">Punjab National Bank (PNB)</option>
+              <option value="Bank of Baroda">Bank of Baroda</option>
+              <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
+              <option value="Canara Bank">Canara Bank</option>
+              <option value="Other Bank">Other Scheduled Bank</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="clinical-input-group">
+            <label>Bank Account Number <span style="color:#EF4444; font-weight:700;">*</span></label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-credit-card"></i>
+              <input type="password" id="bank-cfg-acc-num" placeholder="Enter A/C Number" value="50100492817214" required maxlength="20">
+            </div>
+          </div>
+          <div class="clinical-input-group">
+            <label>Confirm Account <span style="color:#EF4444; font-weight:700;">*</span></label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-circle-check"></i>
+              <input type="text" id="bank-cfg-acc-confirm" placeholder="Re-enter A/C Number" value="50100492817214" required maxlength="20">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="clinical-input-group">
+            <label>IFSC Code <span style="color:#EF4444; font-weight:700;">*</span></label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-fingerprint"></i>
+              <input type="text" id="bank-cfg-ifsc" placeholder="e.g. HDFC0001245" value="HDFC0001245" required style="text-transform:uppercase;" maxlength="11">
+            </div>
+          </div>
+          <div class="clinical-input-group">
+            <label>Branch City</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-map-pin"></i>
+              <input type="text" id="bank-cfg-branch" placeholder="Kolkata" value="Kolkata Newtown">
+            </div>
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>UPI ID (VPA) for Instant Mobile Transfer <span style="color:#EF4444; font-weight:700;">*</span></label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-mobile-screen-button" style="color:#10B981;"></i>
+            <input type="text" id="bank-cfg-upi" placeholder="e.g. 8478093537@upi or ratul@okhdfcbank" value="8478093537@upi" required>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-bank-config')">Cancel</button>
+        <button class="btn-sign-rx" style="background:#3B0764;" onclick="saveConfiguredBankDetails()">
+          <i class="fa-solid fa-shield-check"></i> Save & Verify Details
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL: INSTANT DOCTOR WALLET WITHDRAWAL & BANK PAYOUT
+       ======================================================== -->
+  <div id="modal-wallet-withdraw" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel" style="max-width:440px;">
+      
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-emerald-subtle"><i class="fa-solid fa-building-columns text-emerald"></i></div>
+          <div>
+            <h3>Doctor Wallet Payout</h3>
+            <p>Instant Direct Transfer to Linked Bank Account or UPI</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-wallet-withdraw')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body">
+        
+        <div class="glass-card" style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); padding:14px; margin-bottom:14px; border-radius:12px;">
+          <span style="font-size:11px; color:#A7F3D0; text-transform:uppercase; font-weight:700;">Available Balance for Payout</span>
+          <h2 id="modal-withdraw-available-bal" style="font-size:24px; color:#ffffff; font-weight:800; margin:4px 0 0;">₹28,500.00</h2>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Withdrawal Amount (₹) *</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-indian-rupee-sign text-emerald"></i>
+            <input type="number" id="withdraw-amount-input" placeholder="Enter amount (e.g. 5000)" value="5000" min="500" max="100000">
+          </div>
+          <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+            <button type="button" class="btn-quick-amt" onclick="setWithdrawQuickAmt(2500)">₹2,500</button>
+            <button type="button" class="btn-quick-amt" onclick="setWithdrawQuickAmt(5000)">₹5,000</button>
+            <button type="button" class="btn-quick-amt" onclick="setWithdrawQuickAmt(10000)">₹10,000</button>
+            <button type="button" class="btn-quick-amt" onclick="setWithdrawAllAmt()">All Balance</button>
+          </div>
+        </div>
+
+        <div class="clinical-input-group">
+          <label>Payout Destination *</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-building-columns"></i>
+            <select id="withdraw-method-select">
+              <option value="HDFC">HDFC Bank - A/C No. ••••••8819 (IFSC: HDFC000124)</option>
+              <option value="SBI">State Bank of India - A/C No. ••••••4120</option>
+              <option value="ICICI">ICICI Bank - A/C No. ••••••7391</option>
+              <option value="UPI">Instant UPI VPA (dr.practitioner@okaxis)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="withdraw-process-progress" class="hidden" style="margin-top:12px; padding:14px; border-radius:12px; background:rgba(2, 132, 199, 0.15); border:1px solid rgba(56, 189, 248, 0.5); text-align:center;">
+          <div class="spinner-dot-ring" style="margin: 0 auto 8px; width:28px; height:28px; border-width:3px;"></div>
+          <strong style="color:#ffffff; font-size:13px; display:block;">Processing Instant IMPS / UPI Settlement...</strong>
+          <small style="color:#94A3B8; font-size:11px;">Crediting funds to linked bank account...</small>
+        </div>
+
+      </div>
+
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-wallet-withdraw')">Cancel</button>
+        <button class="btn-sign-rx" id="btn-execute-withdraw" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);" onclick="executeWalletWithdrawal()">
+          <i class="fa-solid fa-money-bill-transfer"></i> Transfer to Bank Now
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 6: OFFICIAL DOCTOR SMART DIGITAL ID CARD
+       ======================================================== -->
+  <div id="modal-doctor-badge" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel badge-dialog-panel">
+      <div class="modal-panel-header">
+        <h3><i class="fa-solid fa-id-badge text-blue"></i> Hospital Physician Smart Badge</h3>
+        <button class="btn-modal-close" onclick="closeModal('modal-doctor-badge')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-panel-body badge-modal-body">
+        
+        <div class="smart-doctor-id-card">
+          
+          <div class="id-card-top-stripe">
+            <div class="hosp-badge-brand">
+              <i class="fa-solid fa-hospital-user"></i>
+              <span>MEDIX HEALTHCARE SYSTEM</span>
+            </div>
+            <div class="hologram-chip">
+              <div class="chip-shine"></div>
+            </div>
+          </div>
+
+          <div class="id-card-center">
+            <div class="id-photo-frame">
+              <div class="id-photo-placeholder" id="badge-photo-initials">SW</div>
+              <span class="id-active-dot"></span>
+            </div>
+            
+            <h2 id="badge-doc-name">Dr. Sarah Williams</h2>
+            <p class="id-doc-degrees" id="badge-doc-titles">MD, DM (Cardiology), FACC, FSCAI</p>
+            <span class="id-role-badge" id="badge-doc-role">CHIEF OF INTERVENTIONAL CARDIOLOGY</span>
+
+            <div class="id-meta-grid">
+              <div><span>REF ID:</span> <strong id="badge-staff-id">REF-ACTIVE</strong></div>
+              <div><span>REG NO:</span> <strong id="badge-doc-reg">ACTIVE</strong></div>
+              <div><span>CHAMBER:</span> <strong id="badge-doc-dept">Main Clinic</strong></div>
+              <div><span>DISTRICT:</span> <strong id="badge-doc-region">City</strong></div>
+            </div>
+
+            <div class="id-barcode-row">
+              <div class="fake-barcode">||| | |||| | ||| ||||| || | |||| |||| ||</div>
+              <div class="id-qr"><i class="fa-solid fa-qrcode"></i></div>
+            </div>
+          </div>
+
+          <div class="id-card-bottom-footer">
+            <span>HIPAA SECURE • ALL ACCESS CATH LAB, CCU & HYBRID OR</span>
+          </div>
+
+        </div>
+
+      </div>
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-doctor-badge')">Close Badge</button>
+        <button class="btn-preview-rx" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Badge</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 7: OFFICIAL VERIFIED CLINICAL CV & DOSSIER
+       ======================================================== -->
+  <div id="modal-clinical-cv" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel rx-print-dialog" style="max-width:720px;">
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-blue-subtle"><i class="fa-solid fa-file-invoice text-blue"></i></div>
+          <div>
+            <h3>Official Practitioner Verified Curriculum Vitae (CV)</h3>
+            <p>National Medical Council & Clinical Practice Dossier</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-clinical-cv')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-panel-body print-paper-body">
+        
+        <!-- Official Hospital / Board Header -->
+        <div class="hospital-letterhead">
+          <div class="hosp-logo-col">
+            <i class="fa-solid fa-building-columns text-blue"></i>
+            <div>
+              <h2>MEDIX MEDICAL CREDENTIALING BOARD</h2>
+              <p>Certified Clinical Practitioner Curriculum Vitae & Dossier</p>
+              <small><i class="fa-solid fa-shield-check text-emerald"></i> Accredited Healthcare Provider Registry • Verification Reference ID: <strong id="cv-ref-top">REF-ACTIVE</strong></small>
+            </div>
+          </div>
+          <div class="doc-letterhead-info">
+            <strong id="cv-doc-name">Dr. Practitioner</strong>
+            <p id="cv-doc-titles">MBBS, Registered Medical Practitioner</p>
+            <span class="badge-status-pill badge-completed" style="margin-top:4px; display:inline-block;"><i class="fa-solid fa-circle-check"></i> VERIFIED & ACTIVE</span>
+          </div>
+        </div>
+
+        <hr class="letterhead-divider">
+
+        <!-- 1. Registered Practice & Chamber Location -->
+        <div class="cv-section-box">
+          <h4 class="cv-section-title"><i class="fa-solid fa-hospital-user text-blue"></i> 1. Registered Chamber & Practice Jurisdiction</h4>
+          <div class="bio-meta-grid" style="background:#F8FAFC; padding:12px; border-radius:8px; border:1px solid #E2E8F0; color:#0F172A;">
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Practitioner Name:</span>
+              <strong id="cv-field-name" style="color:#0F172A;">-</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Doctor Reference ID:</span>
+              <strong id="cv-field-ref" style="color:#0284C7; font-family:var(--font-mono);">-</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Chamber Address:</span>
+              <strong id="cv-field-chamber" style="color:#0F172A;">-</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">District & State:</span>
+              <strong id="cv-field-district-state" style="color:#0F172A;">-</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Postal Pin Code:</span>
+              <strong id="cv-field-pincode" style="color:#0F172A;">-</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Official Email:</span>
+              <strong id="cv-field-email" style="color:#0F172A;">-</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Contact Phone:</span>
+              <strong id="cv-field-phone" style="color:#0F172A;">-</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Registration Status:</span>
+              <span class="badge-status-pill badge-completed" style="font-size:10px;">Primary Registered Doctor</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Academic Qualifications & Medical Degrees -->
+        <div class="cv-section-box mt-14">
+          <h4 class="cv-section-title"><i class="fa-solid fa-graduation-cap text-indigo"></i> 2. Education, Academic Degrees & Licensure</h4>
+          <div id="cv-academic-content" style="padding:10px 14px; background:#F8FAFC; border-radius:8px; border-left:3px solid #2563EB; font-size:12px; color:#1E293B;">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+
+        <!-- 3. Clinical Specialization & Department Focus -->
+        <div class="cv-section-box mt-14">
+          <h4 class="cv-section-title"><i class="fa-solid fa-stethoscope text-cyan"></i> 3. Clinical Department & Practice Specialization</h4>
+          <div id="cv-specialty-content" style="padding:10px 14px; background:#F8FAFC; border-radius:8px; border-left:3px solid #0284C7; font-size:12px; color:#1E293B;">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+
+        <!-- 4. Clinical Experience & Chamber Affiliations -->
+        <div class="cv-section-box mt-14">
+          <h4 class="cv-section-title"><i class="fa-solid fa-briefcase text-amber"></i> 4. Professional Experience & Hospital Affiliations</h4>
+          <div id="cv-experience-content" style="padding:10px 14px; background:#F8FAFC; border-radius:8px; border-left:3px solid #F59E0B; font-size:12px; color:#1E293B;">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+
+        <!-- 5. OPD Consultation Tariff & Tariff Schedule -->
+        <div class="cv-section-box mt-14">
+          <h4 class="cv-section-title"><i class="fa-solid fa-receipt text-emerald"></i> 5. Approved Consultation Tariff & Banking Settlement</h4>
+          <div class="bio-meta-grid" style="background:#F8FAFC; padding:12px; border-radius:8px; border:1px solid #E2E8F0; color:#0F172A;">
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Standard OPD Consultation Fee:</span>
+              <strong id="cv-fee-opd" style="color:#10B981; font-size:13px;">₹800.00</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Follow-up Review Fee:</span>
+              <strong id="cv-fee-followup" style="color:#10B981; font-size:13px;">₹400.00</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Duty Schedule:</span>
+              <strong id="cv-duty-schedule" style="color:#0F172A;">Mon – Sat (09:00 AM – 06:00 PM)</strong>
+            </div>
+            <div class="bio-meta-item">
+              <span style="color:#64748B;">Settlement Payout Account:</span>
+              <strong id="cv-settlement-status" style="color:#0284C7;">-</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Practice Philosophy & Bio -->
+        <div class="cv-section-box mt-14">
+          <h4 class="cv-section-title"><i class="fa-solid fa-notes-medical text-teal"></i> 6. Clinical Philosophy & Care Commitment</h4>
+          <p id="cv-bio-text" style="font-size:11px; color:#334155; line-height:1.5; background:#F8FAFC; padding:10px 14px; border-radius:8px; border:1px solid #E2E8F0; margin:0;">
+            -
+          </p>
+        </div>
+
+        <!-- Verified Credential Token & Signature Footer -->
+        <div class="print-footer-row" style="margin-top:20px;">
+          <div class="qr-verify-col">
+            <div class="fake-qr-code" style="color:#0284C7;"><i class="fa-solid fa-qrcode"></i></div>
+            <small>Credential Verification Token: <strong id="cv-qr-token">#MDX-VERIFY-ACTIVE</strong><br>Digitally Sealed via Medix Hospital Council</small>
+          </div>
+          <div class="doctor-signature-col">
+            <div class="signature-cursive" id="cv-signature-name">Dr. Practitioner</div>
+            <div class="sig-line"></div>
+            <strong style="color:#0F172A;">Verified Clinical Practitioner</strong>
+            <small style="display:block; color:#64748B;" id="cv-sig-date">Date: Live Certified</small>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-clinical-cv')">Close</button>
+        <button class="btn-sign-rx" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save Verified CV</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL 8: DOWNLOAD & RUN LOCALLY ON CLIENT'S PHONE
+       ======================================================== -->
+  <div id="modal-mobile-install" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel">
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge bg-emerald-subtle"><i class="fa-solid fa-mobile-screen-button text-emerald"></i></div>
+          <div>
+            <h3>Download & Run Locally on Mobile</h3>
+            <p>Install on phone home screen or download offline standalone app</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-mobile-install')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-panel-body">
+        
+        <!-- Option 1: 1-Click PWA Install -->
+        <div class="install-method-box">
+          <div class="method-header">
+            <span class="badge-mini" style="background:var(--emerald-subtle); color:var(--emerald-success);">RECOMMENDED</span>
+            <h4>Option 1: 1-Click Install to Mobile Home Screen (PWA)</h4>
+          </div>
+          <p style="font-size:12px; color:var(--text-sub); margin:6px 0 12px;">
+            Installs as a standalone offline application directly on your Android or iPhone device with full-screen experience and app icon.
+          </p>
+          <button class="btn-install-native" id="btn-trigger-pwa-install" onclick="triggerPwaInstall()">
+            <i class="fa-solid fa-download"></i> Install HMS Doctor on This Device
+          </button>
+          <div class="ios-install-hint mt-10">
+            <small><strong>📱 On iPhone / Safari:</strong> Tap the <i class="fa-solid fa-arrow-up-from-bracket"></i> <strong>Share</strong> button at bottom &rarr; tap <strong>"Add to Home Screen"</strong>.</small>
+          </div>
+        </div>
+
+        <!-- Option 2: Download Standalone Offline HTML File -->
+        <div class="install-method-box mt-14">
+          <div class="method-header">
+            <span class="badge-mini">OFFLINE BUNDLE</span>
+            <h4>Option 2: Download Standalone Offline App (.html)</h4>
+          </div>
+          <p style="font-size:12px; color:var(--text-sub); margin:6px 0 12px;">
+            Downloads a single all-in-one HTML file to your phone. You can open and use it locally in any browser anytime without needing an active internet connection.
+          </p>
+          <button class="btn-download-bundle" onclick="downloadOfflineHtmlBundle()">
+            <i class="fa-solid fa-file-arrow-down"></i> Download Offline App File (hms_doctor.html)
+          </button>
+        </div>
+
+      </div>
+      <div class="modal-panel-footer">
+        <button class="btn-modal-cancel" onclick="closeModal('modal-mobile-install')">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Mobile Floating Download / Install FAB -->
+  <div class="mobile-floating-install-fab" onclick="openMobileInstallModal()">
+    <i class="fa-solid fa-download"></i>
+    <span>Install App</span>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Audio Context Elements (Synthesized via Web Audio API) -->
+  <script src="app.js"></script>
+</body>
+</html>

@@ -212,7 +212,17 @@ export default function AppointmentsPage() {
       </div>
 
       {/* Main Queue View */}
-      {viewMode === 'token_queue' ? (
+      {filteredApps.length === 0 ? (
+        <div className="bg-white p-10 sm:p-14 rounded-2xl border border-slate-200 text-center space-y-3 shadow-xs">
+          <div className="h-16 w-16 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mx-auto">
+            <Calendar className="h-8 w-8" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">No Appointments in Queue</h3>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+            There are currently no active appointments or live consultation tokens in the queue. You can schedule a new appointment using the button above.
+          </p>
+        </div>
+      ) : viewMode === 'token_queue' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredApps.map(app => (
             <div

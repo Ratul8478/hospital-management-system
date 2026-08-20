@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Crown } from 'lucide-react';
+import SuperAdminModal from '@/components/SuperAdminModal';
 
 interface ConceptHeaderProps {
   theme?: 'dark' | 'light' | 'cyber' | 'glass' | 'luxury' | 'brutalist' | 'pastels';
@@ -13,6 +14,7 @@ interface ConceptHeaderProps {
 
 export default function ConceptHeader({ theme = 'dark', activeSection, onNavigate }: ConceptHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSuperAdminModal, setShowSuperAdminModal] = useState(false);
 
   const handleNavClick = (id: string, e: React.MouseEvent) => {
     if (onNavigate) {
@@ -105,15 +107,17 @@ export default function ConceptHeader({ theme = 'dark', activeSection, onNavigat
           </a>
         </nav>
 
-        {/* RIGHT HEADER ACTIONS: Android App, Sign In, Registration */}
+        {/* RIGHT HEADER ACTIONS: Super Admin, Sign In, Registration */}
         <div className="hidden sm:flex items-center gap-2.5">
-          <Link
-            href="/android"
-            className="px-3.5 py-1.5 text-xs font-black rounded-full bg-emerald-500/20 text-emerald-950 border border-emerald-500/40 hover:bg-emerald-500/30 flex items-center gap-1.5 transition-all shadow-xs"
+          <button
+            type="button"
+            onClick={() => setShowSuperAdminModal(true)}
+            className="px-3.5 py-1.5 text-xs sm:text-sm font-black text-amber-950 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-300 hover:from-amber-400 hover:to-yellow-500 rounded-full border border-amber-400/80 shadow-md flex items-center gap-1.5 cursor-pointer hover:scale-105 transition-all btn-premium-3d"
           >
-            <span>📱</span>
-            <span>Android App</span>
-          </Link>
+            <Crown className="w-3.5 h-3.5 text-amber-900" />
+            <span>Super Admin</span>
+          </button>
+
           <Link
             href="/login"
             className={`px-3.5 py-1.5 text-xs sm:text-sm font-extrabold rounded-full transition-all ${currentNavItemStyle}`}
@@ -166,14 +170,18 @@ export default function ConceptHeader({ theme = 'dark', activeSection, onNavigat
           >
             Contact
           </a>
-          <Link
-            href="/android"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-2 py-2 text-sm font-black text-emerald-800"
-          >
-            <span>📱</span> Open Android Doctor App
-          </Link>
           <div className="pt-3 border-t border-emerald-200/60 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setShowSuperAdminModal(true);
+              }}
+              className="w-full text-center py-2.5 rounded-xl bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-300 text-amber-950 text-xs font-black shadow-md border border-amber-400 flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Crown className="w-3.5 h-3.5 text-amber-900" />
+              <span>Super Admin Portal</span>
+            </button>
             <Link
               href="/login"
               className="w-full text-center py-2.5 rounded-xl border border-emerald-300 text-xs font-bold hover:bg-emerald-100"
@@ -189,6 +197,12 @@ export default function ConceptHeader({ theme = 'dark', activeSection, onNavigat
           </div>
         </div>
       )}
+
+      {/* DEDICATED SUPER ADMIN 2FA OTP MODAL */}
+      <SuperAdminModal
+        isOpen={showSuperAdminModal}
+        onClose={() => setShowSuperAdminModal(false)}
+      />
     </header>
   );
 }

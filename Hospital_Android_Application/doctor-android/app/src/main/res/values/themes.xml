@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.HmsDoctor" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/hms_navy</item>
+        <item name="android:navigationBarColor">@color/hms_surface</item>
+        <item name="android:windowBackground">@color/hms_background</item>
+    </style>
+</resources>

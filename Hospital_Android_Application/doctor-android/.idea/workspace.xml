@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="32f3b56f-3d2e-4b39-ad0d-14ef57e7642b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../../.bun/install/cache/iconv-lite@0.6.3@@@1/.idea/iconv-lite.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/AndroidProjectSystem.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/gradle.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/markdown.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/migrations.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/runConfigurations.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Food Delivery App/food-dash/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/google-services.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../gradle/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../gradle/.idea/deviceManager.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../local.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/components/layout/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/components/layout/Header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/components/layout/Sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/components/layout/Sidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/components/layout/TabBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../../Data structure Website/dsa-visualizer/src/components/layout/TabBar.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 4,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3I3RgBxBGnXeh3TamcpW7KeD5gc" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "android.gradle.sync.needed": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "E:/DOWNLOADS/Users/Mr.Ratul/Hospital_Android_Application/doctor-android"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="32f3b56f-3d2e-4b39-ad0d-14ef57e7642b" name="Changes" comment="" />
+      <created>1786991379488</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1786991379488</updated>
+    </task>
+    <servers />
+  </component>
+</project>

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppProvider } from '@/lib/store';
 import { LayoutShell } from '@/components/LayoutShell';
@@ -6,6 +6,13 @@ import { LayoutShell } from '@/components/LayoutShell';
 export const metadata: Metadata = {
   title: 'Medix ERP — Multi-Branch Hospital Management System',
   description: 'Enterprise Healthcare ERP with multi-branch isolation, Super Admin controls, bed management, pharmacy inventory, and lab diagnostics.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#046a4e',
 };
 
 export default function RootLayout({

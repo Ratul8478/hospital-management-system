@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useApp } from '@/lib/store';
-import { useRouter } from 'next/navigation';
+import { MarketingJoinRequest, MarketingRepresentative } from '@/lib/data';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   BarChart3,
@@ -47,10 +48,15 @@ import {
   Sparkles,
   ChevronRight,
   Share2,
-  UserCheck
+  UserCheck,
+  Lock,
+  FileText,
+  Send,
+  Key,
+  Radio
 } from 'lucide-react';
 
-export default function SuperAdminDashboardPage() {
+function SuperAdminDashboardContent() {
   const router = useRouter();
   const {
     branches,
@@ -65,18 +71,94 @@ export default function SuperAdminDashboardPage() {
     adminApplications,
     marketingRepresentatives,
     marketingJoinRequests,
+    marketingEmailLogs,
+    superAdminFinalApproveMarketingRequest,
+    superAdminDirectApproveMainHospitalRequest,
+    rejectMarketingJoinRequest,
+    directHireMarketingRepresentative,
+    fireMarketingRepresentative,
+    reinstateMarketingRepresentative,
     hireAdmin,
     fireAdmin,
     approveAdminApplication,
     rejectAdminApplication,
     addBranch,
+    addDoctor,
+    addMarketingRepresentative,
     setSelectedBranchId,
     setUserRole,
+    userRole,
   } = useApp();
 
   // Active Division / Tab
-  const [activeTab, setActiveTab] = useState<'branches' | 'campus' | 'clinical' | 'finance' | 'admin' | 'applications' | 'marketing' | 'inspector'>('branches');
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'branches' | 'campus' | 'clinical' | 'finance' | 'admin' | 'applications' | 'marketing-hq' | 'marketing-branch' | 'marketing' | 'inspector'>('branches');
   const [inspectedBranchId, setInspectedBranchId] = useState<number>(1);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (userRole === 'patient') {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
+          <div className="h-16 w-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900">Restricted Headquarters Command</h2>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            This module is exclusively reserved for <strong>Anichul Haque (Super Admin)</strong>. Patient accounts cannot view or alter central hospital infrastructure, financial ledgers, or branch administrators.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/dashboard/patient"
+              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#046a4e] hover:bg-[#03543e] text-white rounded-2xl font-bold text-xs shadow-md transition-all"
+            >
+              Return to Patient Care Portal
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Synchronize tab from URL query params (e.g. ?tab=marketing-hq)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['branches', 'campus', 'clinical', 'finance', 'admin', 'applications', 'marketing-hq', 'marketing-branch', 'marketing', 'inspector'].includes(tabParam)) {
+      setActiveTab(tabParam as any);
+    }
+  }, [searchParams]);
+
+  // Computed Pending Marketing Queues
+  const directHqPending = useMemo(() => {
+    return marketingJoinRequests.filter(r => r.targetBranchId === 1 && r.status === 'pending_super_admin_approval');
+  }, [marketingJoinRequests]);
+
+  const branchForwardedPending = useMemo(() => {
+    return marketingJoinRequests.filter(r => r.targetBranchId !== 1 && r.status === 'pending_super_admin_approval');
+  }, [marketingJoinRequests]);
+
+  const rejectedMarketingRequests = useMemo(() => {
+    return marketingJoinRequests.filter(r => r.status === 'rejected');
+  }, [marketingJoinRequests]);
+
+  // Marketing Pipeline Sub-Tab in Super Admin
+  const [marketingSubTab, setMarketingSubTab] = useState<'all' | 'hq_direct' | 'branch_forwarded' | 'email_logs' | 'directory'>('all');
+
+  // KYC Dossier Inspector Modal
+  const [inspectingKycReq, setInspectingKycReq] = useState<MarketingJoinRequest | null>(null);
+
+  // Marketing Email Dispatch Celebration Modal
+  const [dispatchedEmailModal, setDispatchedEmailModal] = useState<{
+    repName: string;
+    refId: string;
+    email: string;
+    branchName: string;
+    adminName: string;
+  } | null>(null);
 
   // Search & Filter state for Branches Directory
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,6 +189,25 @@ export default function SuperAdminDashboardPage() {
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPhone, setAdminPhone] = useState('');
+
+  // Hire Doctor Modal State
+  const [showHireDoctor, setShowHireDoctor] = useState(false);
+  const [docName, setDocName] = useState('');
+  const [docBranchId, setDocBranchId] = useState<number>(1);
+  const [docSpecialty, setDocSpecialty] = useState('General & Cardiology Medicine');
+  const [docFee, setDocFee] = useState<number>(800);
+  const [docContact, setDocContact] = useState('');
+  const [docStatus, setDocStatus] = useState<'available' | 'busy' | 'off-duty'>('available');
+
+  // Hire Marketing Rep Modal State
+  const [showHireMarketingRep, setShowHireMarketingRep] = useState(false);
+  const [mktName, setMktName] = useState('');
+  const [mktBranchId, setMktBranchId] = useState<number>(1);
+  const [mktTerritory, setMktTerritory] = useState('');
+  const [mktPhone, setMktPhone] = useState('');
+  const [mktEmail, setMktEmail] = useState('');
+  const [mktExperience, setMktExperience] = useState<number>(3);
+  const [mktCommission, setMktCommission] = useState('10% on Diagnostics & OPD');
 
   // Total KPIs across all 9 branches
   const totalRev = invoices.reduce((sum, inv) => sum + inv.amount, 0);
@@ -207,6 +308,79 @@ export default function SuperAdminDashboardPage() {
     }
   };
 
+  const handleHireDoctorSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!docName.trim()) return;
+
+    addDoctor({
+      branchId: Number(docBranchId),
+      name: docName.trim(),
+      specialty: docSpecialty,
+      fee: Number(docFee) || 500,
+      status: docStatus,
+      contact: docContact.trim() || '+91 98000 00000',
+    });
+
+    const targetBranch = branches.find(b => b.id === Number(docBranchId));
+    setActionAlert({
+      type: 'success',
+      message: `Doctor ${docName.trim()} hired & appointed successfully to ${targetBranch?.name || 'Hospital Campus'}!`,
+    });
+    setTimeout(() => setActionAlert(null), 4500);
+
+    setDocName('');
+    setDocContact('');
+    setShowHireDoctor(false);
+  };
+
+  const handleHireMarketingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mktName.trim() || !mktEmail.trim()) return;
+
+    directHireMarketingRepresentative({
+      name: mktName.trim(),
+      email: mktEmail.trim(),
+      phone: mktPhone.trim() || '+91 98000 00000',
+      targetBranchId: Number(mktBranchId),
+      territory: mktTerritory.trim() || 'General Regional Healthcare Network',
+      experienceYears: Number(mktExperience) || 2,
+      qualificationsOrNotes: mktCommission || 'Directly Onboarded by Super Admin',
+    });
+
+    setActionAlert({
+      type: 'success',
+      message: `Candidate ${mktName.trim()} submitted to Super Admin Approval Queue! Review & click "Approve & Dispatch Reference ID" for final activation.`,
+    });
+    setTimeout(() => setActionAlert(null), 5000);
+
+    setMktName('');
+    setMktPhone('');
+    setMktEmail('');
+    setMktTerritory('');
+    setShowHireMarketingRep(false);
+    setActiveTab('marketing-hq');
+  };
+
+  const handleFireMarketingRepAction = (rep: MarketingRepresentative) => {
+    if (confirm(`Are you sure you want to terminate / fire ${rep.name} (${rep.referenceId})? Their system access and referral tracking will be revoked immediately.`)) {
+      fireMarketingRepresentative(rep.id, 'Terminated by Super Admin Executive Command');
+      setActionAlert({
+        type: 'error',
+        message: `Marketing Representative ${rep.name} (${rep.referenceId}) has been FIRED / TERMINATED. Portal access is revoked immediately.`,
+      });
+      setTimeout(() => setActionAlert(null), 5000);
+    }
+  };
+
+  const handleReinstateMarketingRepAction = (rep: MarketingRepresentative) => {
+    reinstateMarketingRepresentative(rep.id);
+    setActionAlert({
+      type: 'success',
+      message: `Marketing Representative ${rep.name} (${rep.referenceId}) has been RE-ACTIVATED & RE-HIRED. Portal access is restored.`,
+    });
+    setTimeout(() => setActionAlert(null), 5000);
+  };
+
   const handleFireAdminAction = (branchId: number) => {
     const targetB = branches.find(b => b.id === branchId);
     const oldAdmin = targetB?.adminName;
@@ -238,6 +412,48 @@ export default function SuperAdminDashboardPage() {
       message: `Application from ${app?.applicantName} for ${app?.targetBranchCode} has been rejected.`,
     });
     setTimeout(() => setActionAlert(null), 3500);
+  };
+
+  const handleApproveMarketingDirect = (req: MarketingJoinRequest) => {
+    const generatedRef = superAdminDirectApproveMainHospitalRequest(req.id, 'Anichul Haque (Super Admin HQ Master)');
+    setDispatchedEmailModal({
+      repName: req.name,
+      refId: generatedRef,
+      email: req.email,
+      branchName: 'ARIYAN HOSPITAL MULTISPECIALITY (HQ)',
+      adminName: 'Anichul Haque (Super Admin HQ Master)',
+    });
+    setActionAlert({
+      type: 'success',
+      message: `Direct HQ Marketing Representative ${req.name} Approved! Reference ID ${generatedRef} dispatched to ${req.email}.`,
+    });
+    setTimeout(() => setActionAlert(null), 4500);
+  };
+
+  const handleApproveMarketingBranch = (req: MarketingJoinRequest) => {
+    const targetBranchObj = branches.find(b => b.id === req.targetBranchId);
+    const generatedRef = superAdminFinalApproveMarketingRequest(req.id, 'Anichul Haque (Super Admin HQ Master)');
+    setDispatchedEmailModal({
+      repName: req.name,
+      refId: generatedRef,
+      email: req.email,
+      branchName: req.targetBranchName,
+      adminName: req.branchAdminName || targetBranchObj?.adminName || 'Branch Administrator',
+    });
+    setActionAlert({
+      type: 'success',
+      message: `Branch-Forwarded Candidate ${req.name} Granted Final Master Approval! Reference ID ${generatedRef} dispatched to ${req.email}.`,
+    });
+    setTimeout(() => setActionAlert(null), 4500);
+  };
+
+  const handleRejectMarketing = (reqId: number, reqName?: string) => {
+    rejectMarketingJoinRequest(reqId);
+    setActionAlert({
+      type: 'error',
+      message: `Marketing application #${reqId} (${reqName || 'Applicant'}) has been rejected by Super Admin.`,
+    });
+    setTimeout(() => setActionAlert(null), 4000);
   };
 
   const handleEnterBranchERP = (branchId: number) => {
@@ -285,22 +501,38 @@ export default function SuperAdminDashboardPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 z-10">
+        <div className="flex flex-wrap items-center gap-2.5 z-10">
           <button
-            onClick={handleExportExecutiveReport}
-            disabled={isExporting}
-            className="flex items-center gap-2 bg-[#064e3b] hover:bg-[#08634d] text-emerald-100 font-black text-xs px-4 py-3 rounded-full border border-emerald-400/40 shadow-md transition-all cursor-pointer hover:scale-105"
+            onClick={() => setShowHireDoctor(true)}
+            className="flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white font-black text-xs px-4 py-3 rounded-full border border-emerald-300/40 shadow-lg transition-all cursor-pointer hover:scale-105 btn-premium-3d"
           >
-            {isExporting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            <span>Export Audit CSV</span>
+            <Stethoscope className="h-4 w-4 text-emerald-200" />
+            <span>+ Hire Doctor</span>
+          </button>
+
+          <button
+            onClick={() => setShowHireMarketingRep(true)}
+            className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs px-4 py-3 rounded-full border border-purple-400/40 shadow-lg transition-all cursor-pointer hover:scale-105 btn-premium-3d"
+          >
+            <UserPlus className="h-4 w-4 text-purple-200" />
+            <span>+ Hire Marketing Rep</span>
           </button>
 
           <button
             onClick={() => setShowAddBranch(true)}
-            className="flex items-center gap-2 bg-[#6ee7b7] hover:bg-[#34d399] text-[#022c22] font-black text-xs px-5 py-3 rounded-full shadow-lg transition-all cursor-pointer hover:scale-105 btn-premium-3d"
+            className="flex items-center gap-2 bg-[#6ee7b7] hover:bg-[#34d399] text-[#022c22] font-black text-xs px-4 py-3 rounded-full shadow-lg transition-all cursor-pointer hover:scale-105 btn-premium-3d"
           >
             <PlusCircle className="h-4 w-4" />
-            <span>Onboard New Branch Node</span>
+            <span>+ Onboard Branch</span>
+          </button>
+
+          <button
+            onClick={handleExportExecutiveReport}
+            disabled={isExporting}
+            className="flex items-center gap-1.5 bg-[#064e3b] hover:bg-[#08634d] text-emerald-100 font-black text-xs px-3.5 py-3 rounded-full border border-emerald-400/40 shadow-md transition-all cursor-pointer hover:scale-105"
+          >
+            {isExporting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            <span>Export CSV</span>
           </button>
         </div>
       </div>
@@ -325,125 +557,6 @@ export default function SuperAdminDashboardPage() {
           </button>
         </div>
       )}
-
-      {/* DIVISION NAVIGATION TABS (TEA GREEN / FOREST THEME) */}
-      <div className="bg-[#022c22] p-2 rounded-2xl shadow-xl border border-[#064e3b] flex items-center gap-2 overflow-x-auto text-xs">
-        
-        {/* BRANCHES HUB (DEFAULT) */}
-        <button
-          onClick={() => setActiveTab('branches')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-            activeTab === 'branches'
-              ? 'bg-[#044e3b] text-emerald-100 border-b-2 border-[#10b981] shadow-md'
-              : 'text-emerald-200/80 hover:bg-[#033a2d] hover:text-white'
-          }`}
-        >
-          <Crown className="w-4 h-4 text-amber-300" />
-          <span>Hospital Branches Directory ({branches.length})</span>
-        </button>
-
-        {/* CAMPUS DASHBOARD */}
-        <button
-          onClick={() => setActiveTab('campus')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-            activeTab === 'campus'
-              ? 'bg-[#044e3b] text-emerald-100 border-b-2 border-[#10b981] shadow-md'
-              : 'text-emerald-200/80 hover:bg-[#033a2d] hover:text-white'
-          }`}
-        >
-          <BarChart3 className="w-4 h-4 text-emerald-300" />
-          <span>Campus Dashboard</span>
-        </button>
-
-        {/* CLINICAL & PATIENTS */}
-        <button
-          onClick={() => setActiveTab('clinical')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-            activeTab === 'clinical'
-              ? 'bg-[#044e3b] text-emerald-100 border-b-2 border-[#10b981] shadow-md'
-              : 'text-emerald-200/80 hover:bg-[#033a2d] hover:text-white'
-          }`}
-        >
-          <Stethoscope className="w-4 h-4 text-teal-300" />
-          <span>Clinical & Patients</span>
-        </button>
-
-        {/* FINANCE & PARTNERS */}
-        <button
-          onClick={() => setActiveTab('finance')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-            activeTab === 'finance'
-              ? 'bg-[#044e3b] text-emerald-100 border-b-2 border-[#10b981] shadow-md'
-              : 'text-emerald-200/80 hover:bg-[#033a2d] hover:text-white'
-          }`}
-        >
-          <Coins className="w-4 h-4 text-yellow-300" />
-          <span>Finance & Partners</span>
-        </button>
-
-        {/* ADMINISTRATION */}
-        <button
-          onClick={() => setActiveTab('admin')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-            activeTab === 'admin'
-              ? 'bg-[#044e3b] text-emerald-100 border-b-2 border-[#10b981] shadow-md'
-              : 'text-emerald-200/80 hover:bg-[#033a2d] hover:text-white'
-          }`}
-        >
-          <Shield className="w-4 h-4 text-emerald-300" />
-          <span>Administration</span>
-        </button>
-
-        {/* APPLICATIONS QUEUE */}
-        <button
-          onClick={() => setActiveTab('applications')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 relative ${
-            activeTab === 'applications'
-              ? 'bg-[#044e3b] text-emerald-100 border-b-2 border-[#10b981] shadow-md'
-              : 'text-emerald-200/80 hover:bg-[#033a2d] hover:text-white'
-          }`}
-        >
-          <Inbox className="w-4 h-4 text-emerald-300" />
-          <span>Admin Requests Queue</span>
-          {pendingApplications.length > 0 && (
-            <span className="px-2 py-0.5 text-[9px] font-black bg-amber-400 text-slate-950 rounded-full">
-              {pendingApplications.length}
-            </span>
-          )}
-        </button>
-
-        {/* GLOBAL MARKETING & REFERRALS HUB */}
-        <button
-          onClick={() => setActiveTab('marketing')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 relative ${
-            activeTab === 'marketing'
-              ? 'bg-purple-800 text-white border-b-2 border-purple-400 shadow-md'
-              : 'text-purple-300 hover:bg-purple-950/80 hover:text-white'
-          }`}
-        >
-          <Share2 className="w-4 h-4 text-purple-300" />
-          <span>Marketing & Referral Force ({marketingRepresentatives.length})</span>
-          {marketingJoinRequests.filter(r => r.status === 'pending').length > 0 && (
-            <span className="px-2 py-0.5 text-[9px] font-black bg-purple-400 text-slate-950 rounded-full">
-              {marketingJoinRequests.filter(r => r.status === 'pending').length}
-            </span>
-          )}
-        </button>
-
-        {/* INSPECTOR */}
-        <button
-          onClick={() => setActiveTab('inspector')}
-          className={`px-4 py-2.5 rounded-xl font-extrabold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-            activeTab === 'inspector'
-              ? 'bg-[#044e3b] text-emerald-100 border-b-2 border-[#10b981] shadow-md'
-              : 'text-emerald-200/80 hover:bg-[#033a2d] hover:text-white'
-          }`}
-        >
-          <Eye className="w-4 h-4 text-cyan-300" />
-          <span>Live Branch ERP Inspector</span>
-        </button>
-
-      </div>
 
       {/* TAB 1: HOSPITAL BRANCHES DIRECTORY (3D INTERACTIVE CARDS) */}
       {activeTab === 'branches' && (
@@ -688,7 +801,7 @@ export default function SuperAdminDashboardPage() {
                 <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-md">Revenue</span>
               </div>
               <h3 className="font-black text-lg text-slate-900">Billing, Ledger & Franchise</h3>
-              <p className="text-xs text-slate-500">${totalRev.toLocaleString()} collected across {invoices.length} invoices network-wide.</p>
+              <p className="text-xs text-slate-500">₹{totalRev.toLocaleString()} collected across {invoices.length} invoices network-wide.</p>
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-amber-700">
                 <button onClick={() => setActiveTab('finance')} className="hover:underline flex items-center gap-1 cursor-pointer">
                   Explore Financial Hub <ChevronRight className="w-3.5 h-3.5" />
@@ -729,7 +842,7 @@ export default function SuperAdminDashboardPage() {
                 { name: 'Pharmacy & POS', href: '/pharmacy', icon: Pill, color: 'text-pink-600 bg-pink-50', count: `${medicines.length} Medicines` },
                 { name: 'Laboratory Diagnostic', href: '/laboratory', icon: FlaskConical, color: 'text-cyan-600 bg-cyan-50', count: `${labRequests.length} Tests` },
                 { name: 'Billing & Invoicing', href: '/billing', icon: Receipt, color: 'text-slate-600 bg-slate-100', count: `${invoices.length} Invoices` },
-                { name: 'Accounts & Ledger', href: '/accounting', icon: Coins, color: 'text-amber-600 bg-amber-50', count: `$${totalRev.toLocaleString()}` },
+                { name: 'Accounts & Ledger', href: '/accounting', icon: Coins, color: 'text-amber-600 bg-amber-50', count: `₹${totalRev.toLocaleString()}` },
                 { name: 'Franchise / Referrals', href: '/franchise', icon: Handshake, color: 'text-yellow-600 bg-yellow-50', count: 'Active Network' },
                 { name: 'Enterprise Reports', href: '/accounting', icon: TrendingUp, color: 'text-sky-600 bg-sky-50', count: 'Audit Analytics' },
                 { name: 'User Accounts & Roles', href: '/admin', icon: Users, color: 'text-purple-600 bg-purple-50', count: 'RBAC Control' },
@@ -829,6 +942,92 @@ export default function SuperAdminDashboardPage() {
               <p className="text-xs text-slate-600">Pathology tests, biochemistry, and reports.</p>
             </Link>
           </div>
+
+          {/* DOCTORS & SPECIALISTS HIRING & ROSTER DESK */}
+          <div className="bg-[#f0fdf4] p-6 rounded-3xl border border-emerald-200 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-200/80 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#046a4e] bg-emerald-100 px-2.5 py-0.5 rounded-md border border-emerald-300">
+                  CLINICAL TALENT & CONSULTANTS
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mt-1">Appointed Medical Doctors & Specialists ({doctors.length})</h3>
+                <p className="text-xs text-slate-600">Super Admin direct recruitment, campus deployment, and OPD roaster.</p>
+              </div>
+
+              <button
+                onClick={() => setShowHireDoctor(true)}
+                className="px-4 py-2.5 bg-[#046a4e] hover:bg-[#03523c] text-white text-xs font-black rounded-full shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 self-start sm:self-auto btn-premium-3d"
+              >
+                <Stethoscope className="w-4 h-4 text-emerald-200" />
+                <span>+ Hire & Deploy Doctor</span>
+              </button>
+            </div>
+
+            {doctors.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 space-y-2">
+                <Stethoscope className="w-8 h-8 mx-auto text-slate-300" />
+                <p className="text-xs font-bold">No doctors currently hired. Click '+ Hire & Deploy Doctor' above to onboard doctors.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-emerald-100/60 text-[#062c21] font-extrabold uppercase text-[10px] tracking-wider rounded-xl">
+                    <tr>
+                      <th className="p-3">Doctor Name</th>
+                      <th className="p-3">Specialty / Department</th>
+                      <th className="p-3">Assigned Campus</th>
+                      <th className="p-3">Consultation Fee</th>
+                      <th className="p-3">Contact</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-emerald-100 font-medium">
+                    {doctors.map(doc => {
+                      const branch = branches.find(b => b.id === doc.branchId);
+                      return (
+                        <tr key={doc.id} className="hover:bg-emerald-50/50 transition-colors">
+                          <td className="p-3 font-black text-slate-900 flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-[#046a4e] text-white flex items-center justify-center font-bold text-xs">
+                              {doc.name.replace('Dr. ', '').charAt(0)}
+                            </div>
+                            <span>{doc.name}</span>
+                          </td>
+                          <td className="p-3 text-slate-700 font-bold">{doc.specialty}</td>
+                          <td className="p-3 text-slate-800">
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 text-[10px] font-bold">
+                              {branch?.name || `Branch #${doc.branchId}`}
+                            </span>
+                          </td>
+                          <td className="p-3 font-mono font-bold text-[#046a4e]">₹ {doc.fee}</td>
+                          <td className="p-3 font-mono text-slate-600">{doc.contact}</td>
+                          <td className="p-3">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold capitalize ${
+                              doc.status === 'available'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : doc.status === 'busy'
+                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                : 'bg-slate-100 text-slate-600 border border-slate-300'
+                            }`}>
+                              {doc.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <Link
+                              href="/doctors"
+                              className="px-3 py-1 bg-white hover:bg-emerald-100 text-[#046a4e] border border-emerald-300 rounded-lg text-[11px] font-bold transition-all inline-block"
+                            >
+                              OPD Workspace
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -851,7 +1050,7 @@ export default function SuperAdminDashboardPage() {
             <Link href="/accounting" className="p-6 rounded-3xl border border-emerald-100 bg-amber-50/50 hover:bg-amber-50 transition-all space-y-2 group card-3d">
               <Coins className="w-6 h-6 text-amber-600" />
               <h3 className="font-extrabold text-sm text-slate-900">Accounts & Ledger</h3>
-              <p className="text-xs text-slate-500">${totalRev.toLocaleString()} Balance sheet</p>
+              <p className="text-xs text-slate-500">₹{totalRev.toLocaleString()} Balance sheet</p>
             </Link>
 
             <Link href="/franchise" className="p-6 rounded-3xl border border-emerald-100 bg-yellow-50/50 hover:bg-yellow-50 transition-all space-y-2 group card-3d">
@@ -1006,143 +1205,702 @@ export default function SuperAdminDashboardPage() {
         </div>
       )}
 
-      {/* TAB: GLOBAL MARKETING & REFERRAL FORCE HUB (WITH APPROVER ADMIN AUDIT) */}
-      {activeTab === 'marketing' && (
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-xs space-y-6 animate-in fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-100 pb-4 gap-4">
+      {/* ========================================================================= */}
+      {/* TAB: DIRECT HQ MARKETING QUEUE (SUPER ADMIN 1-CLICK APPROVE OR REJECT)    */}
+      {/* ========================================================================= */}
+      {activeTab === 'marketing-hq' && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-amber-200 shadow-xs space-y-6 animate-in fade-in">
+          {/* Header & Status Banner */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-amber-200 pb-5 gap-4">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-purple-700 bg-purple-100 px-3 py-1 rounded-full border border-purple-300">
-                MULTI-BRANCH FIELD MARKETING AUDIT & APPROVAL TRACKER
-              </span>
-              <h2 className="text-2xl font-black text-slate-900 mt-1">
-                Hospital Network Marketing & Approver Audit Log
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-950 bg-amber-200 px-3 py-1 rounded-full border border-amber-400 flex items-center gap-1.5 shadow-2xs">
+                  <Crown className="w-3.5 h-3.5 text-amber-700" />
+                  DIRECT HEADQUARTERS MARKETING DESK (BRANCH 1)
+                </span>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5 border border-emerald-300">
+                  <Radio className="w-3 h-3 text-emerald-600 animate-spin" />
+                  REAL-TIME QUEUE ACTIVE
+                </span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mt-1.5">
+                Direct Super Admin HQ Marketing Requests
               </h2>
-              <p className="text-xs text-slate-500 font-medium">
-                Audit which individual hospital administrator approved which marketing representative, along with their assigned Reference ID, territory, and referred patient volume.
+              <p className="text-xs text-slate-500 font-medium max-w-3xl mt-0.5">
+                Candidates applying directly for entry into Super Admin&apos;s Main Hospital (Medix Central). Review complete KYC, grant instant approval to dispatch Reference ID to email, or reject application.
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="px-3.5 py-1.5 rounded-xl bg-purple-50 text-purple-950 text-xs font-mono font-bold border border-purple-200">
-                Total Marketing Partners: {marketingRepresentatives.length}
+              <span className="px-3.5 py-1.5 rounded-xl bg-amber-100 text-amber-950 text-xs font-mono font-bold border border-amber-300">
+                Pending Direct Action: {directHqPending.length}
               </span>
+              <button
+                onClick={() => setActiveTab('marketing-branch')}
+                className="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 text-xs font-bold border border-indigo-200 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <span>Switch to Branch Queue ({branchForwardedPending.length})</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 
-          {/* Marketing Summary Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl bg-purple-50/60 border border-purple-200 space-y-1 card-3d">
-              <span className="text-[10px] font-black text-purple-800 uppercase tracking-wider">Total Field Representatives</span>
-              <p className="text-3xl font-black text-purple-950">{marketingRepresentatives.length}</p>
-              <span className="text-xs text-purple-700 font-bold">Approved across {branches.length} Branch Nodes</span>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1 card-3d">
-              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Total Referred Patients</span>
-              <p className="text-3xl font-black text-emerald-950">
-                {marketingRepresentatives.reduce((sum, r) => sum + r.referredPatientsCount, 0)}
+          {/* Protocol Alert */}
+          <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-xs flex items-start gap-3.5">
+            <Shield className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <h4 className="font-black text-amber-950">SUPER ADMIN DIRECT DISPATCH RULES</h4>
+              <p className="text-amber-900 font-medium leading-relaxed">
+                Jab aap kisi Direct HQ applicant ko <strong>Approve</strong> karenge, tab system instantly ek unique <strong>Reference ID</strong> generate karega aur marketing man ke registered verified email par email confirmation bhej dega. Agar aap <strong>Reject</strong> karte hain, to request turant decline ho jayegi aur koi Reference ID issue nahi hoga.
               </p>
-              <span className="text-xs text-emerald-700 font-bold">Generated through Partner Reference Codes</span>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1 card-3d">
-              <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider">Network Referral Commissions</span>
-              <p className="text-3xl font-black text-amber-950">
-                ₹ {marketingRepresentatives.reduce((sum, r) => sum + r.totalCommissionEarned, 0).toLocaleString()}
-              </p>
-              <span className="text-xs text-amber-700 font-bold">Disbursed to Field Marketing Agents</span>
             </div>
           </div>
 
-          {/* AUDIT LOG: WHICH INDIVIDUAL HOSPITAL ADMIN APPROVED WHICH MARKETING MAN */}
+          {/* Pending Direct HQ Applicants Grid */}
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-purple-600" />
-                  <span>Hospital Admin Approvals & Reference ID Audit Log</span>
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Track individual hospital admins who issued reference IDs to marketing partners.
-                </p>
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <Inbox className="w-5 h-5 text-amber-600" />
+              <span>Incoming Direct HQ Candidates Pending Action</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-950 font-mono text-xs font-black">
+                {directHqPending.length} Pending
+              </span>
+            </h3>
+
+            {directHqPending.length === 0 ? (
+              <div className="p-10 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl text-center space-y-2">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+                <h4 className="font-black text-sm text-slate-800">All Direct HQ Applications Processed</h4>
+                <p className="text-xs text-slate-500">No pending marketing applicants waiting for Direct Super Admin action.</p>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {directHqPending.map((req) => (
+                  <div key={req.id} className="p-6 rounded-3xl bg-gradient-to-br from-amber-50/70 to-white border-2 border-amber-300 shadow-sm space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase text-amber-950 bg-amber-200 px-2.5 py-0.5 rounded-md border border-amber-400">
+                            HQ DIRECT CANDIDATE #{req.id}
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                            Target: Medix Central (Branch 1 HQ)
+                          </span>
+                        </div>
+                        <h4 className="font-black text-lg text-slate-900 mt-1.5">{req.name}</h4>
+                        <p className="text-xs text-slate-600 font-medium">{req.territory}</p>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 font-mono font-black text-xs">
+                        {req.experienceYears}y Exp
+                      </span>
+                    </div>
+
+                    {/* Detailed KYC Info Grid */}
+                    <div className="grid grid-cols-2 gap-2.5 text-xs bg-white p-3.5 rounded-2xl border border-amber-200">
+                      <div>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Guardian Name</span>
+                        <span className="font-bold text-slate-900">{req.fatherOrMotherName || 'Alok Sen'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">DOB & Blood Group</span>
+                        <span className="font-bold text-purple-900 font-mono">{req.dob || '1993-08-14'} • {req.bloodGroup || 'B+'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Aadhar Card</span>
+                        <span className="font-mono font-bold text-slate-900">{req.aadharNumber || '8877-6655-4433'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">PAN Card</span>
+                        <span className="font-mono font-bold text-slate-900">{req.panNumber || 'AFGPD1122Q'}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Driving Licence</span>
+                        <span className="font-mono font-bold text-slate-900">{req.drivingLicenceNumber || 'MH03-2017-0099881'}</span>
+                      </div>
+                      <div className="col-span-2 pt-1 border-t border-slate-100">
+                        <span className="text-slate-400 block text-[10px] uppercase font-bold">Residential Address</span>
+                        <span className="text-slate-700 font-medium">{req.address || 'Hospital Catchment Area'}, Pin: {req.pinCode || '400058'}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-amber-100/60 border border-amber-200 text-amber-950 text-xs font-bold flex items-center justify-between">
+                      <span>Verified Email: <strong className="font-mono">{req.email}</strong> ✓</span>
+                      <span className="text-emerald-700 font-mono">Target: {req.expectedMonthlyReferrals} Patients/Mo</span>
+                    </div>
+
+                    {/* Interactive Action Buttons */}
+                    <div className="flex items-center gap-2 pt-2 border-t border-amber-200">
+                      <button
+                        onClick={() => setInspectingKycReq(req)}
+                        className="px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs rounded-xl border border-amber-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <Eye className="w-4 h-4 text-amber-700" />
+                        <span>Inspect KYC</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleApproveMarketingDirect(req)}
+                        className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
+                      >
+                        <Check className="w-4 h-4 text-slate-950" />
+                        <span>Approve & Dispatch Reference ID</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRejectMarketing(req.id, req.name)}
+                        className="px-4 py-2.5 bg-rose-100 hover:bg-rose-200 text-rose-800 font-extrabold text-xs rounded-xl border border-rose-300 transition-all cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Reject</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Active Direct HQ Representatives List */}
+          <div className="space-y-4 pt-6 border-t border-slate-200">
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-emerald-600" />
+              <span>Active Direct HQ Marketing Representatives</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-mono text-xs font-bold">
+                {marketingRepresentatives.filter(r => r.branchId === 1).length} Active in HQ
+              </span>
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {marketingRepresentatives.filter(r => r.branchId === 1).map((rep) => (
+                <div key={rep.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-sm">{rep.name}</span>
+                    <span className="px-2 py-0.5 rounded bg-purple-100 text-purple-950 font-mono text-xs font-black">
+                      {rep.referenceId}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">{rep.territory}</p>
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200 font-medium">
+                    <span className="text-emerald-700 font-bold">Referred: {rep.referredPatientsCount} Patients</span>
+                    <span className="font-bold text-slate-900">₹ {rep.totalCommissionEarned.toLocaleString()} Earned</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB: BRANCH RECOMMENDED MARKETING QUEUE (SUPER ADMIN FINAL APPROVE/REJECT)*/}
+      {/* ========================================================================= */}
+      {activeTab === 'marketing-branch' && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-indigo-200 shadow-xs space-y-6 animate-in fade-in">
+          {/* Header & Status Banner */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-indigo-200 pb-5 gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-950 bg-indigo-200 px-3 py-1 rounded-full border border-indigo-400 flex items-center gap-1.5 shadow-2xs">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-700" />
+                  MULTI-BRANCH FORWARDED MARKETING QUEUE (BRANCH 2 TO 9)
+                </span>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5 border border-emerald-300">
+                  <Radio className="w-3 h-3 text-emerald-600 animate-spin" />
+                  AWAITING FINAL SUPER ADMIN MASTER DECISION
+                </span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mt-1.5">
+                Branch Admin Pre-Approved Marketing Candidates
+              </h2>
+              <p className="text-xs text-slate-500 font-medium max-w-3xl mt-0.5">
+                These marketing representatives applied for branch hospitals (South, North, West, etc.) and were verified and recommended by the respective Branch Hospital Administrator. They require Super Admin&apos;s Final Approval to issue the Reference ID and send the confirmation email.
+              </p>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 font-extrabold uppercase bg-purple-50/50">
-                    <th className="py-3.5 px-4">Approved By Hospital Admin</th>
-                    <th className="py-3.5 px-4">Hospital Facility</th>
-                    <th className="py-3.5 px-4">Marketing Representative</th>
-                    <th className="py-3.5 px-4">Generated Reference ID</th>
-                    <th className="py-3.5 px-4">Assigned Territory</th>
-                    <th className="py-3.5 px-4 text-center">Approval Date</th>
-                    <th className="py-3.5 px-4 text-center">Referred Patients</th>
-                    <th className="py-3.5 px-4 text-right">Commission</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {marketingRepresentatives.map((rep) => {
-                    const branchObj = branches.find(b => b.id === rep.branchId);
-                    const approver = rep.approvedByAdminName || branchObj?.adminName || 'Hospital Admin';
-                    return (
-                      <tr key={rep.id} className="hover:bg-purple-50/30 transition-colors">
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-8 h-8 rounded-full bg-purple-100 text-purple-800 font-black text-xs flex items-center justify-center shrink-0 border border-purple-300">
-                              ADM
+            <div className="flex items-center gap-3">
+              <span className="px-3.5 py-1.5 rounded-xl bg-indigo-100 text-indigo-950 text-xs font-mono font-bold border border-indigo-300">
+                Awaiting SA Master Approval: {branchForwardedPending.length}
+              </span>
+              <button
+                onClick={() => setActiveTab('marketing-hq')}
+                className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <span>Switch to Direct HQ Queue ({directHqPending.length})</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Protocol Alert */}
+          <div className="p-4 rounded-2xl bg-indigo-50 border-2 border-indigo-300 shadow-xs flex items-start gap-3.5">
+            <Shield className="w-5 h-5 text-indigo-700 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <h4 className="font-black text-indigo-950">BRANCH FORWARDED APPROVAL GATEWAY</h4>
+              <p className="text-indigo-900 font-medium leading-relaxed">
+                Branch Admins candidate ko sirf &quot;Recommend&quot; kar sakte hain. <strong>Jab tak Super Admin yahan &quot;Grant Final Super Admin Approval&quot; par click nahi karta, tab tak koi Reference ID candidate ko nahi jayega.</strong> Super Admin chahe to kisi bhi candidate ko reject bhi kar sakta hai.
+              </p>
+            </div>
+          </div>
+
+          {/* Pending Branch-Forwarded Applicants Grid */}
+          <div className="space-y-4">
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-indigo-600" />
+              <span>Candidates Pre-Approved by Branch Admins (Pending Super Admin Final Action)</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-200 text-indigo-950 font-mono text-xs font-black">
+                {branchForwardedPending.length} Candidates
+              </span>
+            </h3>
+
+            {branchForwardedPending.length === 0 ? (
+              <div className="p-10 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl text-center space-y-2">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+                <h4 className="font-black text-sm text-slate-800">No Branch Recommended Candidates Pending</h4>
+                <p className="text-xs text-slate-500">All branch-forwarded marketing applications have been reviewed by Super Admin.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {branchForwardedPending.map((req) => {
+                  const targetBranchObj = branches.find(b => b.id === req.targetBranchId);
+                  return (
+                    <div key={req.id} className="p-6 rounded-3xl bg-gradient-to-br from-indigo-50/70 to-white border-2 border-indigo-300 shadow-sm space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] font-black uppercase text-indigo-950 bg-indigo-200 px-2.5 py-0.5 rounded-md border border-indigo-400">
+                              BRANCH CANDIDATE #{req.id}
                             </span>
-                            <div>
-                              <p className="font-extrabold text-purple-950 text-xs">{approver}</p>
-                              <p className="text-[10px] text-slate-400 font-mono">{rep.approvedByAdminEmail || branchObj?.adminEmail || 'admin@hospital.com'}</p>
-                            </div>
+                            <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              Pre-Approved by {req.branchAdminName || targetBranchObj?.adminName || 'Branch Admin'}
+                            </span>
                           </div>
-                        </td>
+                          <h4 className="font-black text-lg text-slate-900 mt-2">{req.name}</h4>
+                          <p className="text-xs text-indigo-950 font-bold">Target Facility: {req.targetBranchName} ({req.targetBranchCode})</p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">{req.territory}</p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-mono font-black text-xs">
+                          {req.experienceYears}y Exp
+                        </span>
+                      </div>
 
-                        <td className="py-4 px-4">
-                          <span className="font-black text-slate-900">{rep.branchCode}</span>
-                          <span className="block text-[10px] text-slate-500 truncate max-w-[140px]">{rep.branchName}</span>
-                        </td>
+                      {/* Detailed KYC Info Grid */}
+                      <div className="grid grid-cols-2 gap-2.5 text-xs bg-white p-3.5 rounded-2xl border border-indigo-200">
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">Guardian Name</span>
+                          <span className="font-bold text-slate-900">{req.fatherOrMotherName || 'Suresh Hegde'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">DOB & Blood Group</span>
+                          <span className="font-bold text-purple-900 font-mono">{req.dob || '1990-12-10'} • {req.bloodGroup || 'A+'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">Aadhar Card</span>
+                          <span className="font-mono font-bold text-slate-900">{req.aadharNumber || '6677-8899-0011'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">PAN Card</span>
+                          <span className="font-mono font-bold text-slate-900">{req.panNumber || 'CDGHG9900L'}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">Driving Licence</span>
+                          <span className="font-mono font-bold text-slate-900">{req.drivingLicenceNumber || 'KA01-2015-0044556'}</span>
+                        </div>
+                        <div className="col-span-2 pt-1 border-t border-slate-100">
+                          <span className="text-slate-400 block text-[10px] uppercase font-bold">Residential Address</span>
+                          <span className="text-slate-700 font-medium">{req.address || 'Hospital Catchment Area'}, Pin: {req.pinCode || '560095'}</span>
+                        </div>
+                      </div>
 
-                        <td className="py-4 px-4">
-                          <p className="font-black text-slate-900 text-xs">{rep.name}</p>
-                          <p className="text-[10px] text-slate-500 font-mono">{rep.phone}</p>
-                        </td>
+                      <div className="p-2.5 rounded-xl bg-indigo-100/60 border border-indigo-200 text-indigo-950 text-xs font-bold flex items-center justify-between">
+                        <span>Email: <strong className="font-mono">{req.email}</strong> (Verified ✓)</span>
+                        <span className="text-emerald-700 font-mono">Exp Referrals: {req.expectedMonthlyReferrals}/Mo</span>
+                      </div>
 
-                        <td className="py-4 px-4">
-                          <span className="bg-purple-100 text-purple-950 font-mono font-black px-2.5 py-1 rounded-lg text-xs border border-purple-300 shadow-2xs">
-                            {rep.referenceId}
+                      {/* Interactive Action Buttons */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-indigo-200">
+                        <button
+                          onClick={() => setInspectingKycReq(req)}
+                          className="px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs rounded-xl border border-indigo-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        >
+                          <Eye className="w-4 h-4 text-indigo-700" />
+                          <span>Inspect KYC</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleApproveMarketingBranch(req)}
+                          className="flex-1 py-2.5 bg-gradient-to-r from-indigo-700 to-purple-900 hover:from-indigo-800 hover:to-purple-950 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
+                        >
+                          <Key className="w-4 h-4 text-amber-300" />
+                          <span>Grant Final Super Admin Approval & Send Reference ID</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleRejectMarketing(req.id, req.name)}
+                          className="px-4 py-2.5 bg-rose-100 hover:bg-rose-200 text-rose-800 font-extrabold text-xs rounded-xl border border-rose-300 transition-all cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                          <span>Reject</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Initial Branch Review Queue (Monitoring / Fast-track bypass) */}
+          <div className="space-y-4 pt-6 border-t border-slate-200">
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-600" />
+              <span>Applications Awaiting Initial Branch Admin Review</span>
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-mono text-xs font-bold">
+                {marketingJoinRequests.filter(r => r.targetBranchId !== 1 && r.status === 'pending_branch_review').length} Awaiting Local Branch Action
+              </span>
+            </h3>
+
+            {marketingJoinRequests.filter(r => r.targetBranchId !== 1 && r.status === 'pending_branch_review').length === 0 ? (
+              <p className="text-xs text-slate-500 font-medium">✓ No pending initial reviews at any branch.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {marketingJoinRequests.filter(r => r.targetBranchId !== 1 && r.status === 'pending_branch_review').map(req => (
+                  <div key={req.id} className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-slate-900 text-sm">{req.name}</p>
+                      <p className="text-xs text-slate-500">Target: {req.targetBranchName} • {req.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          const targetBranchObj = branches.find(b => b.id === req.targetBranchId);
+                          handleApproveMarketingBranch(req);
+                        }}
+                        className="px-3 py-1.5 bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer hover:bg-indigo-800"
+                      >
+                        Super Admin Fast-Track Approve
+                      </button>
+                      <button
+                        onClick={() => handleRejectMarketing(req.id, req.name)}
+                        className="px-3 py-1.5 bg-rose-100 text-rose-800 font-bold text-xs rounded-xl cursor-pointer hover:bg-rose-200"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB: GLOBAL MARKETING FORCE DIRECTORY, EMAIL LOGS & AUDIT LEDGER          */}
+      {/* ========================================================================= */}
+      {activeTab === 'marketing' && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-xs space-y-6 animate-in fade-in">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-emerald-100 pb-5 gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-purple-900 bg-purple-100 px-3 py-1 rounded-full border border-purple-300 flex items-center gap-1.5">
+                  <Crown className="w-3 h-3 text-purple-700" />
+                  GLOBAL MARKETING DIRECTORY & EMAIL AUDIT LEDGER
+                </span>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5 border border-emerald-300">
+                  <Radio className="w-3 h-3 text-emerald-600 animate-spin" />
+                  REAL-TIME NETWORK SYNC
+                </span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mt-1.5">
+                Marketing Force Roster & Real-Time Email Logs
+              </h2>
+              <p className="text-xs text-slate-500 font-medium max-w-3xl mt-0.5">
+                Audit all active marketing representatives, commission disbursements, and dispatched Reference ID emails.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowHireMarketingRep(true)}
+                className="px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 btn-premium-3d"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-purple-200" />
+                <span>+ Hire Marketing Rep</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('marketing-hq')}
+                className="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-xs rounded-xl border border-amber-300 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Crown className="w-3.5 h-3.5 text-amber-700" />
+                <span>HQ Direct Queue ({directHqPending.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('marketing-branch')}
+                className="px-3.5 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-950 font-bold text-xs rounded-xl border border-indigo-300 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Building2 className="w-3.5 h-3.5 text-indigo-700" />
+                <span>Branch Queue ({branchForwardedPending.length})</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Marketing KPI Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200 space-y-1 card-3d">
+              <span className="text-[10px] font-black text-purple-800 uppercase tracking-wider">Active Field Reps</span>
+              <p className="text-2xl font-black text-purple-950">{marketingRepresentatives.length}</p>
+              <span className="text-[11px] text-purple-700 font-bold">Across {branches.length} Branches</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-1 card-3d">
+              <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider">HQ Direct Pending</span>
+              <p className="text-2xl font-black text-amber-950">{directHqPending.length}</p>
+              <span className="text-[11px] text-amber-700 font-bold">Awaiting 1-Click SA Action</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-1 card-3d">
+              <span className="text-[10px] font-black text-indigo-800 uppercase tracking-wider">Branch Forwarded</span>
+              <p className="text-2xl font-black text-indigo-950">{branchForwardedPending.length}</p>
+              <span className="text-[11px] text-indigo-700 font-bold">Pre-Approved by Branch Admins</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1 card-3d">
+              <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Total Dispatched Emails</span>
+              <p className="text-2xl font-black text-emerald-950">{marketingEmailLogs.length}</p>
+              <span className="text-[11px] text-emerald-700 font-bold">Verified SMTP 200 OK</span>
+            </div>
+          </div>
+
+          {/* Subtabs within Consolidated View */}
+          <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200 text-xs">
+            <button
+              onClick={() => setMarketingSubTab('all')}
+              className={`px-4 py-2 rounded-xl font-black transition-all cursor-pointer ${
+                marketingSubTab === 'all'
+                  ? 'bg-purple-950 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+              }`}
+            >
+              All Overview
+            </button>
+
+            <button
+              onClick={() => setMarketingSubTab('email_logs')}
+              className={`px-4 py-2 rounded-xl font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                marketingSubTab === 'email_logs'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+              }`}
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>📨 Email Dispatch Logs ({marketingEmailLogs.length})</span>
+            </button>
+
+            <button
+              onClick={() => setMarketingSubTab('directory')}
+              className={`px-4 py-2 rounded-xl font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+                marketingSubTab === 'directory'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-950 hover:bg-white/60'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>👥 Active Representatives Directory ({marketingRepresentatives.length})</span>
+            </button>
+          </div>
+
+          {/* SECTION: REAL-TIME EMAIL DISPATCH LOGS */}
+          {(marketingSubTab === 'all' || marketingSubTab === 'email_logs') && (
+            <div className="space-y-4 pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <Send className="w-5 h-5 text-emerald-600" />
+                    <span>Real-Time Reference ID Email Dispatch Stream</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Cryptographic audit trail of all confirmation emails dispatched to marketing representatives after Super Admin approval.
+                  </p>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-950 text-xs font-mono font-black border border-emerald-300">
+                  {marketingEmailLogs.length} Verified Dispatches
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500 font-extrabold uppercase bg-emerald-50/50">
+                      <th className="py-3 px-4">Dispatch ID & Timestamp</th>
+                      <th className="py-3 px-4">Recipient Partner</th>
+                      <th className="py-3 px-4">Issued Reference ID</th>
+                      <th className="py-3 px-4">Hospital Facility</th>
+                      <th className="py-3 px-4">Authorized By</th>
+                      <th className="py-3 px-4">SMTP Relay Server</th>
+                      <th className="py-3 px-4 text-center">Delivery Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {marketingEmailLogs.map((log) => (
+                      <tr key={log.id} className="hover:bg-emerald-50/30 transition-colors">
+                        <td className="py-3 px-4">
+                          <span className="font-mono font-black text-emerald-950 text-xs block">{log.id}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{log.dispatchedAt}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-bold text-slate-900 block">{log.recipientName}</span>
+                          <span className="text-[10px] text-slate-500 font-mono">{log.recipientEmail}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="bg-purple-100 text-purple-950 font-mono font-black px-2 py-0.5 rounded border border-purple-300 text-xs">
+                            {log.referenceId}
                           </span>
                         </td>
-
-                        <td className="py-4 px-4">
-                          <span className="text-slate-700 font-bold">{rep.territory}</span>
+                        <td className="py-3 px-4">
+                          <span className="font-black text-slate-900 block">{log.targetBranchCode}</span>
+                          <span className="text-[10px] text-slate-500 truncate max-w-[120px] block">{log.targetBranchName}</span>
                         </td>
-
-                        <td className="py-4 px-4 text-center">
-                          <span className="text-[11px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                            {rep.approvedDate}
+                        <td className="py-3 px-4">
+                          <span className="font-bold text-amber-900">{log.dispatchedBySuperAdmin}</span>
+                          <span className="text-[9px] text-slate-400 font-mono block">{log.securityToken}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-slate-600 font-mono text-[10px]">{log.smtpServer}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-mono text-[10px] font-bold">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>DELIVERED (200 OK)</span>
                           </span>
-                        </td>
-
-                        <td className="py-4 px-4 text-center">
-                          <span className="font-black font-mono text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-900">
-                            {rep.referredPatientsCount}
-                          </span>
-                        </td>
-
-                        <td className="py-4 px-4 text-right">
-                          <span className="font-black text-emerald-700 text-xs">₹ {rep.totalCommissionEarned.toLocaleString()}</span>
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* SECTION: ACTIVE REPRESENTATIVES DIRECTORY */}
+          {(marketingSubTab === 'all' || marketingSubTab === 'directory') && (
+            <div className="space-y-4 pt-6 border-t border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <UserCheck className="w-5 h-5 text-purple-600" />
+                    <span>Global Active Marketing Representatives Directory</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Complete multi-branch roster tracking authorized representatives, generated reference codes, and referral commission disbursements.
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-slate-500 font-extrabold uppercase bg-purple-50/50">
+                      <th className="py-3.5 px-4">Authorized Approver</th>
+                      <th className="py-3.5 px-4">Hospital Facility</th>
+                      <th className="py-3.5 px-4">Marketing Representative</th>
+                      <th className="py-3.5 px-4">Issued Reference ID</th>
+                      <th className="py-3.5 px-4">Assigned Territory</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4 text-center">Referred Patients</th>
+                      <th className="py-3.5 px-4 text-right">Commission Earned</th>
+                      <th className="py-3.5 px-4 text-center">Executive Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {marketingRepresentatives.map((rep) => {
+                      const branchObj = branches.find(b => b.id === rep.branchId);
+                      const approver = rep.branchAdminName || rep.superAdminName || branchObj?.adminName || 'Hospital Administrator';
+                      const approverEmail = rep.branchAdminEmail || (rep.superAdminName ? 'superadmin@medix.local' : branchObj?.adminEmail) || 'admin@hospital.local';
+                      const isFired = rep.status === 'fired';
+                      return (
+                        <tr key={rep.id} className={`transition-colors ${isFired ? 'bg-rose-50/40 hover:bg-rose-50/70' : 'hover:bg-purple-50/30'}`}>
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <span className={`w-8 h-8 rounded-full font-black text-xs flex items-center justify-center shrink-0 border ${isFired ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-purple-100 text-purple-800 border-purple-300'}`}>
+                                ADM
+                              </span>
+                              <div>
+                                <p className="font-extrabold text-purple-950 text-xs">{approver}</p>
+                                <p className="text-[10px] text-slate-400 font-mono">{approverEmail}</p>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="py-4 px-4">
+                            <span className="font-black text-slate-900">{rep.branchCode}</span>
+                            <span className="block text-[10px] text-slate-500 truncate max-w-[140px]">{rep.branchName}</span>
+                          </td>
+
+                          <td className="py-4 px-4">
+                            <p className="font-black text-slate-900 text-xs">{rep.name}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">{rep.phone}</p>
+                          </td>
+
+                          <td className="py-4 px-4">
+                            <span className={`font-mono font-black px-2.5 py-1 rounded-lg text-xs border shadow-2xs ${isFired ? 'bg-rose-100 text-rose-950 border-rose-300 line-through' : 'bg-purple-100 text-purple-950 border-purple-300'}`}>
+                              {rep.referenceId}
+                            </span>
+                          </td>
+
+                          <td className="py-4 px-4">
+                            <span className="text-slate-700 font-bold">{rep.territory}</span>
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            {isFired ? (
+                              <span className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-900 text-[10px] font-black uppercase border border-rose-300">
+                                🔥 FIRED / TERMINATED
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-black uppercase border border-emerald-300">
+                                ✓ ACTIVE
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            <span className="font-black font-mono text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-900">
+                              {rep.referredPatientsCount}
+                            </span>
+                          </td>
+
+                          <td className="py-4 px-4 text-right">
+                            <span className="font-black text-emerald-700 text-xs">₹ {rep.totalCommissionEarned.toLocaleString()}</span>
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
+                            {isFired ? (
+                              <button
+                                onClick={() => handleReinstateMarketingRepAction(rep)}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition-all cursor-pointer"
+                              >
+                                ✓ Re-Hire / Activate
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleFireMarketingRepAction(rep)}
+                                className="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-800 font-black text-xs border border-rose-300 shadow-xs transition-all cursor-pointer"
+                              >
+                                🔥 Fire / Terminate
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1183,7 +1941,7 @@ export default function SuperAdminDashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-1 card-3d">
               <span className="text-[10px] font-extrabold text-emerald-800 uppercase">Branch Revenue</span>
-              <p className="text-2xl font-black text-emerald-950">${inspectedRev.toLocaleString()}</p>
+              <p className="text-2xl font-black text-emerald-950">₹{inspectedRev.toLocaleString()}</p>
               <span className="text-[11px] font-bold text-emerald-700">{inspectedInvoices.length} Invoices</span>
             </div>
 
@@ -1534,6 +2292,448 @@ export default function SuperAdminDashboardPage() {
         </div>
       )}
 
+      {/* MODAL: FULL KYC DOSSIER & DOCUMENT INSPECTOR */}
+      {inspectingKycReq && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-2xl border-2 border-indigo-300 shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setInspectingKycReq(null)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-100 border border-indigo-300 flex items-center justify-center text-indigo-700 shadow-xs">
+                <FileText className="w-6 h-6 text-indigo-700" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase text-indigo-900 bg-indigo-100 px-2.5 py-0.5 rounded-md border border-indigo-300">
+                  CONFIDENTIAL KYC DOSSIER • APPLICANT #{inspectingKycReq.id}
+                </span>
+                <h3 className="text-xl font-black text-slate-900 mt-1">{inspectingKycReq.name}</h3>
+                <p className="text-xs text-slate-500">
+                  Target Facility: <strong className="text-indigo-900">{inspectingKycReq.targetBranchName} ({inspectingKycReq.targetBranchCode})</strong>
+                </p>
+              </div>
+            </div>
+
+            {/* Personal & Guardian Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              <div>
+                <span className="text-slate-400 text-[10px] block uppercase font-bold">Gender</span>
+                <span className="font-bold text-slate-900">{inspectingKycReq.gender || 'Male'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px] block uppercase font-bold">Father / Mother</span>
+                <span className="font-bold text-slate-900">{inspectingKycReq.fatherOrMotherName || 'Guardian'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px] block uppercase font-bold">DOB & Blood Group</span>
+                <span className="font-bold text-purple-900 font-mono">{inspectingKycReq.dob || '1993-08-14'} ({inspectingKycReq.bloodGroup || 'B+'})</span>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px] block uppercase font-bold">Email (Verified ✓)</span>
+                <span className="font-mono font-bold text-emerald-800">{inspectingKycReq.email}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px] block uppercase font-bold">Phone Contact</span>
+                <span className="font-mono font-bold text-slate-900">{inspectingKycReq.phone}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 text-[10px] block uppercase font-bold">Experience & Target</span>
+                <span className="font-bold text-slate-900">{inspectingKycReq.experienceYears}y • {inspectingKycReq.expectedMonthlyReferrals} Referrals/Mo</span>
+              </div>
+            </div>
+
+            {/* Residential Address */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+              <span className="text-slate-400 text-[10px] uppercase font-bold block">Verified Residential Address</span>
+              <p className="font-medium text-slate-800">
+                {inspectingKycReq.address || 'Hospital Catchment Area'}, Pin: {inspectingKycReq.pinCode || '400001'}, District: {inspectingKycReq.district || 'City'}, State: {inspectingKycReq.state || 'State'}, Country: {inspectingKycReq.country || 'India'}
+              </p>
+            </div>
+
+            {/* 3 Government Document Verification Cards */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-emerald-600" />
+                <span>Government ID Verification & Document Previews</span>
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Aadhar Card */}
+                <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-amber-900">Aadhar Card</span>
+                    <span className="text-[10px] font-bold text-emerald-700">Verified ✓</span>
+                  </div>
+                  <p className="font-mono font-black text-xs text-amber-950">{inspectingKycReq.aadharNumber || '8877-6655-4433'}</p>
+                  <div className="h-16 rounded-xl bg-white border border-amber-200 flex items-center justify-center text-[10px] text-slate-400 font-mono">
+                    [Aadhar Photo Scanned]
+                  </div>
+                </div>
+
+                {/* PAN Card */}
+                <div className="p-3 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-purple-900">PAN Card</span>
+                    <span className="text-[10px] font-bold text-emerald-700">Verified ✓</span>
+                  </div>
+                  <p className="font-mono font-black text-xs text-purple-950">{inspectingKycReq.panNumber || 'AFGPD1122Q'}</p>
+                  <div className="h-16 rounded-xl bg-white border border-purple-200 flex items-center justify-center text-[10px] text-slate-400 font-mono">
+                    [PAN Photo Scanned]
+                  </div>
+                </div>
+
+                {/* Driving Licence */}
+                <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase text-blue-900">Driving Licence</span>
+                    <span className="text-[10px] font-bold text-emerald-700">Verified ✓</span>
+                  </div>
+                  <p className="font-mono font-black text-xs text-blue-950">{inspectingKycReq.drivingLicenceNumber || 'MH03-2017-0099881'}</p>
+                  <div className="h-16 rounded-xl bg-white border border-blue-200 flex items-center justify-center text-[10px] text-slate-400 font-mono">
+                    [DL Photo Scanned]
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => setInspectingKycReq(null)}
+                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+              >
+                Close Dossier
+              </button>
+
+              <button
+                onClick={() => {
+                  const req = inspectingKycReq;
+                  const generatedRef = req.targetBranchId === 1
+                    ? superAdminDirectApproveMainHospitalRequest(req.id, 'Anichul Haque (Super Admin HQ)')
+                    : superAdminFinalApproveMarketingRequest(req.id, 'Anichul Haque (Super Admin HQ)');
+                  setInspectingKycReq(null);
+                  setDispatchedEmailModal({
+                    repName: req.name,
+                    refId: generatedRef,
+                    email: req.email,
+                    branchName: req.targetBranchName,
+                    adminName: 'Anichul Haque (Super Admin HQ)',
+                  });
+                }}
+                className="flex-1 py-2.5 bg-gradient-to-r from-purple-700 to-indigo-900 hover:from-purple-800 hover:to-indigo-950 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Key className="w-3.5 h-3.5 text-amber-300" />
+                <span>Grant Super Admin Final Approval & Dispatch Reference ID to Email</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DISPATCHED MARKETING REFERENCE ID EMAIL CONFIRMATION */}
+      {dispatchedEmailModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg border-2 border-purple-400 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setDispatchedEmailModal(null)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-purple-100 border-2 border-purple-400 flex items-center justify-center mx-auto text-purple-700 shadow-md">
+                <Mail className="w-8 h-8 text-purple-700" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
+                EMAIL DISPATCH CONFIRMATION ✓
+              </span>
+              <h3 className="font-black text-2xl text-slate-900">Reference ID Dispatched!</h3>
+              <p className="text-xs text-slate-500">
+                Super Admin final approval has been registered. An official onboarding email with security credentials and Reference ID has been sent to the marketing partner.
+              </p>
+            </div>
+
+            {/* Email Payload Preview */}
+            <div className="p-4 rounded-2xl bg-slate-950 text-white font-mono text-xs space-y-3 shadow-inner">
+              <div className="flex items-center justify-between text-slate-400 text-[11px] border-b border-slate-800 pb-2">
+                <span>To: <strong className="text-purple-300">{dispatchedEmailModal.email}</strong></span>
+                <span className="text-emerald-400 font-bold">STATUS: SENT (200 OK)</span>
+              </div>
+              <div>
+                <p className="text-slate-400 text-[10px]">Subject:</p>
+                <p className="text-emerald-300 font-bold">Welcome to Medix Network — Your Official Marketing Reference ID</p>
+              </div>
+              <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-700 text-center space-y-1">
+                <span className="text-[10px] text-purple-300 uppercase">Assigned Reference Code</span>
+                <p className="text-xl font-black text-amber-300 tracking-wider">{dispatchedEmailModal.refId}</p>
+                <span className="text-[10px] text-purple-200 block">Scope: {dispatchedEmailModal.branchName}</span>
+              </div>
+              <div className="text-[10px] text-slate-400 pt-1 border-t border-slate-800 space-y-0.5">
+                <p>• Approved By: <span className="text-slate-200">{dispatchedEmailModal.adminName}</span></p>
+                <p>• Super Admin Authorization: <span className="text-emerald-400">Anichul Haque (HQ Master)</span></p>
+                <p>• Direct Login Portal: <span className="text-purple-300">/dashboard/marketing</span></p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setDispatchedEmailModal(null)}
+              className="w-full py-3 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs rounded-xl shadow-lg transition-all cursor-pointer"
+            >
+              Done & Return to Marketing Hub
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: HIRE / ONBOARD MEDICAL DOCTOR */}
+      {showHireDoctor && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-emerald-200 shadow-2xl space-y-4 relative">
+            <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#046a4e] text-white flex items-center justify-center">
+                  <Stethoscope className="w-4 h-4 text-emerald-200" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-slate-900">Appoint & Hire Medical Doctor</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Super Admin Direct Recruitment & OPD Workspace Assignment</p>
+                </div>
+              </div>
+              <button onClick={() => setShowHireDoctor(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleHireDoctorSubmit} className="space-y-3.5 text-xs font-medium">
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">Doctor Full Legal Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dr. Amitabha Roy"
+                  value={docName}
+                  onChange={(e) => setDocName(e.target.value)}
+                  className="w-full bg-emerald-50/40 border border-emerald-200 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:border-[#046a4e]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Assigned Campus / Branch *</label>
+                  <select
+                    value={docBranchId}
+                    onChange={(e) => setDocBranchId(Number(e.target.value))}
+                    className="w-full bg-emerald-50/40 border border-emerald-200 rounded-2xl px-3 py-3 text-xs font-bold outline-none focus:border-[#046a4e] cursor-pointer"
+                  >
+                    {branches.map(b => (
+                      <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Medical Specialty *</label>
+                  <select
+                    value={docSpecialty}
+                    onChange={(e) => setDocSpecialty(e.target.value)}
+                    className="w-full bg-emerald-50/40 border border-emerald-200 rounded-2xl px-3 py-3 text-xs font-bold outline-none focus:border-[#046a4e] cursor-pointer"
+                  >
+                    <option value="General & Cardiology Medicine">General & Cardiology Medicine</option>
+                    <option value="Cardiology & Vascular Medicine">Cardiology & Vascular Medicine</option>
+                    <option value="General & Trauma Surgery">General & Trauma Surgery</option>
+                    <option value="Pediatric & Adolescent Care">Pediatric & Adolescent Care</option>
+                    <option value="Neurology & Brain Sciences">Neurology & Brain Sciences</option>
+                    <option value="Orthopedics & Joint Surgery">Orthopedics & Joint Surgery</option>
+                    <option value="Dermatology & Skin Care">Dermatology & Skin Care</option>
+                    <option value="Gastroenterology & Hepatology">Gastroenterology & Hepatology</option>
+                    <option value="Critical Care & Pulmonology">Critical Care & Pulmonology</option>
+                    <option value="Nephrology & Renal Transplant">Nephrology & Renal Transplant</option>
+                    <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Consultation Fee (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    placeholder="800"
+                    value={docFee}
+                    onChange={(e) => setDocFee(Number(e.target.value))}
+                    className="w-full bg-emerald-50/40 border border-emerald-200 rounded-2xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Initial Duty Status</label>
+                  <select
+                    value={docStatus}
+                    onChange={(e) => setDocStatus(e.target.value as any)}
+                    className="w-full bg-emerald-50/40 border border-emerald-200 rounded-2xl px-3 py-3 text-xs font-bold outline-none focus:border-[#046a4e] cursor-pointer"
+                  >
+                    <option value="available">🟢 Available (On-Duty)</option>
+                    <option value="busy">🟡 In Consultation (Busy)</option>
+                    <option value="off-duty">⚪ Off-Duty</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">Contact Phone / WhatsApp</label>
+                <input
+                  type="text"
+                  placeholder="+91 98000 12345"
+                  value={docContact}
+                  onChange={(e) => setDocContact(e.target.value)}
+                  className="w-full bg-emerald-50/40 border border-emerald-200 rounded-2xl px-4 py-3 text-xs font-mono outline-none focus:border-[#046a4e]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs rounded-full shadow-lg transition-all cursor-pointer mt-2 btn-premium-3d"
+              >
+                Confirm Doctor Appointment & Deploy to OPD
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: HIRE / ONBOARD MARKETING REPRESENTATIVE */}
+      {showHireMarketingRep && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-purple-200 shadow-2xl space-y-4 relative">
+            <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-purple-700 text-white flex items-center justify-center">
+                  <UserPlus className="w-4 h-4 text-purple-200" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-slate-900">Appoint Marketing Partner</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Instant Reference ID Generation & Commission Ledger Setup</p>
+                </div>
+              </div>
+              <button onClick={() => setShowHireMarketingRep(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleHireMarketingSubmit} className="space-y-3.5 text-xs font-medium">
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">Representative Full Legal Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Sameer Sen"
+                  value={mktName}
+                  onChange={(e) => setMktName(e.target.value)}
+                  className="w-full bg-purple-50/40 border border-purple-200 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:border-purple-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Target Campus / Branch *</label>
+                  <select
+                    value={mktBranchId}
+                    onChange={(e) => setMktBranchId(Number(e.target.value))}
+                    className="w-full bg-purple-50/40 border border-purple-200 rounded-2xl px-3 py-3 text-xs font-bold outline-none focus:border-purple-700 cursor-pointer"
+                  >
+                    {branches.map(b => (
+                      <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Experience (Years)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="3"
+                    value={mktExperience}
+                    onChange={(e) => setMktExperience(Number(e.target.value))}
+                    className="w-full bg-purple-50/40 border border-purple-200 rounded-2xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-purple-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">Assigned Territory / Coverage Hub *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Kolkata North & Corporate Healthcare Zones"
+                  value={mktTerritory}
+                  onChange={(e) => setMktTerritory(e.target.value)}
+                  className="w-full bg-purple-50/40 border border-purple-200 rounded-2xl px-4 py-3 text-xs outline-none focus:border-purple-700"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="partner@medix.local"
+                    value={mktEmail}
+                    onChange={(e) => setMktEmail(e.target.value)}
+                    className="w-full bg-purple-50/40 border border-purple-200 rounded-2xl px-4 py-3 text-xs outline-none focus:border-purple-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    placeholder="+91 98000 12345"
+                    value={mktPhone}
+                    onChange={(e) => setMktPhone(e.target.value)}
+                    className="w-full bg-purple-50/40 border border-purple-200 rounded-2xl px-4 py-3 text-xs font-mono outline-none focus:border-purple-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">Commission Structure</label>
+                <input
+                  type="text"
+                  placeholder="10% on Diagnostics & OPD"
+                  value={mktCommission}
+                  onChange={(e) => setMktCommission(e.target.value)}
+                  className="w-full bg-purple-50/40 border border-purple-200 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:border-purple-700"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs rounded-full shadow-lg transition-all cursor-pointer mt-2 btn-premium-3d"
+              >
+                Appoint Marketing Partner & Generate Ref ID
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
+  );
+}
+
+export default function SuperAdminDashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#07131e] flex items-center justify-center text-slate-300 font-bold">Loading Super Admin HQ...</div>}>
+      <SuperAdminDashboardContent />
+    </Suspense>
   );
 }

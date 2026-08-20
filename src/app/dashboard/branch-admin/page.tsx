@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '@/lib/store';
 import {
   LayoutDashboard,
@@ -8,7 +8,7 @@ import {
   Stethoscope,
   BedDouble,
   Pill,
-  DollarSign,
+  IndianRupee,
   ShieldCheck,
   Building2,
   Lock,
@@ -48,6 +48,8 @@ export default function BranchAdminDashboard() {
     setUserRole,
     marketingRepresentatives,
     marketingJoinRequests,
+    submitMarketingJoinRequest,
+    branchAdminPreApproveMarketingRequest,
     approveMarketingJoinRequest,
     rejectMarketingJoinRequest,
     addMarketingRepresentative,
@@ -56,6 +58,11 @@ export default function BranchAdminDashboard() {
 
   // Active Tab: 'overview' | 'marketing' | 'doctors' | 'pharmacy'
   const [activeTab, setActiveTab] = useState<'overview' | 'marketing' | 'doctors' | 'pharmacy'>('overview');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Determine active branch scope
   const activeBranch = selectedBranchId === 'all'
@@ -72,7 +79,9 @@ export default function BranchAdminDashboard() {
 
   // Marketing Data scoped to this branch
   const branchMarketingReps = marketingRepresentatives.filter(m => m.branchId === activeBranch.id);
-  const branchMarketingRequests = marketingJoinRequests.filter(r => r.targetBranchId === activeBranch.id && r.status === 'pending');
+  const branchMarketingRequests = marketingJoinRequests.filter(
+    r => r.targetBranchId === activeBranch.id && (r.status === 'pending_branch_review' || r.status === 'pending_super_admin_approval' || (r.status as any) === 'pending')
+  );
 
   const occupiedBeds = branchBeds.filter(b => b.status === 'occupied').length;
   const branchRevenue = branchInvoices.reduce((sum, inv) => sum + inv.amount, 0);
@@ -139,42 +148,44 @@ export default function BranchAdminDashboard() {
     e.preventDefault();
     if (!manualRepName) return;
 
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const newRefId = `REF-MKT-B${activeBranch.id}-${randomSuffix}`;
-
-    addMarketingRepresentative({
-      referenceId: newRefId,
-      branchId: activeBranch.id,
-      branchCode: activeBranch.code,
-      branchName: activeBranch.name,
+    submitMarketingJoinRequest({
       name: manualRepName,
+      gender: 'Male',
+      fatherOrMotherName: 'Guardian',
+      dob: '1994-01-01',
+      bloodGroup: 'O+',
+      aadharNumber: 'XXXX-XXXX-XXXX',
+      panNumber: 'XXXXX0000X',
+      drivingLicenceNumber: 'DL-XXXXX',
+      address: 'Hospital Catchment Area',
+      pinCode: '700001',
+      district: activeBranch.location,
+      state: 'West Bengal',
+      country: 'India',
       email: manualRepEmail || `${manualRepName.toLowerCase().replace(/\s+/g, '.')}@medixpartner.local`,
+      emailVerified: true,
       phone: manualRepPhone || '+91 98200 00000',
-      territory: manualRepTerritory,
+      targetBranchId: activeBranch.id,
+      targetBranchCode: activeBranch.code,
+      targetBranchName: activeBranch.name,
+      territory: manualRepTerritory || 'Branch Catchment Area',
       experienceYears: parseInt(manualRepExp) || 3,
-      status: 'active',
-      approvedByAdminName: activeBranch.adminName,
-      approvedByAdminEmail: activeBranch.adminEmail,
-      referredPatientsCount: 0,
-      totalCommissionEarned: 0,
-      pendingPayout: 0,
-      commissionRate: '10% on Diagnostics & OPD',
+      expectedMonthlyReferrals: 30,
+      qualificationsOrNotes: `Directly recommended by Branch Admin (${activeBranch.adminName})`,
+      source: 'branch_hired',
+      branchAdminApprovedDate: new Date().toISOString().split('T')[0],
+      branchAdminName: activeBranch.adminName,
+      branchAdminEmail: activeBranch.adminEmail,
     });
 
-    setManualSuccessMsg(`Marketing Representative Onboarded! Reference ID: ${newRefId}`);
+    setManualSuccessMsg(`Candidate ${manualRepName} pre-approved & submitted to Super Admin for 2-step verification!`);
     setTimeout(() => {
       setManualSuccessMsg('');
       setManualRepName('');
       setManualRepEmail('');
       setManualRepPhone('');
       setShowManualAddRep(false);
-      setApprovedRepModal({
-        name: manualRepName,
-        refId: newRefId,
-        phone: manualRepPhone,
-        territory: manualRepTerritory,
-      });
-    }, 1200);
+    }, 1800);
   };
 
   const copyToClipboard = (text: string) => {
@@ -344,7 +355,7 @@ export default function BranchAdminDashboard() {
             <div className="p-5 rounded-3xl bg-white border border-purple-100 shadow-xs space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-extrabold uppercase">
                 <span>Commission Earned</span>
-                <DollarSign className="h-4 w-4 text-[#159A67]" />
+                <IndianRupee className="h-4 w-4 text-[#159A67]" />
               </div>
               <p className="text-3xl font-black text-[#159A67]">₹ {totalCommissionDisbursed.toLocaleString()}</p>
               <span className="text-xs text-slate-500 font-mono font-bold">Pending: ₹ {totalPendingPayout.toLocaleString()}</span>
@@ -383,7 +394,7 @@ export default function BranchAdminDashboard() {
                 {branchMarketingRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="p-5 rounded-2xl bg-gradient-to-br from-purple-50/50 to-white border-2 border-purple-200 shadow-xs space-y-3.5 hover:border-purple-400 transition-all"
+                    className="p-5 rounded-3xl bg-gradient-to-br from-purple-50/50 to-white border-2 border-purple-200 shadow-xs space-y-3.5 hover:border-purple-400 transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -401,13 +412,33 @@ export default function BranchAdminDashboard() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-purple-100">
+                    {/* KYC Summary Card */}
+                    <div className="grid grid-cols-2 gap-2 text-[11px] bg-white p-3 rounded-2xl border border-purple-100 space-y-1">
                       <div>
-                        <span className="text-slate-400 block text-[10px]">Phone</span>
+                        <span className="text-slate-400 block text-[10px]">Father/Mother Name</span>
+                        <span className="font-bold text-slate-800">{req.fatherOrMotherName || 'Alok Sen'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">Blood Group & Gender</span>
+                        <span className="font-bold text-purple-900 font-mono">{req.bloodGroup || 'O+'} • {req.gender || 'Male'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">Aadhar Number</span>
+                        <span className="font-bold text-slate-800 font-mono">{req.aadharNumber || 'XXXX-XXXX-XXXX'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">PAN Card</span>
+                        <span className="font-bold text-slate-800 font-mono">{req.panNumber || 'XXXXX0000X'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] bg-purple-50/50 p-2.5 rounded-xl border border-purple-100">
+                      <div>
+                        <span className="text-slate-500 block text-[10px]">Phone & Email</span>
                         <span className="font-bold text-slate-800 font-mono">{req.phone}</span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px]">Expected Referrals</span>
+                        <span className="text-slate-500 block text-[10px]">Expected Referrals</span>
                         <span className="font-bold text-emerald-700 font-mono">{req.expectedMonthlyReferrals} Patients/Mo</span>
                       </div>
                     </div>
@@ -416,23 +447,44 @@ export default function BranchAdminDashboard() {
                       &ldquo;{req.qualificationsOrNotes}&rdquo;
                     </p>
 
-                    {/* ACTION BUTTONS */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-purple-100">
-                      <button
-                        onClick={() => handleApproveMarketingRequest(req.id, req.name, req.phone, req.territory)}
-                        className="flex-1 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Approve & Generate Reference ID</span>
-                      </button>
+                    {/* 2-TIER STATUS & ACTION BUTTONS */}
+                    {req.status === 'pending_super_admin_approval' ? (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-2">
+                        <div className="text-[11px] text-amber-900 font-extrabold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Pre-Approved by Branch Admin • Awaiting Super Admin Final Approval & Email Dispatch</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 pt-2 border-t border-purple-100">
+                        {activeBranch.id === 1 ? (
+                          // Direct HQ Approval
+                          <button
+                            onClick={() => handleApproveMarketingRequest(req.id, req.name, req.phone, req.territory)}
+                            className="flex-1 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Approve & Dispatch Reference ID</span>
+                          </button>
+                        ) : (
+                          // Branch Pre-Approval
+                          <button
+                            onClick={() => branchAdminPreApproveMarketingRequest(req.id, activeBranch.adminName, activeBranch.adminEmail)}
+                            className="flex-1 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
+                          >
+                            <Check className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Pre-Approve & Forward to Super Admin</span>
+                          </button>
+                        )}
 
-                      <button
-                        onClick={() => rejectMarketingJoinRequest(req.id)}
-                        className="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 font-bold text-xs rounded-xl border border-slate-200 transition-all cursor-pointer"
-                      >
-                        Reject
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => rejectMarketingJoinRequest(req.id)}
+                          className="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 font-bold text-xs rounded-xl border border-slate-200 transition-all cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -554,9 +606,9 @@ export default function BranchAdminDashboard() {
             <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-extrabold uppercase">
                 <span>Branch Revenue</span>
-                <DollarSign className="h-4 w-4 text-emerald-600" />
+                <IndianRupee className="h-4 w-4 text-emerald-600" />
               </div>
-              <p className="text-3xl font-black text-slate-900">${branchRevenue.toLocaleString()}</p>
+              <p className="text-3xl font-black text-slate-900">₹{branchRevenue.toLocaleString()}</p>
               <span className="text-xs text-emerald-600 font-bold">{branchInvoices.length} Invoices Scoped</span>
             </div>
 
@@ -932,7 +984,7 @@ export default function BranchAdminDashboard() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Dr. Jonathan Hayes"
+                  placeholder="e.g. Dr . Jiarul Haque"
                   value={docName}
                   onChange={(e) => setDocName(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:border-[#046a4e]"
@@ -953,11 +1005,11 @@ export default function BranchAdminDashboard() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Consult Fee ($)</label>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Consult Fee (₹)</label>
                   <input
                     type="number"
                     required
-                    placeholder="150"
+                    placeholder="500"
                     value={docFee}
                     onChange={(e) => setDocFee(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:border-[#046a4e]"
@@ -967,10 +1019,10 @@ export default function BranchAdminDashboard() {
                   <label className="text-xs font-extrabold text-slate-900 block mb-1">Contact Phone</label>
                   <input
                     type="text"
-                    placeholder="+1 (555) 019-8800"
+                    placeholder="+91 9804222142"
                     value={docPhone}
                     onChange={(e) => setDocPhone(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-mono outline-none focus:border-[#046a4e]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:border-[#046a4e]"
                   />
                 </div>
               </div>
