@@ -160,6 +160,15 @@ export interface Doctor {
   fee: number;
   status: 'available' | 'busy' | 'off-duty';
   contact: string;
+  image?: string;
+  avatarUrl?: string;
+  email?: string;
+  qualification?: string;
+  department?: string;
+  scheduleTime?: string; // e.g. "10:00 AM - 02:00 PM"
+  chamberRoom?: string; // e.g. "OPD Chamber 102"
+  registeredBy?: string;
+  registrationDate?: string;
 }
 
 export interface Patient {
@@ -173,6 +182,8 @@ export interface Patient {
   phone: string;
   condition: string;
   status: 'opd' | 'admitted' | 'discharged';
+  address?: string;
+  admittedDate?: string;
 }
 
 export interface Bed {
@@ -183,6 +194,11 @@ export interface Bed {
   dailyCharge: number;
   status: 'available' | 'occupied' | 'maintenance';
   patientName?: string;
+  patientUhid?: string;
+  admissionDate?: string;
+  expectedDischargeDate?: string;
+  expectedReleaseTime?: string; // e.g. "02:00 PM"
+  assignedDoctor?: string;
 }
 
 export interface Medicine {
@@ -193,6 +209,8 @@ export interface Medicine {
   stock: number;
   price: number;
   expiryDate: string;
+  batchNumber?: string;
+  dosageForm?: string; // Tablet, Syrup, Injection, Capsule
 }
 
 export interface LabRequest {
@@ -200,10 +218,14 @@ export interface LabRequest {
   branchId: number;
   requestNumber: string;
   patientName: string;
+  patientUhid?: string;
   testName: string;
   category: string;
   doctorName: string;
   status: 'pending' | 'processing' | 'ready';
+  testPrice?: number;
+  sampleCollectedAt?: string;
+  reportUrl?: string;
 }
 
 export interface Invoice {

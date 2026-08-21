@@ -518,6 +518,14 @@ function SuperAdminDashboardContent() {
             <span>+ Hire Marketing Rep</span>
           </button>
 
+          <Link
+            href="/receptionist"
+            className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs px-4 py-3 rounded-full shadow-lg transition-all cursor-pointer hover:scale-105 btn-premium-3d border border-amber-300"
+          >
+            <Building2 className="h-4 w-4 text-amber-900" />
+            <span>Receptionist Command Hub</span>
+          </Link>
+
           <button
             onClick={() => setShowAddBranch(true)}
             className="flex items-center gap-2 bg-[#6ee7b7] hover:bg-[#34d399] text-[#022c22] font-black text-xs px-4 py-3 rounded-full shadow-lg transition-all cursor-pointer hover:scale-105 btn-premium-3d"

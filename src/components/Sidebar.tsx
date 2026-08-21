@@ -99,6 +99,7 @@ export function Sidebar() {
           division: 'DOCTOR CLINICAL SUITE',
           items: [
             { name: 'OPD Doctor Desk', href: '/dashboard/doctor', icon: Stethoscope, iconColor: 'text-teal-300' },
+            { name: 'Receptionist Desk', href: '/receptionist', icon: Building2, iconColor: 'text-amber-300' },
             { name: 'Appointments Queue', href: '/appointments', icon: CalendarDays, iconColor: 'text-emerald-300' },
             { name: 'Patient Directory (EHR)', href: '/patients', icon: User, iconColor: 'text-sky-300' },
             { name: 'Pharmacy & Prescriptions', href: '/pharmacy', icon: Pill, iconColor: 'text-amber-200' },
@@ -122,6 +123,7 @@ export function Sidebar() {
         {
           division: 'CLINICAL SERVICES',
           items: [
+            { name: 'Receptionist Desk', href: '/receptionist', icon: Building2, iconColor: 'text-amber-300', badge: 'Front Desk' },
             { name: 'Patients (EHR)', href: '/patients', icon: User, iconColor: 'text-teal-300' },
             { name: 'Appointments & Tokens', href: '/appointments', icon: CalendarDays, iconColor: 'text-emerald-300' },
             { name: 'OPD Doctors', href: '/doctors', icon: Stethoscope, iconColor: 'text-teal-200' },
@@ -187,6 +189,7 @@ export function Sidebar() {
       {
         division: 'CLINICAL & PATIENTS',
         items: [
+          { name: 'Receptionist Command Hub', href: '/receptionist', icon: Building2, iconColor: 'text-amber-300', badge: 'Front Desk' },
           { name: 'Patients (EHR)', href: '/patients', icon: User, iconColor: 'text-teal-300' },
           { name: 'Appointments & Tokens', href: '/appointments', icon: CalendarDays, iconColor: 'text-emerald-300' },
           { name: 'OPD Workspace', href: '/doctors', icon: Stethoscope, iconColor: 'text-teal-200' },

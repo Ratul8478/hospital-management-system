@@ -101,10 +101,27 @@ interface AppContextType {
   updateBranchAdminStatus: (id: number, status: 'active' | 'vacant' | 'suspended') => void;
   reassignBranchAdmin: (adminId: number, newBranchId: number) => void;
   addDoctor: (doctor: Omit<Doctor, 'id'>) => void;
+  updateDoctor: (id: number, data: Partial<Doctor>) => void;
+  deleteDoctor: (id: number) => void;
   addPatient: (patient: Omit<Patient, 'id'>) => void;
+  updatePatient: (id: number, data: Partial<Patient>) => void;
+  deletePatient: (id: number) => void;
   addBranch: (newBranch: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'>) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'tokenNumber'>) => void;
+  updateAppointment: (id: number, data: Partial<Appointment>) => void;
   updateAppointmentStatus: (id: number, status: Appointment['status']) => void;
+  deleteAppointment: (id: number) => void;
+  addBed: (bed: Omit<Bed, 'id'>) => void;
+  updateBed: (id: number, data: Partial<Bed>) => void;
+  deleteBed: (id: number) => void;
+  addMedicine: (med: Omit<Medicine, 'id'>) => void;
+  updateMedicine: (id: number, data: Partial<Medicine>) => void;
+  deleteMedicine: (id: number) => void;
+  addLabRequest: (lab: Omit<LabRequest, 'id'>) => void;
+  updateLabRequest: (id: number, data: Partial<LabRequest>) => void;
+  deleteLabRequest: (id: number) => void;
+  updateMarketingRepresentative: (id: number, data: Partial<MarketingRepresentative>) => void;
+  deleteMarketingRepresentative: (id: number) => void;
   isMobileSidebarOpen: boolean;
   setIsMobileSidebarOpen: (isOpen: boolean) => void;
   toggleMobileSidebar: () => void;
@@ -409,21 +426,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addDoctor = (newDoc: Omit<Doctor, 'id'>) => {
     const created: Doctor = {
       ...newDoc,
-      id: doctors.length + 1,
+      id: doctors.length > 0 ? Math.max(...doctors.map(d => d.id)) + 1 : 1,
     };
     setDoctors(prev => [...prev, created]);
+  };
+
+  const updateDoctor = (id: number, data: Partial<Doctor>) => {
+    setDoctors(prev => prev.map(d => d.id === id ? { ...d, ...data } : d));
+  };
+
+  const deleteDoctor = (id: number) => {
+    setDoctors(prev => prev.filter(d => d.id !== id));
   };
 
   const addPatient = (newPatient: Omit<Patient, 'id'>) => {
     const created: Patient = {
       ...newPatient,
-      id: patients.length + 1,
+      id: patients.length > 0 ? Math.max(...patients.map(p => p.id)) + 1 : 1,
     };
     setPatients(prev => [...prev, created]);
   };
 
+  const updatePatient = (id: number, data: Partial<Patient>) => {
+    setPatients(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  };
+
+  const deletePatient = (id: number) => {
+    setPatients(prev => prev.filter(p => p.id !== id));
+  };
+
   const addBranch = (newBranchData: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'>) => {
-    const newId = branches.length + 1;
+    const newId = branches.length > 0 ? Math.max(...branches.map(b => b.id)) + 1 : 1;
     const createdBranch: Branch = {
       ...newBranchData,
       id: newId,
@@ -439,13 +472,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setBranchAdmins(prev => [
         ...prev,
         {
-          id: prev.length + 1,
+          id: prev.length > 0 ? Math.max(...prev.map(a => a.id)) + 1 : 1,
           branchId: newId,
           branchCode: newBranchData.code,
           branchName: newBranchData.name,
           name: newBranchData.adminName,
           email: newBranchData.adminEmail,
-          phone: '+1 (555) 999-8888',
+          phone: '+91 9804222142',
           status: 'active',
           assignedDate: new Date().toISOString().split('T')[0],
           roleTitle: 'Branch Central Admin',
@@ -458,14 +491,79 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const nextToken = 100 + appointments.length + 1;
     const created: Appointment = {
       ...newApp,
-      id: appointments.length + 1,
+      id: appointments.length > 0 ? Math.max(...appointments.map(a => a.id)) + 1 : 1,
       tokenNumber: nextToken,
     };
     setAppointments(prev => [...prev, created]);
   };
 
+  const updateAppointment = (id: number, data: Partial<Appointment>) => {
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, ...data } : a));
+  };
+
   const updateAppointmentStatus = (id: number, status: Appointment['status']) => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+  };
+
+  const deleteAppointment = (id: number) => {
+    setAppointments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const addBed = (newBed: Omit<Bed, 'id'>) => {
+    const created: Bed = {
+      ...newBed,
+      id: beds.length > 0 ? Math.max(...beds.map(b => b.id)) + 1 : 1,
+    };
+    setBeds(prev => [...prev, created]);
+  };
+
+  const updateBed = (id: number, data: Partial<Bed>) => {
+    setBeds(prev => prev.map(b => b.id === id ? { ...b, ...data } : b));
+  };
+
+  const deleteBed = (id: number) => {
+    setBeds(prev => prev.filter(b => b.id !== id));
+  };
+
+  const addMedicine = (newMed: Omit<Medicine, 'id'>) => {
+    const created: Medicine = {
+      ...newMed,
+      id: medicines.length > 0 ? Math.max(...medicines.map(m => m.id)) + 1 : 1,
+    };
+    setMedicines(prev => [...prev, created]);
+  };
+
+  const updateMedicine = (id: number, data: Partial<Medicine>) => {
+    setMedicines(prev => prev.map(m => m.id === id ? { ...m, ...data } : m));
+  };
+
+  const deleteMedicine = (id: number) => {
+    setMedicines(prev => prev.filter(m => m.id !== id));
+  };
+
+  const addLabRequest = (newLab: Omit<LabRequest, 'id'>) => {
+    const created: LabRequest = {
+      ...newLab,
+      id: labRequests.length > 0 ? Math.max(...labRequests.map(l => l.id)) + 1 : 1,
+    };
+    setLabRequests(prev => [...prev, created]);
+  };
+
+  const updateLabRequest = (id: number, data: Partial<LabRequest>) => {
+    setLabRequests(prev => prev.map(l => l.id === id ? { ...l, ...data } : l));
+  };
+
+  const deleteLabRequest = (id: number) => {
+    setLabRequests(prev => prev.filter(l => l.id !== id));
+  };
+
+  const updateMarketingRepresentative = (id: number, data: Partial<MarketingRepresentative>) => {
+    setMarketingRepresentatives(prev => prev.map(r => r.id === id ? { ...r, ...data } : r));
+  };
+
+  const deleteMarketingRepresentative = (id: number) => {
+    setMarketingRepresentatives(prev => prev.filter(r => r.id !== id));
+    setMarketingJoinRequests(prev => prev.filter(r => r.id !== id));
   };
 
   const submitMarketingJoinRequest = (requestData: Omit<MarketingJoinRequest, 'id' | 'appliedDate' | 'status'>) => {
@@ -781,10 +879,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateBranchAdminStatus,
         reassignBranchAdmin,
         addDoctor,
+        updateDoctor,
+        deleteDoctor,
         addPatient,
+        updatePatient,
+        deletePatient,
         addBranch,
         addAppointment,
+        updateAppointment,
         updateAppointmentStatus,
+        deleteAppointment,
+        addBed,
+        updateBed,
+        deleteBed,
+        addMedicine,
+        updateMedicine,
+        deleteMedicine,
+        addLabRequest,
+        updateLabRequest,
+        deleteLabRequest,
+        updateMarketingRepresentative,
+        deleteMarketingRepresentative,
         isMobileSidebarOpen,
         setIsMobileSidebarOpen,
         toggleMobileSidebar,

@@ -30,7 +30,9 @@ import {
   Info,
   FileBadge,
   Phone,
-  MessageSquare
+  MessageSquare,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { detectSuspiciousPayload } from '@/lib/security';
 import ConceptHeader from '@/components/landing-concepts/ConceptHeader';
@@ -97,9 +99,25 @@ function RegisterPageContent() {
   const [mktMonthlyReferrals, setMktMonthlyReferrals] = useState('30');
   const [mktNotes, setMktNotes] = useState('Tie-ups with local general physicians, polyclinics, and corporate offices');
 
-  // Doctor specific fields
+  // Doctor specific fields (Hospital Receptionist Registration)
   const [specialty, setSpecialty] = useState('Cardiology & Vascular Medicine');
   const [consultFee, setConsultFee] = useState('800');
+  const [docQualification, setDocQualification] = useState('MD, MBBS');
+  const [docImage, setDocImage] = useState('');
+  const [docImagePreview, setDocImagePreview] = useState('');
+
+  const handleDocImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setDocImage(base64String);
+        setDocImagePreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Patient specific fields
   const [patientAge, setPatientAge] = useState('35');
@@ -225,14 +243,18 @@ function RegisterPageContent() {
         addDoctor({
           branchId: targetBranch.id,
           name: fullName.startsWith('Dr.') ? fullName : `Dr. ${fullName}`,
-          specialty: specialty,
+          specialty: specialty || 'General & Cardiology Medicine',
           fee: parseFloat(consultFee) || 800,
           status: 'available',
-          contact: phone || '+91 98200 99887',
+          contact: phone || '+91 9804222142',
+          image: docImage || undefined,
+          qualification: docQualification || 'MD, MBBS',
+          registeredBy: `Hospital Receptionist (${targetBranch.name})`,
+          registrationDate: new Date().toISOString().split('T')[0],
         });
         setUserRole('doctor');
         setSelectedBranchId(targetBranch.id);
-        setSuccessMsg(`🩺 Medical Consultant Profile created for ${targetBranch.code}!`);
+        setSuccessMsg(`🩺 Medical Consultant Registered with Photo for ${targetBranch.code}!`);
         setTimeout(() => router.push('/dashboard/doctor'), 1200);
 
       } else if (adminSubRole === 'patient') {
@@ -755,10 +777,54 @@ function RegisterPageContent() {
             )}
 
             {/* ========================================================================= */}
-            {/* 3. DOCTOR SPECIFIC FIELDS */}
+            {/* 3. DOCTOR SPECIFIC FIELDS (HOSPITAL RECEPTIONIST ONBOARDING) */}
             {/* ========================================================================= */}
             {adminSubRole === 'doctor' && (
               <div className="p-4 bg-[#f0fdf4] border border-[#d1fae5] rounded-2xl space-y-3">
+                {/* Doctor Photo Upload with Preview */}
+                <div className="p-3 bg-white border border-[#d1fae5] rounded-xl space-y-2">
+                  <label className="text-xs font-extrabold text-[#062c21] flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-[#046a4e]" />
+                    <span>Doctor Profile Photo *</span>
+                  </label>
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-16 w-16 rounded-xl overflow-hidden border-2 border-emerald-200 bg-emerald-50 shadow-xs flex items-center justify-center shrink-0">
+                      {docImagePreview ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={docImagePreview} alt="Doctor Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="text-center p-1 text-slate-400">
+                          <Upload className="h-5 w-5 mx-auto mb-0.5 text-slate-400" />
+                          <span className="text-[8px] font-bold block">No Photo</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 flex-1">
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#f0fdf4] hover:bg-[#d1fae5] border border-[#a7f3d0] rounded-xl font-bold text-xs text-[#046a4e] cursor-pointer shadow-xs transition">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleDocImageChange}
+                          className="hidden"
+                        />
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Or enter online Image URL (https://...)"
+                        value={docImage.startsWith('data:') ? '' : docImage}
+                        onChange={(e) => {
+                          setDocImage(e.target.value);
+                          setDocImagePreview(e.target.value);
+                        }}
+                        className="w-full bg-[#f0fdf4] border border-[#d1fae5] rounded-lg px-2.5 py-1 text-[11px] outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block font-extrabold text-[#062c21] mb-1">Assigned Hospital Branch</label>
                   <select
@@ -774,25 +840,38 @@ function RegisterPageContent() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-extrabold text-[#062c21] mb-1">Medical Specialty</label>
+                    <label className="block font-extrabold text-[#062c21] mb-1">Medical Specialty *</label>
                     <input
                       type="text"
                       required
+                      placeholder="General & Cardiology"
                       value={specialty}
                       onChange={e => setSpecialty(e.target.value)}
                       className="w-full px-3.5 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block font-extrabold text-[#062c21] mb-1">Consultation Fee (₹)</label>
+                    <label className="block font-extrabold text-[#062c21] mb-1">Qualifications</label>
                     <input
-                      type="number"
-                      required
-                      value={consultFee}
-                      onChange={e => setConsultFee(e.target.value)}
+                      type="text"
+                      placeholder="MD, MBBS"
+                      value={docQualification}
+                      onChange={e => setDocQualification(e.target.value)}
                       className="w-full px-3.5 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block font-extrabold text-[#062c21] mb-1">Consultation Fee (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="800"
+                    value={consultFee}
+                    onChange={e => setConsultFee(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl outline-none"
+                  />
                 </div>
               </div>
             )}

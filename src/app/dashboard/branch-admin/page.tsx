@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useApp } from '@/lib/store';
 import {
   LayoutDashboard,
@@ -30,7 +31,9 @@ import {
   Award,
   Phone,
   Mail,
-  UserCheck
+  UserCheck,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function BranchAdminDashboard() {
@@ -97,12 +100,29 @@ export default function BranchAdminDashboard() {
   const [approvedRepModal, setApprovedRepModal] = useState<{ name: string; refId: string; phone: string; territory: string } | null>(null);
   const [copiedRefId, setCopiedRefId] = useState<string | null>(null);
 
-  // Hire Doctor Form State
+  // Hire Doctor Form State (Receptionist Onboarding)
   const [docName, setDocName] = useState('');
-  const [docSpecialty, setDocSpecialty] = useState('Cardiology & Vascular Medicine');
-  const [docFee, setDocFee] = useState('150');
+  const [docSpecialty, setDocSpecialty] = useState('General & Cardiology Medicine');
+  const [docFee, setDocFee] = useState('800');
   const [docPhone, setDocPhone] = useState('');
+  const [docQualification, setDocQualification] = useState('MD, MBBS');
+  const [docImage, setDocImage] = useState('');
+  const [docImagePreview, setDocImagePreview] = useState('');
   const [docSuccessMsg, setDocSuccessMsg] = useState('');
+
+  // Handle local doctor photo file upload
+  const handleDocImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setDocImage(base64String);
+        setDocImagePreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Manual Add Marketing Rep State
   const [manualRepName, setManualRepName] = useState('');
@@ -119,17 +139,23 @@ export default function BranchAdminDashboard() {
     addDoctor({
       branchId: activeBranch.id,
       name: docName.startsWith('Dr.') ? docName : `Dr. ${docName}`,
-      specialty: docSpecialty,
-      fee: parseFloat(docFee) || 150,
+      specialty: docSpecialty || 'General & Cardiology Medicine',
+      fee: parseFloat(docFee) || 800,
       status: 'available',
-      contact: docPhone || '+1 (555) 019-8800',
+      contact: docPhone || '+91 9804222142',
+      image: docImage || undefined,
+      qualification: docQualification || 'MD, MBBS',
+      registeredBy: `Hospital Receptionist (${activeBranch.name})`,
+      registrationDate: new Date().toISOString().split('T')[0],
     });
 
-    setDocSuccessMsg(`Dr. ${docName} hired for ${activeBranch.code}!`);
+    setDocSuccessMsg(`Dr. ${docName} registered with photo for ${activeBranch.code}!`);
     setTimeout(() => {
       setDocSuccessMsg('');
       setDocName('');
       setDocPhone('');
+      setDocImage('');
+      setDocImagePreview('');
       setShowAddDoctor(false);
     }, 1200);
   };
@@ -231,6 +257,13 @@ export default function BranchAdminDashboard() {
           >
             <UserPlus className="w-4 h-4" /> Add Marketing Rep
           </button>
+
+          <Link
+            href="/receptionist"
+            className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs rounded-full shadow-lg transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 border border-amber-300"
+          >
+            <Building2 className="w-4 h-4 text-amber-900" /> Receptionist Desk
+          </Link>
 
           <button
             onClick={() => setShowAddDoctor(true)}
@@ -734,16 +767,31 @@ export default function BranchAdminDashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {branchDoctors.map(doc => (
-              <div key={doc.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div>
-                  <p className="font-extrabold text-slate-900 text-sm">{doc.name}</p>
-                  <p className="text-xs text-[#046a4e] font-bold">{doc.specialty}</p>
+              <div key={doc.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {doc.image ? (
+                    <div className="h-12 w-12 rounded-2xl overflow-hidden border border-emerald-200 shrink-0 bg-white shadow-xs">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={doc.image} alt={doc.name} className="h-full w-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="h-12 w-12 rounded-2xl bg-[#046a4e] text-white font-black text-base flex items-center justify-center shadow-xs shrink-0">
+                      {doc.name.replace(/^Dr\.\s*/i, '').charAt(0) || 'D'}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-extrabold text-slate-900 text-sm">{doc.name}</p>
+                    <p className="text-xs text-[#046a4e] font-bold">{doc.specialty}</p>
+                    {doc.qualification && (
+                      <p className="text-[10px] text-slate-400">{doc.qualification}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <span className="px-3 py-1 text-xs font-black bg-emerald-100 text-emerald-800 rounded-full border border-emerald-300">
-                    ${doc.fee} Consult Fee
+                    ₹{doc.fee} Consult Fee
                   </span>
-                  <p className="text-xs text-slate-500 font-mono mt-1">{doc.contact || '+1 (555) 019-8800'}</p>
+                  <p className="text-xs text-slate-500 font-mono mt-1">{doc.contact || '+91 9804222142'}</p>
                 </div>
               </div>
             ))}
@@ -979,6 +1027,52 @@ export default function BranchAdminDashboard() {
             )}
 
             <form onSubmit={handleHireDoctorSubmit} className="space-y-4 text-xs font-medium">
+              {/* Doctor Photo Upload Section */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+                <label className="text-xs font-extrabold text-slate-900 block flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-[#046a4e]" />
+                  <span>Doctor Profile Photo *</span>
+                </label>
+
+                <div className="flex items-center gap-3.5">
+                  <div className="h-16 w-16 rounded-2xl overflow-hidden border-2 border-emerald-200 bg-white shadow-xs flex items-center justify-center shrink-0">
+                    {docImagePreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={docImagePreview} alt="Doctor Preview" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="text-center p-1 text-slate-400">
+                        <Upload className="h-5 w-5 mx-auto mb-0.5 text-slate-400" />
+                        <span className="text-[8px] font-bold block">No Photo</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 flex-1">
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-800 cursor-pointer shadow-xs transition">
+                      <Upload className="w-3.5 h-3.5 text-[#046a4e]" />
+                      <span>Upload Photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleDocImageFileChange}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <input
+                      type="text"
+                      placeholder="Or paste image URL (https://...)"
+                      value={docImage.startsWith('data:') ? '' : docImage}
+                      onChange={(e) => {
+                        setDocImage(e.target.value);
+                        setDocImagePreview(e.target.value);
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-[10px] outline-none focus:border-[#046a4e]"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-extrabold text-slate-900 block mb-1">Doctor Full Name *</label>
                 <input
@@ -987,42 +1081,54 @@ export default function BranchAdminDashboard() {
                   placeholder="e.g. Dr . Jiarul Haque"
                   value={docName}
                   onChange={(e) => setDocName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:border-[#046a4e]"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-extrabold text-slate-900 block mb-1">Specialty</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Cardiology & Surgery"
-                  value={docSpecialty}
-                  onChange={(e) => setDocSpecialty(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:border-[#046a4e]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold outline-none focus:border-[#046a4e]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Consult Fee (₹)</label>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Specialty *</label>
                   <input
-                    type="number"
+                    type="text"
                     required
-                    placeholder="500"
-                    value={docFee}
-                    onChange={(e) => setDocFee(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-bold outline-none focus:border-[#046a4e]"
+                    placeholder="General & Cardiology"
+                    value={docSpecialty}
+                    onChange={(e) => setDocSpecialty(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-medium outline-none focus:border-[#046a4e]"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Contact Phone</label>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Qualification</label>
+                  <input
+                    type="text"
+                    placeholder="MD, MBBS"
+                    value={docQualification}
+                    onChange={(e) => setDocQualification(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-medium outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Consult Fee (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="800"
+                    value={docFee}
+                    onChange={(e) => setDocFee(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Contact Phone *</label>
                   <input
                     type="text"
                     placeholder="+91 9804222142"
                     value={docPhone}
                     onChange={(e) => setDocPhone(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs font-medium outline-none focus:border-[#046a4e]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-medium outline-none focus:border-[#046a4e]"
                   />
                 </div>
               </div>
@@ -1032,7 +1138,7 @@ export default function BranchAdminDashboard() {
                 className="w-full py-3.5 bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs rounded-full shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
                 <UserPlus className="h-4 w-4" />
-                <span>Confirm Hire & Assign to {activeBranch.code}</span>
+                <span>Confirm Registration & Save Doctor Photo</span>
               </button>
             </form>
           </div>

@@ -81,7 +81,6 @@ const STATE = {
     district: "Kolkata",
     state: "West Bengal",
     room: "OPD Suite 302, 3rd Floor, Wing A, Kolkata - 700016",
-    regNo: "NMC-2024-88412",
     referenceId: "MDX-DOC-8841",
     npi: "NPI-9948201481",
     dea: "BW-8910412",
@@ -636,7 +635,6 @@ function fillDemo(type) {
       specialtyLead: "Chief of Interventional Cardiology & Lead Cath Lab Director",
       department: "Cardiovascular Sciences",
       room: "OPD Suite 302, 3rd Floor, Wing A",
-      regNo: "NMC-2024-88412",
       npi: "NPI-9948201481",
       dea: "BW-8910412",
       feeOpd: 150,
@@ -660,7 +658,6 @@ function fillDemo(type) {
       specialtyLead: "Lead Consultant & Head of General & Internal Medicine",
       department: "Internal Medicine & General OPD",
       room: "OPD Room 102, Newtown Main Branch",
-      regNo: "WB-MC-2024-99120",
       npi: "NPI-8831920192",
       dea: "BJ-4410291",
       feeOpd: 500,
@@ -684,7 +681,6 @@ function fillDemo(type) {
       specialtyLead: "Senior Consultant & Head of Internal Medicine",
       department: "Internal Medicine & Therapeutics",
       room: "OPD Suite 104, 1st Floor, Wing B",
-      regNo: "NMC-2022-77120",
       npi: "NPI-8831920192",
       dea: "BJ-4410291",
       feeOpd: 120,
@@ -736,7 +732,6 @@ function quickLoginJiarul() {
     specialtyLead: "General & Cardiology Medicine Director",
     department: "General & Cardiology Medicine",
     room: "Newtown, Noapara, Sukanta Polli Road, Kolkata - 700157",
-    regNo: "ARIYAN-HQ-REF-2026",
     npi: "NPI-9804222142",
     dea: "BW-9804221",
     feeOpd: 800,
@@ -777,7 +772,6 @@ function switchAuthMode(mode) {
 function handleRegister() {
   const name = document.getElementById('reg-name') ? document.getElementById('reg-name').value.trim() : '';
   const gender = document.getElementById('reg-gender') ? document.getElementById('reg-gender').value.trim() : '';
-  const regNo = document.getElementById('reg-regno') ? document.getElementById('reg-regno').value.trim() : '';
   const chamberAddress = document.getElementById('reg-chamber-address') ? document.getElementById('reg-chamber-address').value.trim() : '';
   const pincode = document.getElementById('reg-pincode') ? document.getElementById('reg-pincode').value.trim() : '';
   const district = document.getElementById('reg-district') ? document.getElementById('reg-district').value.trim() : '';
@@ -799,12 +793,6 @@ function handleRegister() {
   if (!gender) {
     errBox.classList.remove('hidden');
     errText.textContent = 'Doctor Gender is MANDATORY. Please select Male, Female, or Other.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!regNo) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Medical Council Registration ID (NMC / State Reg No) is MANDATORY.';
     playClinicalChime('alert');
     return;
   }
@@ -872,7 +860,6 @@ function handleRegister() {
       gender: gender,
       email: email,
       referenceId: refId,
-      regNo: regNo,
       chamberAddress: chamberAddress,
       pincode: pincode,
       district: district,
@@ -892,7 +879,7 @@ function handleRegister() {
       feeEmergency: 1200,
       feeIpd: 650,
       dutyStatus: "AVAILABLE",
-      bio: `Registered physician (Reg ID: ${regNo}) practicing at ${chamberAddress}, ${district}, ${state}. Verified via Hospital Reference ID [${refId}].`,
+      bio: `Registered physician practicing at ${chamberAddress}, ${district}, ${state}. Verified via Hospital Reference ID [${refId}].`,
       broadcastMsg: `Doctor is available in chamber (${chamberAddress}).`
     };
 
@@ -1751,29 +1738,33 @@ function updateProfileUI() {
   if (profGenderField) profGenderField.textContent = doc.gender || 'Female';
   if (profEmailField) profEmailField.textContent = doc.email || 'doctor@medix.hospital';
   if (profPhoneField) profPhoneField.textContent = doc.phone || '+91 98042 22142';
-  if (profRoleField) profRoleField.textContent = 'DOCTOR (Verified)';
+  if (profRoleField) profRoleField.textContent = 'DOCTOR';
 
   // 2. Clinical Credentials & Education Card elements
   const profTitlesField = document.getElementById('profile-titles-field');
   const profCollegeField = document.getElementById('profile-college-field');
   const profSpecField = document.getElementById('profile-spec-field');
   const profExpField = document.getElementById('profile-exp-field');
-  const profRegNoField = document.getElementById('profile-regno-field');
 
-  if (profTitlesField) profTitlesField.textContent = doc.titles || 'MBBS, MD (Medicine), DM (Cardiology), FACC';
-  if (profCollegeField) profCollegeField.textContent = doc.medicalCollege || 'All India Institute of Medical Sciences (AIIMS)';
-  if (profSpecField) profSpecField.textContent = doc.specialtyLead || 'Interventional Cardiology & Electrophysiology';
-  if (profExpField) profExpField.textContent = doc.experienceYears || doc.experience || '12+ Years';
-  if (profRegNoField) profRegNoField.textContent = doc.regNo || doc.referenceId || 'NMC-2024-88412';
+  if (profTitlesField) profTitlesField.textContent = doc.titles && doc.titles.trim() ? doc.titles : 'Not specified';
+  if (profCollegeField) profCollegeField.textContent = doc.medicalCollege && doc.medicalCollege.trim() ? doc.medicalCollege : 'Not specified';
+  if (profSpecField) profSpecField.textContent = doc.specialtyLead && doc.specialtyLead.trim() ? doc.specialtyLead : 'Not specified';
+  if (profExpField) profExpField.textContent = (doc.experienceYears && doc.experienceYears.trim()) ? doc.experienceYears : ((doc.experience && doc.experience.trim()) ? doc.experience : 'Not specified');
 
   // 3. Work Experience & Practice Card elements
   const profWorkExpField = document.getElementById('profile-work-exp-field');
   const profChamberField = document.getElementById('profile-chamber-field');
   const profFeesField = document.getElementById('profile-fees-field');
 
-  if (profWorkExpField) profWorkExpField.textContent = doc.workExperience || doc.experience || 'Senior Consultant Cardiologist - Medix Super Specialty, Ex-Resident AIIMS';
-  if (profChamberField) profChamberField.textContent = fullChamberLocation;
-  if (profFeesField) profFeesField.textContent = `₹${doc.feeOpd || 800} (Standard OPD) • ₹${doc.feeFollowup || 400} (Follow-up)`;
+  if (profWorkExpField) profWorkExpField.textContent = doc.workExperience && doc.workExperience.trim() ? doc.workExperience : ((doc.experience && doc.experience.trim()) ? doc.experience : 'Not specified');
+  if (profChamberField) profChamberField.textContent = fullChamberLocation || doc.chamberAddress || 'Not specified';
+  if (profFeesField) {
+    if (doc.feeOpd || doc.feeFollowup) {
+      profFeesField.textContent = `₹${doc.feeOpd || 0} (Standard OPD) • ₹${doc.feeFollowup || 0} (Follow-up)`;
+    } else {
+      profFeesField.textContent = 'Not specified';
+    }
+  }
 
   // 4. Large Circle Avatar in Profile Tab
   const profAvatarCircle = document.getElementById('profile-avatar-circle');
@@ -1991,7 +1982,7 @@ function updateProfileUI() {
   if (nameField) nameField.textContent = doc.name || "Ratul Das";
   if (emailField) emailField.textContent = doc.email || "ratul66313@gmail.com";
   if (phoneField) phoneField.textContent = doc.phone || "+91 8478093537";
-  if (roleField) roleField.textContent = doc.role || "USER";
+  if (roleField) roleField.textContent = "DOCTOR";
   if (avatarLetter) {
     const rawName = (doc.name || "Ratul").replace(/^(Dr\s*\.?\s*)/i, '').trim();
     avatarLetter.textContent = rawName.charAt(0).toUpperCase() || 'R';
@@ -2270,7 +2261,6 @@ function openEditProfileModal() {
   if (!doc) return;
   if (document.getElementById('edit-doc-name')) document.getElementById('edit-doc-name').value = doc.name || '';
   if (document.getElementById('edit-doc-gender')) document.getElementById('edit-doc-gender').value = doc.gender || 'Male';
-  if (document.getElementById('edit-doc-regno')) document.getElementById('edit-doc-regno').value = doc.regNo || doc.referenceId || '';
   if (document.getElementById('edit-doc-years-exp')) document.getElementById('edit-doc-years-exp').value = doc.experienceYears || doc.experience || '';
   if (document.getElementById('edit-doc-college')) document.getElementById('edit-doc-college').value = doc.medicalCollege || '';
   if (document.getElementById('edit-doc-titles')) document.getElementById('edit-doc-titles').value = doc.titles || '';
@@ -2309,7 +2299,6 @@ function saveProfileChanges() {
     STATE.currentDoctor.initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : rawName.substring(0, 2).toUpperCase() || 'DR';
   }
   if (document.getElementById('edit-doc-gender')) STATE.currentDoctor.gender = document.getElementById('edit-doc-gender').value;
-  if (document.getElementById('edit-doc-regno')) STATE.currentDoctor.regNo = document.getElementById('edit-doc-regno').value.trim() || STATE.currentDoctor.regNo;
   if (document.getElementById('edit-doc-years-exp')) STATE.currentDoctor.experienceYears = document.getElementById('edit-doc-years-exp').value.trim() || STATE.currentDoctor.experienceYears;
   if (document.getElementById('edit-doc-college')) STATE.currentDoctor.medicalCollege = document.getElementById('edit-doc-college').value.trim() || STATE.currentDoctor.medicalCollege;
   if (document.getElementById('edit-doc-titles')) STATE.currentDoctor.titles = document.getElementById('edit-doc-titles').value.trim() || STATE.currentDoctor.titles;

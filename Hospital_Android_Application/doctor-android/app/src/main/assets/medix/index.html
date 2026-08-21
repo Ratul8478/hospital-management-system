@@ -6452,13 +6452,7 @@ body {
                       </div>
                     </div>
 
-                    <div class="clinical-input-group">
-                      <label>Medical Reg ID <span style="color:#EF4444; font-weight:700;">*</span></label>
-                      <div class="input-wrapper" style="border: 1.5px solid rgba(37, 99, 235, 0.45); background: rgba(37, 99, 235, 0.04);">
-                        <i class="fa-solid fa-id-card text-blue" style="color:#2563EB;"></i>
-                        <input type="text" id="reg-regno" placeholder="NMC Reg No (e.g. NMC-2024-88412)" required>
-                      </div>
-                    </div>
+
                   </div>
 
                   <div class="clinical-input-group">
@@ -6502,7 +6496,7 @@ body {
                       <input type="text" id="reg-reference-id" placeholder="Enter Doctor Reference ID / Referral Code" required>
                     </div>
                     <small style="color: #94A3B8; font-size: 11px; margin-top: 4px; display: block;">
-                      <i class="fa-solid fa-shield-halved" style="color:#10B981;"></i> Medical Reg ID and Reference ID are strictly mandatory for all authorized doctors.
+                      <i class="fa-solid fa-shield-halved" style="color:#10B981;"></i> Reference ID is strictly mandatory for all authorized doctors.
                     </small>
                   </div>
 
@@ -6967,24 +6961,24 @@ body {
                   <!-- 2 Core Sections Balance Ribbon -->
                   <div class="wallet-metrics-ribbon" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div class="w-ribbon-col" style="text-align:left; padding:8px 12px; background:rgba(2,132,199,0.12); border-radius:10px; border:1px solid rgba(2,132,199,0.25);">
-                      <span class="w-ribbon-title" style="color:#38BDF8; font-weight:700;"><i class="fa-solid fa-stethoscope"></i> 1. Direct Commission</span>
-                      <strong class="w-ribbon-val text-blue" id="wallet-direct-val" style="font-size:16px; color:#38BDF8; display:block; margin:2px 0;">₹12,500.00</strong>
-                      <small class="w-ribbon-sub" style="color:#94A3B8; font-size:10px;">Direct OPD & Chamber</small>
+                      <span class="w-ribbon-title" style="color:#38BDF8; font-weight:700;"><i class="fa-solid fa-user-doctor"></i> 1. Councelling Fees</span>
+                      <strong class="w-ribbon-val text-blue" id="wallet-direct-val" style="font-size:16px; color:#38BDF8; display:block; margin:2px 0;">₹0.00</strong>
+                      <small class="w-ribbon-sub" style="color:#94A3B8; font-size:10px;">Direct Patient's Councelling Fees</small>
                     </div>
                     <div class="w-ribbon-col" style="text-align:left; padding:8px 12px; background:rgba(16,185,129,0.12); border-radius:10px; border:1px solid rgba(16,185,129,0.25);">
-                      <span class="w-ribbon-title" style="color:#34D399; font-weight:700;"><i class="fa-solid fa-hospital-user"></i> 2. Referral Commission (15%)</span>
-                      <strong class="w-ribbon-val text-emerald" id="wallet-referral-val" style="font-size:16px; color:#34D399; display:block; margin:2px 0;">₹18,500.00</strong>
-                      <small class="w-ribbon-sub" style="color:#94A3B8; font-size:10px;">15% on Hospital Billing</small>
+                      <span class="w-ribbon-title" style="color:#34D399; font-weight:700;"><i class="fa-solid fa-handshake-simple"></i> 2. Partnership Profit</span>
+                      <strong class="w-ribbon-val text-emerald" id="wallet-referral-val" style="font-size:16px; color:#34D399; display:block; margin:2px 0;">₹0.00</strong>
+                      <small class="w-ribbon-sub" style="color:#94A3B8; font-size:10px;">10% on Center Billing</small>
                     </div>
                   </div>
                 </div>
 
                 <!-- ========================================================================= -->
-                <!-- SECTION 1: DIRECT COMMISSION (ডাইরেক্ট কমিশন) -->
+                <!-- SECTION 1: DIRECT PATIENT'S COUNCELLING FEES -->
                 <!-- ========================================================================= -->
                 <div class="glass-card mt-16" style="border:1px solid rgba(2,132,199,0.35); background:rgba(17,34,64,0.92);">
                   <div class="card-header-flex">
-                    <h4 class="card-subhead" style="color:#38BDF8;"><i class="fa-solid fa-user-doctor"></i> Section 1: Direct Commission (ডাইরেক্ট কমিশন)</h4>
+                    <h4 class="card-subhead" style="color:#38BDF8;"><i class="fa-solid fa-user-doctor"></i> Section 1: Direct Patient's Councelling Fees</h4>
                     <span class="badge-mini" style="background:rgba(2,132,199,0.2); color:#38BDF8; border:1px solid rgba(2,132,199,0.4);">100% Direct Payout</span>
                   </div>
                   <p style="font-size:11px; color:var(--text-sub); margin-bottom:12px;">
@@ -6993,9 +6987,7 @@ body {
 
                   <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:12px;">
                     <div style="background:rgba(2,132,199,0.08); border:1px solid rgba(2,132,199,0.2); border-radius:10px; padding:10px;">
-                      <span style="font-size:10px; color:#94A3B8; display:block;">Direct OPD Fee Rate</span>
-                      <strong style="color:#FFFFFF; font-size:13px;">₹800.00 / Patient</strong>
-                      <small style="color:#38BDF8; display:block; font-size:10px; margin-top:2px;">100% Retained</small>
+                      <strong style="color:#FFFFFF; font-size:16px; display:block;">15% On Billing Amount</strong>
                     </div>
                     <div style="background:rgba(2,132,199,0.08); border:1px solid rgba(2,132,199,0.2); border-radius:10px; padding:10px;">
                       <span style="font-size:10px; color:#94A3B8; display:block;">Total Consultations</span>
@@ -7005,78 +6997,33 @@ body {
                   </div>
 
                   <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:11px; color:#CBD5E1;"><i class="fa-solid fa-wallet text-blue"></i> Accumulated Direct Commission:</span>
-                    <strong style="color:#38BDF8; font-size:14px;" id="sec-direct-comm-amt">₹12,500.00</strong>
+                    <span style="font-size:11px; color:#CBD5E1;"><i class="fa-solid fa-square" style="color:#38BDF8; font-size:8px; vertical-align:middle; margin-right:6px;"></i> Direct Patient's Councelling Fees</span>
+                    <strong style="color:#38BDF8; font-size:14px;" id="sec-direct-comm-amt">₹0.00</strong>
                   </div>
                 </div>
 
                 <!-- ========================================================================= -->
-                <!-- SECTION 2: REFERRAL COMMISSION (রেফারেল কমিশন - ১৫% হসপিটাল বিলিং) -->
+                <!-- SECTION 2: PARTNERSHIP PROFIT (10% Center Billing) -->
                 <!-- ========================================================================= -->
                 <div class="glass-card mt-16" style="border:1px solid rgba(16,185,129,0.35); background:rgba(17,34,64,0.92);">
                   <div class="card-header-flex">
-                    <h4 class="card-subhead" style="color:#34D399;"><i class="fa-solid fa-handshake-angle"></i> Section 2: Referral Commission (রেফারেল কমিশন)</h4>
-                    <span class="badge-mini" style="background:rgba(16,185,129,0.2); color:#34D399; border:1px solid rgba(16,185,129,0.4); font-weight:800;">15% Hospital Billing</span>
+                    <h4 class="card-subhead" style="color:#34D399;"><i class="fa-solid fa-handshake-simple"></i> Section 2: Partnership Profit</h4>
+                    <span class="badge-mini" style="background:rgba(2,132,199,0.2); color:#38BDF8; border:1px solid rgba(2,132,199,0.4); font-weight:800;">100% Direct Payout</span>
                   </div>
                   
-                  <!-- 15% Rule Callout Banner -->
+                  <!-- 10% Rule Callout Banner -->
                   <div style="background:linear-gradient(135deg, rgba(16,185,129,0.18) 0%, rgba(2,132,199,0.18) 100%); border:1px solid rgba(16,185,129,0.4); border-radius:10px; padding:10px 12px; margin-bottom:12px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                      <i class="fa-solid fa-percent" style="color:#10B981; font-size:16px;"></i>
+                    <div style="display:flex; align-items:flex-start; gap:8px;">
+                      <i class="fa-solid fa-percent" style="color:#10B981; font-size:16px; margin-top:2px;"></i>
                       <div>
-                        <strong style="color:#FFFFFF; font-size:12px; display:block;">15% Fixed Referral Commission on Hospital Billing</strong>
-                        <span style="color:#A7F3D0; font-size:11px;">যে হসপিটালে বিলিং হবে, সেই হসপিটালের মোট পেশেন্ট বিলিং অ্যামাউন্টের উপর সরাসরি ১৫% কমিশন ডাক্তারের ওয়ালেটে জমা হবে।</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="commission-rate-list">
-                    <div class="commission-item-card" style="border:1px solid rgba(16,185,129,0.25);">
-                      <div class="comm-hosp-info">
-                        <i class="fa-solid fa-hospital text-emerald"></i>
-                        <div>
-                          <strong>ARIYAN HOSPITAL MULTISPECIALITY (HQ)</strong>
-                          <span>IPD, Cath Lab, Surgery & ICU Admission</span>
-                        </div>
-                      </div>
-                      <div class="comm-payout-badge" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4);">
-                        <strong style="color:#10B981; font-size:13px;">15% Billing</strong>
-                        <small style="color:#94A3B8;">On Total Hospital Bill</small>
-                      </div>
-                    </div>
-
-                    <div class="commission-item-card" style="border:1px solid rgba(16,185,129,0.25);">
-                      <div class="comm-hosp-info">
-                        <i class="fa-solid fa-hospital text-blue"></i>
-                        <div>
-                          <strong>Medix Specialty & Trauma Center</strong>
-                          <span>Level-1 Trauma, Ortho & Emergency</span>
-                        </div>
-                      </div>
-                      <div class="comm-payout-badge" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4);">
-                        <strong style="color:#10B981; font-size:13px;">15% Billing</strong>
-                        <small style="color:#94A3B8;">On Total Hospital Bill</small>
-                      </div>
-                    </div>
-
-                    <div class="commission-item-card" style="border:1px solid rgba(16,185,129,0.25);">
-                      <div class="comm-hosp-info">
-                        <i class="fa-solid fa-hospital text-indigo"></i>
-                        <div>
-                          <strong>Medix Mother & Child Super-Specialty</strong>
-                          <span>Maternity, NICU & Pediatric Surgeries</span>
-                        </div>
-                      </div>
-                      <div class="comm-payout-badge" style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4);">
-                        <strong style="color:#10B981; font-size:13px;">15% Billing</strong>
-                        <small style="color:#94A3B8;">On Total Hospital Bill</small>
+                        <strong style="color:#FFFFFF; font-size:13px; display:block; line-height:1.5;">10% of the total patient billing amount of the center where the partnership is active will be directly credited to the doctor's wallet.</strong>
                       </div>
                     </div>
                   </div>
 
                   <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                    <span style="font-size:11px; color:#CBD5E1;"><i class="fa-solid fa-hand-holding-dollar text-emerald"></i> Accumulated 15% Referral Commission:</span>
-                    <strong style="color:#34D399; font-size:14px;" id="sec-referral-comm-amt">₹18,500.00</strong>
+                    <span style="font-size:11px; color:#CBD5E1;">Total Profit</span>
+                    <strong style="color:#34D399; font-size:16px;" id="sec-referral-comm-amt">₹ 0.00</strong>
                   </div>
                 </div>
 
@@ -7191,7 +7138,7 @@ body {
                     <label class="varsha-field-label">Degrees & Qualifications</label>
                     <div class="varsha-pill-field">
                       <i class="fa-solid fa-graduation-cap"></i>
-                      <span id="profile-titles-field">MBBS, MD (Medicine), DM (Cardiology), FACC</span>
+                      <span id="profile-titles-field">Not specified</span>
                     </div>
                   </div>
 
@@ -7200,7 +7147,7 @@ body {
                     <label class="varsha-field-label">Medical College / University (Pass Out From)</label>
                     <div class="varsha-pill-field">
                       <i class="fa-solid fa-school"></i>
-                      <span id="profile-college-field">All India Institute of Medical Sciences (AIIMS)</span>
+                      <span id="profile-college-field">Not specified</span>
                     </div>
                   </div>
 
@@ -7209,25 +7156,16 @@ body {
                     <label class="varsha-field-label">Specialist In / Specialty Lead</label>
                     <div class="varsha-pill-field">
                       <i class="fa-solid fa-stethoscope"></i>
-                      <span id="profile-spec-field">Interventional Cardiology & Electrophysiology</span>
+                      <span id="profile-spec-field">Not specified</span>
                     </div>
                   </div>
 
-                  <!-- Years of Experience & Medical Reg No Grid -->
-                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div class="varsha-field-group">
-                      <label class="varsha-field-label">Experience</label>
-                      <div class="varsha-pill-field">
-                        <i class="fa-solid fa-award"></i>
-                        <span id="profile-exp-field">12+ Years</span>
-                      </div>
-                    </div>
-                    <div class="varsha-field-group">
-                      <label class="varsha-field-label">Medical Reg ID</label>
-                      <div class="varsha-pill-field">
-                        <i class="fa-solid fa-id-card"></i>
-                        <span id="profile-regno-field">NMC-2024-88412</span>
-                      </div>
+                  <!-- Years of Experience (full width) -->
+                  <div class="varsha-field-group">
+                    <label class="varsha-field-label">Experience</label>
+                    <div class="varsha-pill-field">
+                      <i class="fa-solid fa-award"></i>
+                      <span id="profile-exp-field">Not specified</span>
                     </div>
                   </div>
                 </div>
@@ -7241,7 +7179,7 @@ body {
                     <label class="varsha-field-label">Work Experience & Hospital Affiliations</label>
                     <div class="varsha-pill-field" style="height:auto; min-height:42px; padding:8px 12px;">
                       <i class="fa-solid fa-briefcase" style="margin-top:2px;"></i>
-                      <span id="profile-work-exp-field">Senior Consultant Cardiologist - Medix Super Specialty, Ex-Resident AIIMS</span>
+                      <span id="profile-work-exp-field">Not specified</span>
                     </div>
                   </div>
 
@@ -7250,7 +7188,7 @@ body {
                     <label class="varsha-field-label">Chamber Address & Location</label>
                     <div class="varsha-pill-field" style="height:auto; min-height:42px; padding:8px 12px;">
                       <i class="fa-solid fa-hospital-user" style="margin-top:2px;"></i>
-                      <span id="profile-chamber-field">OPD Suite 302, 3rd Floor, Wing A, Kolkata - 700016</span>
+                      <span id="profile-chamber-field">Not specified</span>
                     </div>
                   </div>
 
@@ -7259,7 +7197,7 @@ body {
                     <label class="varsha-field-label">Consultation Fee Tariff</label>
                     <div class="varsha-pill-field">
                       <i class="fa-solid fa-indian-rupee-sign text-emerald" style="color:#059669;"></i>
-                      <span id="profile-fees-field">₹800 (Standard OPD) • ₹400 (Follow-up)</span>
+                      <span id="profile-fees-field">Not specified</span>
                     </div>
                   </div>
                 </div>
@@ -7984,22 +7922,13 @@ body {
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div class="clinical-input-group">
-            <label>Medical Reg No (NMC / State)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-id-card text-blue"></i>
-              <input type="text" id="edit-doc-regno" placeholder="e.g. NMC-2024-88412">
-            </div>
-          </div>
 
-          <div class="clinical-input-group">
+        <div class="clinical-input-group">
             <label>Years of Clinical Experience</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-award"></i>
               <input type="text" id="edit-doc-years-exp" placeholder="e.g. 12+ Years">
             </div>
-          </div>
         </div>
 
         <div class="clinical-input-group">
@@ -8653,7 +8582,6 @@ const STATE = {
     district: "Kolkata",
     state: "West Bengal",
     room: "OPD Suite 302, 3rd Floor, Wing A, Kolkata - 700016",
-    regNo: "NMC-2024-88412",
     referenceId: "MDX-DOC-8841",
     npi: "NPI-9948201481",
     dea: "BW-8910412",
@@ -9208,7 +9136,6 @@ function fillDemo(type) {
       specialtyLead: "Chief of Interventional Cardiology & Lead Cath Lab Director",
       department: "Cardiovascular Sciences",
       room: "OPD Suite 302, 3rd Floor, Wing A",
-      regNo: "NMC-2024-88412",
       npi: "NPI-9948201481",
       dea: "BW-8910412",
       feeOpd: 150,
@@ -9232,7 +9159,6 @@ function fillDemo(type) {
       specialtyLead: "Lead Consultant & Head of General & Internal Medicine",
       department: "Internal Medicine & General OPD",
       room: "OPD Room 102, Newtown Main Branch",
-      regNo: "WB-MC-2024-99120",
       npi: "NPI-8831920192",
       dea: "BJ-4410291",
       feeOpd: 500,
@@ -9256,7 +9182,6 @@ function fillDemo(type) {
       specialtyLead: "Senior Consultant & Head of Internal Medicine",
       department: "Internal Medicine & Therapeutics",
       room: "OPD Suite 104, 1st Floor, Wing B",
-      regNo: "NMC-2022-77120",
       npi: "NPI-8831920192",
       dea: "BJ-4410291",
       feeOpd: 120,
@@ -9308,7 +9233,6 @@ function quickLoginJiarul() {
     specialtyLead: "General & Cardiology Medicine Director",
     department: "General & Cardiology Medicine",
     room: "Newtown, Noapara, Sukanta Polli Road, Kolkata - 700157",
-    regNo: "ARIYAN-HQ-REF-2026",
     npi: "NPI-9804222142",
     dea: "BW-9804221",
     feeOpd: 800,
@@ -9349,7 +9273,6 @@ function switchAuthMode(mode) {
 function handleRegister() {
   const name = document.getElementById('reg-name') ? document.getElementById('reg-name').value.trim() : '';
   const gender = document.getElementById('reg-gender') ? document.getElementById('reg-gender').value.trim() : '';
-  const regNo = document.getElementById('reg-regno') ? document.getElementById('reg-regno').value.trim() : '';
   const chamberAddress = document.getElementById('reg-chamber-address') ? document.getElementById('reg-chamber-address').value.trim() : '';
   const pincode = document.getElementById('reg-pincode') ? document.getElementById('reg-pincode').value.trim() : '';
   const district = document.getElementById('reg-district') ? document.getElementById('reg-district').value.trim() : '';
@@ -9371,12 +9294,6 @@ function handleRegister() {
   if (!gender) {
     errBox.classList.remove('hidden');
     errText.textContent = 'Doctor Gender is MANDATORY. Please select Male, Female, or Other.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!regNo) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Medical Council Registration ID (NMC / State Reg No) is MANDATORY.';
     playClinicalChime('alert');
     return;
   }
@@ -9444,7 +9361,6 @@ function handleRegister() {
       gender: gender,
       email: email,
       referenceId: refId,
-      regNo: regNo,
       chamberAddress: chamberAddress,
       pincode: pincode,
       district: district,
@@ -9464,7 +9380,7 @@ function handleRegister() {
       feeEmergency: 1200,
       feeIpd: 650,
       dutyStatus: "AVAILABLE",
-      bio: `Registered physician (Reg ID: ${regNo}) practicing at ${chamberAddress}, ${district}, ${state}. Verified via Hospital Reference ID [${refId}].`,
+      bio: `Registered physician practicing at ${chamberAddress}, ${district}, ${state}. Verified via Hospital Reference ID [${refId}].`,
       broadcastMsg: `Doctor is available in chamber (${chamberAddress}).`
     };
 
@@ -10323,29 +10239,33 @@ function updateProfileUI() {
   if (profGenderField) profGenderField.textContent = doc.gender || 'Female';
   if (profEmailField) profEmailField.textContent = doc.email || 'doctor@medix.hospital';
   if (profPhoneField) profPhoneField.textContent = doc.phone || '+91 98042 22142';
-  if (profRoleField) profRoleField.textContent = 'DOCTOR (Verified)';
+  if (profRoleField) profRoleField.textContent = 'DOCTOR';
 
   // 2. Clinical Credentials & Education Card elements
   const profTitlesField = document.getElementById('profile-titles-field');
   const profCollegeField = document.getElementById('profile-college-field');
   const profSpecField = document.getElementById('profile-spec-field');
   const profExpField = document.getElementById('profile-exp-field');
-  const profRegNoField = document.getElementById('profile-regno-field');
 
-  if (profTitlesField) profTitlesField.textContent = doc.titles || 'MBBS, MD (Medicine), DM (Cardiology), FACC';
-  if (profCollegeField) profCollegeField.textContent = doc.medicalCollege || 'All India Institute of Medical Sciences (AIIMS)';
-  if (profSpecField) profSpecField.textContent = doc.specialtyLead || 'Interventional Cardiology & Electrophysiology';
-  if (profExpField) profExpField.textContent = doc.experienceYears || doc.experience || '12+ Years';
-  if (profRegNoField) profRegNoField.textContent = doc.regNo || doc.referenceId || 'NMC-2024-88412';
+  if (profTitlesField) profTitlesField.textContent = doc.titles && doc.titles.trim() ? doc.titles : 'Not specified';
+  if (profCollegeField) profCollegeField.textContent = doc.medicalCollege && doc.medicalCollege.trim() ? doc.medicalCollege : 'Not specified';
+  if (profSpecField) profSpecField.textContent = doc.specialtyLead && doc.specialtyLead.trim() ? doc.specialtyLead : 'Not specified';
+  if (profExpField) profExpField.textContent = (doc.experienceYears && doc.experienceYears.trim()) ? doc.experienceYears : ((doc.experience && doc.experience.trim()) ? doc.experience : 'Not specified');
 
   // 3. Work Experience & Practice Card elements
   const profWorkExpField = document.getElementById('profile-work-exp-field');
   const profChamberField = document.getElementById('profile-chamber-field');
   const profFeesField = document.getElementById('profile-fees-field');
 
-  if (profWorkExpField) profWorkExpField.textContent = doc.workExperience || doc.experience || 'Senior Consultant Cardiologist - Medix Super Specialty, Ex-Resident AIIMS';
-  if (profChamberField) profChamberField.textContent = fullChamberLocation;
-  if (profFeesField) profFeesField.textContent = `₹${doc.feeOpd || 800} (Standard OPD) • ₹${doc.feeFollowup || 400} (Follow-up)`;
+  if (profWorkExpField) profWorkExpField.textContent = doc.workExperience && doc.workExperience.trim() ? doc.workExperience : ((doc.experience && doc.experience.trim()) ? doc.experience : 'Not specified');
+  if (profChamberField) profChamberField.textContent = fullChamberLocation || doc.chamberAddress || 'Not specified';
+  if (profFeesField) {
+    if (doc.feeOpd || doc.feeFollowup) {
+      profFeesField.textContent = `₹${doc.feeOpd || 0} (Standard OPD) • ₹${doc.feeFollowup || 0} (Follow-up)`;
+    } else {
+      profFeesField.textContent = 'Not specified';
+    }
+  }
 
   // 4. Large Circle Avatar in Profile Tab
   const profAvatarCircle = document.getElementById('profile-avatar-circle');
@@ -10563,7 +10483,7 @@ function updateProfileUI() {
   if (nameField) nameField.textContent = doc.name || "Ratul Das";
   if (emailField) emailField.textContent = doc.email || "ratul66313@gmail.com";
   if (phoneField) phoneField.textContent = doc.phone || "+91 8478093537";
-  if (roleField) roleField.textContent = doc.role || "USER";
+  if (roleField) roleField.textContent = "DOCTOR";
   if (avatarLetter) {
     const rawName = (doc.name || "Ratul").replace(/^(Dr\s*\.?\s*)/i, '').trim();
     avatarLetter.textContent = rawName.charAt(0).toUpperCase() || 'R';
@@ -10842,7 +10762,6 @@ function openEditProfileModal() {
   if (!doc) return;
   if (document.getElementById('edit-doc-name')) document.getElementById('edit-doc-name').value = doc.name || '';
   if (document.getElementById('edit-doc-gender')) document.getElementById('edit-doc-gender').value = doc.gender || 'Male';
-  if (document.getElementById('edit-doc-regno')) document.getElementById('edit-doc-regno').value = doc.regNo || doc.referenceId || '';
   if (document.getElementById('edit-doc-years-exp')) document.getElementById('edit-doc-years-exp').value = doc.experienceYears || doc.experience || '';
   if (document.getElementById('edit-doc-college')) document.getElementById('edit-doc-college').value = doc.medicalCollege || '';
   if (document.getElementById('edit-doc-titles')) document.getElementById('edit-doc-titles').value = doc.titles || '';
@@ -10881,7 +10800,6 @@ function saveProfileChanges() {
     STATE.currentDoctor.initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : rawName.substring(0, 2).toUpperCase() || 'DR';
   }
   if (document.getElementById('edit-doc-gender')) STATE.currentDoctor.gender = document.getElementById('edit-doc-gender').value;
-  if (document.getElementById('edit-doc-regno')) STATE.currentDoctor.regNo = document.getElementById('edit-doc-regno').value.trim() || STATE.currentDoctor.regNo;
   if (document.getElementById('edit-doc-years-exp')) STATE.currentDoctor.experienceYears = document.getElementById('edit-doc-years-exp').value.trim() || STATE.currentDoctor.experienceYears;
   if (document.getElementById('edit-doc-college')) STATE.currentDoctor.medicalCollege = document.getElementById('edit-doc-college').value.trim() || STATE.currentDoctor.medicalCollege;
   if (document.getElementById('edit-doc-titles')) STATE.currentDoctor.titles = document.getElementById('edit-doc-titles').value.trim() || STATE.currentDoctor.titles;

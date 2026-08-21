@@ -114,6 +114,11 @@ export function PersonalHealthRecordCard({
     return doctors[0]?.fee || 800;
   }, [doctors]);
 
+  const doctorImage = useMemo(() => {
+    const doc = doctors.find(d => d.name.toLowerCase() === doctorName.toLowerCase()) || doctors[0];
+    return doc?.image || "";
+  }, [doctorName, doctors]);
+
   const patientName = useMemo(() => {
     if (registeredName.trim()) {
       return registeredName.replace(/^Dr\.\s*/i, "");
@@ -263,13 +268,22 @@ export function PersonalHealthRecordCard({
           {/* Doctor Header Profile */}
           <div className="flex items-center gap-3 pb-2 border-b border-purple-400/20">
             <div className="h-12 w-12 rounded-full bg-white border-2 border-purple-300/40 p-0.5 shadow-md flex items-center justify-center overflow-hidden shrink-0">
-              <Image
-                src="/logo.png"
-                alt="Doctor Profile"
-                width={48}
-                height={48}
-                className="h-full w-full object-contain rounded-full"
-              />
+              {doctorImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={doctorImage}
+                  alt="Doctor Profile"
+                  className="h-full w-full object-cover rounded-full"
+                />
+              ) : (
+                <Image
+                  src="/logo.png"
+                  alt="Doctor Profile"
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-contain rounded-full"
+                />
+              )}
             </div>
             <div className="min-w-0">
               <h1 className="text-sm font-extrabold text-white tracking-tight truncate leading-tight">
