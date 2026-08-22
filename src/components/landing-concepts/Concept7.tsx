@@ -149,23 +149,11 @@ export default function Concept7() {
       {/* MANDATORY UNIFIED HEADER */}
       <ConceptHeader theme="pastels" />
 
-      {/* HERO SECTION: PINNED SCROLL-DRIVEN VIDEO STORY (Full-Screen Crystal-Clear Animation) */}
-      <section className="relative h-[220vh] sm:h-[260vh] lg:h-[280vh] w-full bg-[#f0fdf4] overflow-clip">
-        
-        {/* Sticky Pinned Viewport */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden">
-          
-          {/* Full Screen Crystal Clear Canvas Video Layer */}
-          <div className="absolute inset-0 z-0">
-            <HeroScrollCanvasBackground totalFrames={102} framePrefix="/hero-frames/" />
-          </div>
-
-          {/* Minimal Floating Scroll Guidance */}
-          <div className="absolute bottom-5 right-6 z-20 pointer-events-none hidden sm:flex items-center gap-1.5 text-emerald-950 font-extrabold text-[11px] bg-white/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-300/80 shadow-md">
-            <span>Scroll to explore</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#046a4e] animate-bounce" />
-          </div>
-
+      {/* HERO SECTION: AUTO-PLAYING CLINICAL CINEMATIC VIDEO WITH LIVE VOICE GREETING */}
+      <section className="relative w-full h-[85vh] sm:h-[90vh] lg:h-[92vh] bg-[#f0fdf4] overflow-hidden">
+        {/* Full Screen Crystal Clear Canvas Video Layer */}
+        <div className="absolute inset-0 z-0">
+          <HeroScrollCanvasBackground totalFrames={102} framePrefix="/hero-frames/" fps={24} />
         </div>
       </section>
 
@@ -395,15 +383,15 @@ export default function Concept7() {
                 </div>
                 <div>
                   <div className="text-xs text-[#046a4e] font-extrabold uppercase tracking-wider">Reception Call Helpline</div>
-                  <div className="text-base font-black text-emerald-950">+91 70038 31600</div>
+                  <div className="text-base font-black text-emerald-950">+91 9144376971</div>
                 </div>
               </div>
 
               <a
-                href="tel:+917003831600"
+                href="tel:+919144376971"
                 className="w-full py-3 bg-[#046a4e] hover:bg-[#03523c] text-white font-extrabold text-xs rounded-full shadow-md text-center transition-all flex items-center justify-center gap-2 cursor-pointer btn-premium-3d"
               >
-                <PhoneCall className="w-4 h-4" /> Call +91 70038 31600 Now
+                <PhoneCall className="w-4 h-4" /> Call +91 9144376971 Now
               </a>
             </div>
 
@@ -415,12 +403,12 @@ export default function Concept7() {
                 </div>
                 <div>
                   <div className="text-xs text-emerald-700 font-extrabold uppercase tracking-wider">Reception WhatsApp</div>
-                  <div className="text-base font-black text-emerald-950">+91 97336 62319</div>
+                  <div className="text-base font-black text-emerald-950">+91 7810900370</div>
                 </div>
               </div>
 
               <a
-                href="https://wa.me/919733662319?text=Hello%20Ariyan%20Hospital%20Multispeciality,%20I%20would%20like%20to%20inquire%20about%20services."
+                href="https://wa.me/917810900370?text=Hello%20Ariyan%20Hospital%20Multispeciality%20Reception%2C%20I%20would%20like%20to%20inquire%20about%20doctor%20appointments%20and%20hospital%20services."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-full shadow-md text-center transition-all flex items-center justify-center gap-2 cursor-pointer btn-premium-3d"
@@ -440,21 +428,21 @@ export default function Concept7() {
       {/* FLOATING DIRECT CONTACT PILLS */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col sm:flex-row gap-3">
         <a
-          href="https://wa.me/919733662319?text=Hello%20Ariyan%20Hospital%20Multispeciality,%20I%20would%20like%20to%20inquire%20about%20services."
+          href="https://wa.me/917810900370?text=Hello%20Ariyan%20Hospital%20Multispeciality%20Reception%2C%20I%20would%20like%20to%20inquire%20about%20doctor%20appointments%20and%20hospital%20services."
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-2xl transition-all hover:scale-105 cursor-pointer btn-premium-3d"
         >
           <MessageSquare className="w-4 h-4" />
-          <span>WhatsApp: +91 97336 62319</span>
+          <span>WhatsApp: +91 7810900370</span>
         </a>
 
         <a
-          href="tel:+917003831600"
+          href="tel:+919144376971"
           className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs shadow-2xl transition-all hover:scale-105 cursor-pointer btn-premium-3d"
         >
           <PhoneCall className="w-4 h-4" />
-          <span>Call: +91 70038 31600</span>
+          <span>Call: +91 9144376971</span>
         </a>
       </div>
 

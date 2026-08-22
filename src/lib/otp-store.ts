@@ -2,6 +2,7 @@
 // Ariyan Hospital Multispeciality - Security Subsystem
 
 import crypto from 'crypto';
+import { generateSecureOtp, timingSafeEqual } from './security';
 
 interface OtpRecord {
   otp: string;
@@ -64,9 +65,8 @@ export function verifySignedOtpToken(email: string, enteredOtp: string, tokenStr
 export function createSuperAdminOtp(email: string): { otp: string; expiresAt: number; otpToken: string } {
   const cleanEmail = email.trim().toLowerCase();
   
-  // Generate cryptographically random 6-digit code (100000 - 999999)
-  const otpNumber = Math.floor(100000 + Math.random() * 900000);
-  const otp = otpNumber.toString();
+  // Generate cryptographically secure 6-digit code (CSPRNG)
+  const otp = generateSecureOtp();
   
   const now = Date.now();
   const expiresAt = now + OTP_EXPIRY_MS;
@@ -150,8 +150,9 @@ export function verifySuperAdminOtp(
   // Increment attempts
   record.attempts += 1;
 
-  // Validate Match
-  if (record.otp !== cleanEnteredOtp) {
+  // Validate Match using constant-time comparison
+  const isMatch = timingSafeEqual(record.otp, cleanEnteredOtp);
+  if (!isMatch) {
     const remaining = MAX_ATTEMPTS - record.attempts;
     return {
       success: false,

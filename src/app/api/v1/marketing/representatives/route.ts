@@ -1,35 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { INITIAL_MARKETING_REPRESENTATIVES, MarketingRepresentative } from '@/lib/data';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
-let marketingReps: MarketingRepresentative[] = [...INITIAL_MARKETING_REPRESENTATIVES];
+let marketingReps = [...INITIAL_MARKETING_REPRESENTATIVES];
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const branchIdParam = searchParams.get('branch_id');
-    const refIdParam = searchParams.get('ref_id');
+    const branchId = searchParams.get('branchId');
+    const status = searchParams.get('status');
 
-    let filtered = marketingReps;
+    let reps = [...marketingReps];
 
-    if (branchIdParam) {
-      const bId = parseInt(branchIdParam, 10);
-      filtered = filtered.filter(r => r.branchId === bId);
+    if (branchId) {
+      const bId = parseInt(branchId, 10);
+      reps = reps.filter(r => r.branchId === bId);
     }
 
-    if (refIdParam) {
-      filtered = filtered.filter(r => r.referenceId.toLowerCase() === refIdParam.toLowerCase());
+    if (status) {
+      reps = reps.filter(r => r.status === status);
     }
 
     return NextResponse.json({
       success: true,
-      data: {
-        total: filtered.length,
-        representatives: filtered,
-      },
+      data: reps,
+      total: reps.length,
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal Server Error' },
+      { success: false, error: error.message || 'Internal server error fetching marketing reps.' },
       { status: 500 }
     );
   }
@@ -37,7 +37,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const rawBody = await request.json().catch(() => ({}));
+    const threatCheck = detectSuspiciousPayload(rawBody);
+    if (threatCheck.isSuspicious) {
+      return NextResponse.json(
+        { success: false, error: 'Security warning: Malicious payload blocked.' },
+        { status: 400 }
+      );
+    }
+
+    const body = sanitizeObject(rawBody);
     const {
       name,
       gender,
@@ -69,8 +78,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Auto-generate reference ID
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    // Auto-generate reference ID using CSPRNG
+    const randomSuffix = crypto.randomInt(1000, 10000);
     const generatedRefId = `REF-MKT-B${branchId}-${randomSuffix}`;
     const approvalDate = new Date().toISOString().split('T')[0];
 

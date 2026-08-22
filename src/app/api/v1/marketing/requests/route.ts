@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { INITIAL_MARKETING_JOIN_REQUESTS, MarketingJoinRequest } from '@/lib/data';
+import { verifyApiRequest } from '@/lib/api-auth';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
 // In-memory request cache for backend
 let marketingRequests: MarketingJoinRequest[] = [...INITIAL_MARKETING_JOIN_REQUESTS];
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Unauthorized: API Key or Admin Token required' },
+        { status: authResult.statusCode || 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const branchIdParam = searchParams.get('branch_id');
     const statusParam = searchParams.get('status');
@@ -45,7 +55,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const rawBody = await request.json().catch(() => ({}));
+    const threatCheck = detectSuspiciousPayload(rawBody);
+    if (threatCheck.isSuspicious) {
+      return NextResponse.json(
+        { success: false, error: 'Security alert: Malicious payload blocked by API Gateway.' },
+        { status: 400 }
+      );
+    }
+
+    const body = sanitizeObject(rawBody);
     const {
       name,
       gender,

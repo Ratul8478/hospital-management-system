@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifySuperAdminOtp } from '@/lib/otp-store';
-import { detectSuspiciousPayload } from '@/lib/security';
+import { detectSuspiciousPayload, generateSecureToken } from '@/lib/security';
 import { DEFAULT_SUPER_ADMIN_PROFILE } from '@/lib/data';
 
 export async function POST(req: Request) {
@@ -42,8 +42,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Successful verification - generate signed session token
-    const sessionToken = `sa_live_token_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // 4. Successful verification - generate cryptographically secure session token
+    const sessionToken = `sa_live_token_${Date.now()}_${generateSecureToken(32)}`;
 
     return NextResponse.json({
       success: true,

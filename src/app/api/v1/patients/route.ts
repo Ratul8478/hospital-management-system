@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server';
+import crypto from 'crypto';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
+import { verifyApiRequest } from '@/lib/api-auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -8,6 +11,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Token required to access patient records.', authResult.statusCode || 401);
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query') || searchParams.get('search') || searchParams.get('q') || undefined;
     const branchIdParam = searchParams.get('branchId');
@@ -47,6 +55,12 @@ export async function POST(request: NextRequest) {
       return apiError('Invalid JSON payload in request body', 400);
     }
 
+    const threatCheck = detectSuspiciousPayload(body);
+    if (threatCheck.isSuspicious) {
+      return apiError('Malicious input pattern rejected by security firewall', 400);
+    }
+
+    const sanitizedBody = sanitizeObject(body);
     const {
       name,
       age,
@@ -59,24 +73,24 @@ export async function POST(request: NextRequest) {
       address,
       allergies,
       chronicConditions,
-    } = body || {};
+    } = sanitizedBody || {};
 
     if (!name || typeof name !== 'string') {
       return apiError('Missing required field: name', 422, { field: 'name' });
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const generatedUhid = `UHID-B${branchId || 1}-${todayStr.replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedUhid = `UHID-B${branchId || 1}-${todayStr.replace(/-/g, '')}-${crypto.randomInt(1000, 10000)}`;
 
     const newPatient = {
-      id: Math.floor(1000 + Math.random() * 9000),
+      id: crypto.randomInt(1000, 10000),
       branchId: branchId || 1,
       uhid: generatedUhid,
       name,
       age: age || 35,
       gender: gender || 'Unspecified',
       bloodGroup: bloodGroup || 'O+',
-      phone: phone || '+1 (555) 000-0000',
+      phone: phone || '+91 9804222142',
       email: email || `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
       condition: condition || 'General OPD Consultation',
       status: 'opd' as const,

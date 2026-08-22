@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest } from '@/lib/api-auth';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -8,6 +10,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+    }
+
     const { searchParams } = new URL(request.url);
     const doctorIdParam = searchParams.get('doctorId');
     const doctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : 99;
@@ -26,12 +33,24 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    let body: any;
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+    }
+
+    let rawBody: any;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return apiError('Invalid JSON payload in request body', 400);
     }
+
+    const threatCheck = detectSuspiciousPayload(rawBody);
+    if (threatCheck.isSuspicious) {
+      return apiError('Security Alert: Malicious payload blocked by API Gateway', 400);
+    }
+
+    const body = sanitizeObject(rawBody);
 
     const {
       doctorId,

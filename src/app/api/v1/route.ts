@@ -11,6 +11,12 @@ export async function GET() {
       version: 'v1.0.0',
       status: 'operational',
       timestamp: new Date().toISOString(),
+      security: {
+        authentication: 'API Key or Bearer Session Token Required for Protected Endpoints',
+        supportedHeaders: ['x-api-key', 'Authorization: Bearer <token>'],
+        rateLimiting: '120 req/min for API, 10 req/min for Auth',
+        firewall: 'Active (OWASP Injection & Path Traversal Shields Enabled)',
+      },
       endpoints: {
         auth: {
           login: { method: 'POST', path: '/api/v1/auth/login', description: 'Doctor login and JWT session generation' },

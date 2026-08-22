@@ -426,7 +426,7 @@ export default function PatientDashboardPage({ searchParams }: DashboardPageProp
                         </div>
                         <div className="flex items-center justify-between text-slate-600">
                           <span>Contact:</span>
-                          <span className="font-mono text-slate-700">{doc.contact || '+91 7003831600'}</span>
+                          <span className="font-mono text-slate-700">{doc.contact || '+91 9144376971'}</span>
                         </div>
                       </div>
                     </div>

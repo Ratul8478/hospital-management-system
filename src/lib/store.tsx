@@ -17,6 +17,7 @@ import type {
   Appointment,
   AuditLog,
   SuperAdminProfile,
+  HospitalReferral,
 } from './data';
 import {
   INITIAL_BRANCHES,
@@ -34,6 +35,7 @@ import {
   INITIAL_APPOINTMENTS,
   INITIAL_AUDIT_LOGS,
   DEFAULT_SUPER_ADMIN_PROFILE,
+  INITIAL_HOSPITAL_REFERRALS,
 } from './data';
 
 export type UserRole = 
@@ -65,6 +67,10 @@ interface AppContextType {
   invoices: Invoice[];
   appointments: Appointment[];
   auditLogs: AuditLog[];
+  hospitalReferrals: HospitalReferral[];
+  addHospitalReferral: (referral: HospitalReferral) => void;
+  updateHospitalReferralStatus: (id: string | number, status: HospitalReferral['status'], notes?: string) => void;
+  deleteHospitalReferral: (id: string | number) => void;
   selectedBranchId: number | 'all';
   setSelectedBranchId: (id: number | 'all') => void;
   userRole: UserRole;
@@ -139,6 +145,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [marketingRepresentatives, setMarketingRepresentatives] = useState<MarketingRepresentative[]>(INITIAL_MARKETING_REPRESENTATIVES);
   const [marketingJoinRequests, setMarketingJoinRequests] = useState<MarketingJoinRequest[]>(INITIAL_MARKETING_JOIN_REQUESTS);
   const [marketingEmailLogs, setMarketingEmailLogs] = useState<MarketingEmailDispatchLog[]>(INITIAL_MARKETING_EMAIL_LOGS);
+  const [hospitalReferrals, setHospitalReferrals] = useState<HospitalReferral[]>(INITIAL_HOSPITAL_REFERRALS);
   const [doctors, setDoctors] = useState<Doctor[]>(INITIAL_DOCTORS);
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [beds, setBeds] = useState<Bed[]>(INITIAL_BEDS);
@@ -172,6 +179,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('medix_marketing_representatives', JSON.stringify(INITIAL_MARKETING_REPRESENTATIVES));
         localStorage.setItem('medix_marketing_join_requests', JSON.stringify(INITIAL_MARKETING_JOIN_REQUESTS));
         localStorage.setItem('medix_marketing_email_logs', JSON.stringify(INITIAL_MARKETING_EMAIL_LOGS));
+        localStorage.setItem('medix_hospital_referrals', JSON.stringify(INITIAL_HOSPITAL_REFERRALS));
         localStorage.setItem('medix_db_schema_version', '2026_realtime_zero_state_v3');
         
         setSuperAdminProfile(DEFAULT_SUPER_ADMIN_PROFILE);
@@ -182,36 +190,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setBeds(INITIAL_BEDS);
         setMedicines(INITIAL_MEDICINES);
         setAppointments(INITIAL_APPOINTMENTS);
+        setHospitalReferrals(INITIAL_HOSPITAL_REFERRALS);
       } else {
-        const sap = localStorage.getItem('medix_super_admin_profile');
-        if (sap) setSuperAdminProfile(JSON.parse(sap));
-        const b = localStorage.getItem('medix_branches');
-        if (b) setBranches(JSON.parse(b));
-        const ba = localStorage.getItem('medix_branch_admins');
-        if (ba) setBranchAdmins(JSON.parse(ba));
-        const aa = localStorage.getItem('medix_admin_applications');
-        if (aa) setAdminApplications(JSON.parse(aa));
-        const mr = localStorage.getItem('medix_marketing_representatives');
-        if (mr) setMarketingRepresentatives(JSON.parse(mr));
-        const mj = localStorage.getItem('medix_marketing_join_requests');
-        if (mj) setMarketingJoinRequests(JSON.parse(mj));
-        const mel = localStorage.getItem('medix_marketing_email_logs');
-        if (mel) setMarketingEmailLogs(JSON.parse(mel));
-        const doc = localStorage.getItem('medix_doctors');
-        if (doc) setDoctors(JSON.parse(doc));
-        const pat = localStorage.getItem('medix_patients');
-        if (pat) setPatients(JSON.parse(pat));
-        const bd = localStorage.getItem('medix_beds');
-        if (bd) setBeds(JSON.parse(bd));
-        const med = localStorage.getItem('medix_medicines');
-        if (med) setMedicines(JSON.parse(med));
-        const appt = localStorage.getItem('medix_appointments');
-        if (appt) setAppointments(JSON.parse(appt));
+        const safeParse = <T,>(key: string, fallback: T): T => {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            const parsed = JSON.parse(raw);
+            return parsed !== null && parsed !== undefined ? parsed : fallback;
+          } catch {
+            return fallback;
+          }
+        };
+
+        setSuperAdminProfile(safeParse('medix_super_admin_profile', DEFAULT_SUPER_ADMIN_PROFILE));
+        setBranches(safeParse('medix_branches', INITIAL_BRANCHES));
+        setBranchAdmins(safeParse('medix_branch_admins', INITIAL_BRANCH_ADMINS));
+        setAdminApplications(safeParse('medix_admin_applications', INITIAL_ADMIN_APPLICATIONS));
+        setMarketingRepresentatives(safeParse('medix_marketing_representatives', INITIAL_MARKETING_REPRESENTATIVES));
+        setMarketingJoinRequests(safeParse('medix_marketing_join_requests', INITIAL_MARKETING_JOIN_REQUESTS));
+        setMarketingEmailLogs(safeParse('medix_marketing_email_logs', INITIAL_MARKETING_EMAIL_LOGS));
+        setDoctors(safeParse('medix_doctors', INITIAL_DOCTORS));
+        setPatients(safeParse('medix_patients', INITIAL_PATIENTS));
+        setBeds(safeParse('medix_beds', INITIAL_BEDS));
+        setMedicines(safeParse('medix_medicines', INITIAL_MEDICINES));
+        setAppointments(safeParse('medix_appointments', INITIAL_APPOINTMENTS));
+        setHospitalReferrals(safeParse('medix_hospital_referrals', INITIAL_HOSPITAL_REFERRALS));
       }
       const savedRole = localStorage.getItem('medix_user_role') as UserRole;
       if (savedRole) setUserRole(savedRole);
       const concept = localStorage.getItem('medix_landing_concept');
-      if (concept) setSelectedLandingConceptIdState(parseInt(concept, 10));
+      if (concept) setSelectedLandingConceptIdState(parseInt(concept, 10) || 7);
     } catch (e) {
       console.error('Error loading state from localStorage', e);
     } finally {
@@ -242,6 +251,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_branches', JSON.stringify(branches));
+      window.dispatchEvent(new CustomEvent('medix_database_updated', { detail: { branches, doctors } }));
+      document.querySelectorAll('iframe').forEach(frame => {
+        try {
+          frame.contentWindow?.postMessage({ type: 'MEDIX_DB_SYNC', branches, doctors }, '*');
+        } catch (_) {}
+      });
     }
   }, [branches]);
 
@@ -278,8 +293,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (isLoadedRef.current && typeof window !== 'undefined') {
       localStorage.setItem('medix_doctors', JSON.stringify(doctors));
+      window.dispatchEvent(new CustomEvent('medix_database_updated', { detail: { branches, doctors } }));
+      document.querySelectorAll('iframe').forEach(frame => {
+        try {
+          frame.contentWindow?.postMessage({ type: 'MEDIX_DB_SYNC', branches, doctors }, '*');
+        } catch (_) {}
+      });
+
+      // Synchronize live doctors & hospitals database with Cloud API Gateway
+      try {
+        fetch('/api/v1/database', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': 'medix_master_sa_key_2026_ariyan_hq_wb9144376971'
+          },
+          body: JSON.stringify({ branches, doctors })
+        }).catch(() => {});
+      } catch (_) {}
     }
-  }, [doctors]);
+  }, [doctors, branches]);
 
   React.useEffect(() => {
     if (isLoadedRef.current && typeof window !== 'undefined') {
@@ -304,6 +337,85 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('medix_medicines', JSON.stringify(medicines));
     }
   }, [medicines]);
+
+  React.useEffect(() => {
+    if (isLoadedRef.current && typeof window !== 'undefined') {
+      localStorage.setItem('medix_hospital_referrals', JSON.stringify(hospitalReferrals));
+    }
+  }, [hospitalReferrals]);
+
+  // Real-time Event Listeners for Doctor App Dispatches
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleCustomReferral = (e: any) => {
+      if (e.detail) {
+        setHospitalReferrals(prev => {
+          if (prev.some(r => r.referralId === e.detail.referralId || r.id === e.detail.id)) return prev;
+          return [e.detail, ...prev];
+        });
+      }
+    };
+
+    const handleWindowMessage = (e: any) => {
+      if (e.data && (e.data.type === 'MEDIX_REFERRAL_DISPATCHED' || e.data.type === 'MEDIX_NEW_REFERRAL') && e.data.referral) {
+        setHospitalReferrals(prev => {
+          if (prev.some(r => r.referralId === e.data.referral.referralId || r.id === e.data.referral.id)) return prev;
+          return [e.data.referral, ...prev];
+        });
+      }
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'medix_hospital_referrals' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) setHospitalReferrals(parsed);
+        } catch (_) {}
+      }
+    };
+
+    // Multi-device & Cross-Client Cloud Synchronization Poller
+    const syncWithServerReferrals = async () => {
+      try {
+        const res = await fetch('/api/v1/doctor/referrals', {
+          headers: {
+            'x-api-key': 'medix_master_sa_key_2026_ariyan_hq_wb9144376971'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data && Array.isArray(data.data.referrals)) {
+            const serverRefs = data.data.referrals;
+            setHospitalReferrals(prev => {
+              const merged = [...prev];
+              serverRefs.forEach((sr: any) => {
+                const existingIndex = merged.findIndex(r => r.referralId === sr.referralId || r.id === sr.id);
+                if (existingIndex === -1) {
+                  merged.unshift(sr);
+                }
+              });
+              return merged;
+            });
+          }
+        }
+      } catch (_) {}
+    };
+
+    syncWithServerReferrals();
+    const interval = setInterval(syncWithServerReferrals, 500);
+
+    window.addEventListener('medix_referral_dispatched', handleCustomReferral);
+    window.addEventListener('message', handleWindowMessage);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('medix_referral_dispatched', handleCustomReferral);
+      window.removeEventListener('message', handleWindowMessage);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // Direct Super Admin Hire Action
   const hireAdmin = (branchId: number, name: string, email: string, phone?: string) => {
@@ -557,6 +669,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setLabRequests(prev => prev.filter(l => l.id !== id));
   };
 
+  const addHospitalReferral = (newReferral: HospitalReferral) => {
+    setHospitalReferrals(prev => {
+      if (prev.some(r => r.referralId === newReferral.referralId || r.id === newReferral.id)) return prev;
+      return [newReferral, ...prev];
+    });
+  };
+
+  const updateHospitalReferralStatus = (id: string | number, status: HospitalReferral['status'], notes?: string) => {
+    setHospitalReferrals(prev =>
+      prev.map(r => (r.id === id || r.referralId === id ? {
+        ...r,
+        status,
+        clinicalSummary: notes ? `${r.clinicalSummary}\n[Reception Note]: ${notes}` : r.clinicalSummary
+      } : r))
+    );
+  };
+
+  const deleteHospitalReferral = (id: string | number) => {
+    setHospitalReferrals(prev => prev.filter(r => r.id !== id && r.referralId !== id));
+  };
+
   const updateMarketingRepresentative = (id: number, data: Partial<MarketingRepresentative>) => {
     setMarketingRepresentatives(prev => prev.map(r => r.id === id ? { ...r, ...data } : r));
   };
@@ -607,7 +740,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!targetReq) return '';
 
     const finalSuperAdmin = superAdminName || 'Anichul Haque (Super Admin HQ)';
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const randomSuffix = Date.now().toString().slice(-4);
     const generatedRefId = `REF-MKT-B${targetReq.targetBranchId}-${randomSuffix}`;
     const approvalDate = new Date().toISOString().split('T')[0];
 
@@ -667,7 +800,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // Dispatch Simulated Email and Record in Email Log
     const newEmailLog: MarketingEmailDispatchLog = {
-      id: `EML-DISPATCH-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `EML-DISPATCH-${Date.now().toString().slice(-6)}`,
       requestId: targetReq.id,
       recipientName: targetReq.name,
       recipientEmail: targetReq.email,
@@ -680,7 +813,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deliveryStatus: 'delivered',
       smtpServer: 'smtp-relay.medix-network.internal:587',
       emailSubject: `Welcome to Medix: Your Official Marketing Reference ID ${generatedRefId}`,
-      securityToken: `AUTH-SA-HQ-${Math.floor(100000 + Math.random() * 900000)}-SEC`,
+      securityToken: `AUTH-SA-HQ-${Date.now().toString().slice(-6)}-SEC`,
     };
 
     setMarketingEmailLogs(prev => [newEmailLog, ...prev]);
@@ -898,6 +1031,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addLabRequest,
         updateLabRequest,
         deleteLabRequest,
+        hospitalReferrals,
+        addHospitalReferral,
+        updateHospitalReferralStatus,
+        deleteHospitalReferral,
         updateMarketingRepresentative,
         deleteMarketingRepresentative,
         isMobileSidebarOpen,

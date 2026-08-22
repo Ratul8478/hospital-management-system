@@ -5629,14 +5629,30 @@ body {
 }
 
 .btn-refer-doc-chip {
-  background: #0D5C58;
+  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
   color: #FFFFFF !important;
   border: none;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-  padding: 5px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-refer-doc-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.45);
+}
+
+.btn-refer-doc-chip:active {
+  transform: translateY(0);
 }
 
 /* 9. Purple Bottom Navigation Bar (Matching Screenshots) */
@@ -7655,6 +7671,21 @@ body {
                 <!-- Populated dynamically based on selected hospital -->
               </select>
             </div>
+
+            <!-- Doctor Visual Profile Card / Image Badge shown during selection -->
+            <div id="refer-doc-preview-card" style="display:flex; align-items:center; gap:12px; margin-top:10px; padding:10px 12px; background:rgba(2,132,199,0.12); border:1px solid rgba(2,132,199,0.35); border-radius:10px;">
+              <div id="refer-doc-img-wrap" style="width:48px; height:48px; border-radius:50%; overflow:hidden; border:2px solid #0284C7; flex-shrink:0; background:#1E293B; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                <img id="refer-doc-img" src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80" alt="Doctor Photo" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80'">
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <strong id="refer-doc-name-preview" style="color:#FFFFFF; font-size:13px; font-weight:700;">Dr . Jiarul Haque</strong>
+                  <span id="refer-doc-status-badge" style="font-size:9px; font-weight:800; color:#10B981; background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.45); padding:1px 6px; border-radius:9999px;">AVAILABLE</span>
+                </div>
+                <span id="refer-doc-spec-preview" style="color:#38BDF8; font-size:11px; display:block; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">General & Cardiology Medicine</span>
+                <small id="refer-doc-hosp-preview" style="color:#94A3B8; font-size:10px; display:block;">ARIYAN HOSPITAL MULTISPECIALITY</small>
+              </div>
+            </div>
           </div>
 
           <!-- Target Department -->
@@ -8484,6 +8515,57 @@ body {
       <div class="modal-panel-footer">
         <button class="btn-modal-cancel" onclick="closeModal('modal-mobile-install')">Close</button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL: DIRECT HOSPITAL RECEPTION DESK CALL & HOTLINE
+       ======================================================== -->
+  <div id="modal-hospital-call" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel" style="max-width:440px;">
+      
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge" style="background:rgba(16,185,129,0.15); color:#10B981;">
+            <i class="fa-solid fa-phone-volume"></i>
+          </div>
+          <div>
+            <h3 id="modal-call-hosp-name" style="font-size:15px; color:#ffffff;">ARIYAN HOSPITAL MULTISPECIALITY</h3>
+            <p>Direct Reception Desk & Emergency Hotline</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-hospital-call')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body" style="text-align:center; padding:20px 16px;">
+        <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #10B981 0%, #059669 100%); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; box-shadow:0 8px 24px rgba(16,185,129,0.35);">
+          <i class="fa-solid fa-phone" style="font-size:26px; color:#FFFFFF;"></i>
+        </div>
+
+        <span style="font-size:11px; color:#10B981; font-weight:800; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); padding:3px 10px; border-radius:9999px; display:inline-block; margin-bottom:8px;">
+          <i class="fa-solid fa-circle-check"></i> OFFICIAL RECEPTION DESK (24x7)
+        </span>
+
+        <h2 id="modal-call-phone-display" style="font-size:26px; color:#FFFFFF; font-weight:800; letter-spacing:1px; margin:8px 0 16px;">
+          +91 91443 76971
+        </h2>
+
+        <p style="font-size:12px; color:var(--text-sub); margin-bottom:20px; line-height:1.5;">
+          Direct connection to the reception desk triage coordinator at <strong id="modal-call-hosp-sub" style="color:var(--text-main);">ARIYAN HOSPITAL MULTISPECIALITY</strong>.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <a id="modal-call-dial-btn" href="tel:+919144376971" class="btn-sign-rx" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); text-decoration:none; justify-content:center; font-size:14px; padding:12px 16px;">
+            <i class="fa-solid fa-phone"></i> Call Direct via Phone Dialer
+          </a>
+
+          <button class="btn-prof-action" onclick="copyReceptionNumber()" style="width:100%; justify-content:center; background:rgba(255,255,255,0.06); border:1px solid var(--border-color); color:var(--text-main);">
+            <i class="fa-solid fa-copy"></i> <span id="btn-copy-num-text">Copy Phone Number</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -10950,7 +11032,47 @@ function renderSidebarAlerts() {
    ========================================================================== */
 let activeReferralPatient = null;
 
-// Initial Web-Registered & Approved Hospitals Roster with Doctors (Real Default)
+// Comprehensive Multi-Doctor Portrait Resolver (Deterministic & Photo-matched for every single doctor)
+function getDoctorPhotoUrl(name, existingImg) {
+  if (existingImg && typeof existingImg === 'string' && existingImg.trim() && !existingImg.includes('placeholder') && (existingImg.startsWith('http') || existingImg.startsWith('data:'))) {
+    return existingImg;
+  }
+  const n = (name || '').toLowerCase();
+  if (n.includes('jiarul')) return 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('sarah') || n.includes('williams')) return 'https://images.unsplash.com/photo-1594824813584-c8c3a1052670?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('ananya') || n.includes('sen')) return 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('mukherjee') || n.includes('s. k.')) return 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('jenkins') || n.includes('robert')) return 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('vikram') || n.includes('malhotra')) return 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('priya') || n.includes('nair')) return 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('sunita') || n.includes('roy')) return 'https://images.unsplash.com/photo-1623854767648-e7bb8009f0db?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('rajesh') || n.includes('sharma')) return 'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('meera') || n.includes('banerjee')) return 'https://images.unsplash.com/photo-1594824813584-c8c3a1052670?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('debanjan') || n.includes('ghosh')) return 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('pooja') || n.includes('chawla')) return 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80';
+  if (n.includes('amitava')) return 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80';
+
+  // Diverse high-resolution doctor portrait gallery for any other doctor
+  const docPhotosGallery = [
+    'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1594824813584-c8c3a1052670?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1623854767648-e7bb8009f0db?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1622902046580-2b47f47f5471?w=200&auto=format&fit=crop&q=80'
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < n.length; i++) {
+    hash = (hash * 31 + n.charCodeAt(i)) % docPhotosGallery.length;
+  }
+  return docPhotosGallery[Math.abs(hash)];
+}
+
+// Initial Web-Registered & Approved Hospitals Roster with Complete Doctors (All with distinct photos)
 const WEB_REGISTERED_HOSPITALS = [
   {
     id: 1,
@@ -10961,17 +11083,113 @@ const WEB_REGISTERED_HOSPITALS = [
     branchHead: "Dr . Jiarul Haque (Owner & Medical Director)",
     status: "active",
     statusText: "Emergency Cath Lab & ICU Beds Ready (24x7)",
-    phone: "+91 98042 22142",
+    phone: "+91 91443 76971",
     email: "ariyanhospital9@gmail.com",
     doctors: [
-      { id: 1, name: "Dr . Jiarul Haque", specialty: "General & Cardiology Medicine", status: "available", phone: "9804222142" }
+      { id: 101, name: "Dr . Jiarul Haque", specialty: "General & Cardiology Medicine", status: "available", phone: "9804222142", image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80" },
+      { id: 102, name: "Dr. Sarah Williams", specialty: "Interventional Cardiology & Cath Lab", status: "available", phone: "9804222142", image: "https://images.unsplash.com/photo-1594824813584-c8c3a1052670?w=200&auto=format&fit=crop&q=80" },
+      { id: 103, name: "Dr. Ananya Sen", specialty: "Obstetrics & High-Risk Pregnancy", status: "available", phone: "9804222142", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80" },
+      { id: 104, name: "Dr. S. K. Mukherjee", specialty: "Critical Care & ICU Lead", status: "available", phone: "9804222142", image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80" }
+    ]
+  },
+  {
+    id: 2,
+    code: "MEDIX-TRAUMA",
+    name: "Medix Specialty & Trauma Center",
+    location: "Kolkata, West Bengal",
+    address: "EM Bypass Connector, Salt Lake Sector V, Kolkata 700091",
+    branchHead: "Dr. Robert Jenkins (Chief of Surgery)",
+    status: "active",
+    statusText: "Level-1 Trauma & Emergency Standby (24x7)",
+    phone: "+91 98310 99482",
+    email: "trauma@medix.hospital",
+    doctors: [
+      { id: 201, name: "Dr. Robert Jenkins", specialty: "Trauma & Orthopedic Surgery", status: "available", phone: "9831099482", image: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=200&auto=format&fit=crop&q=80" },
+      { id: 202, name: "Dr. Vikram Malhotra", specialty: "Emergency Triage & Acute Critical Care", status: "available", phone: "9831099482", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80" },
+      { id: 203, name: "Dr. Priya Nair", specialty: "Neurology & Neurosurgery", status: "available", phone: "9831099482", image: "https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=200&auto=format&fit=crop&q=80" }
+    ]
+  },
+  {
+    id: 3,
+    code: "MEDIX-MATERNITY",
+    name: "Medix Mother & Child Super-Specialty",
+    location: "Kolkata, West Bengal",
+    address: "Park Circus Clinical Corridor, Kolkata 700017",
+    branchHead: "Dr. Sunita Roy (Head of Neonatology)",
+    status: "active",
+    statusText: "NICU Level-3 & High Risk Birthing Ready",
+    phone: "+91 97480 12345",
+    email: "maternity@medix.hospital",
+    doctors: [
+      { id: 301, name: "Dr. Sunita Roy", specialty: "Obstetrics, Gynecology & Pediatrics", status: "available", phone: "9748012345", image: "https://images.unsplash.com/photo-1623854767648-e7bb8009f0db?w=200&auto=format&fit=crop&q=80" },
+      { id: 302, name: "Dr. Rajesh Sharma", specialty: "Pediatric & Neonatal Intensive Care", status: "available", phone: "9748012345", image: "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?w=200&auto=format&fit=crop&q=80" },
+      { id: 303, name: "Dr. Meera Banerjee", specialty: "Fetal Medicine & Advanced Gynecology", status: "available", phone: "9748012345", image: "https://images.unsplash.com/photo-1594824813584-c8c3a1052670?w=200&auto=format&fit=crop&q=80" }
+    ]
+  },
+  {
+    id: 4,
+    code: "MEDIX-NEURO",
+    name: "Kolkata Institute of Neurosciences & Nephrology",
+    location: "Kolkata, West Bengal",
+    address: "AJC Bose Road, Mullick Bazar, Kolkata 700020",
+    branchHead: "Dr. Debanjan Ghosh (Director of Neuro Sciences)",
+    status: "active",
+    statusText: "Acute Stroke & 24x7 Hemodialysis Unit",
+    phone: "+91 94330 88219",
+    email: "neuro@medix.hospital",
+    doctors: [
+      { id: 401, name: "Dr. Debanjan Ghosh", specialty: "Neurology & Neurosurgery", status: "available", phone: "9433088219", image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&auto=format&fit=crop&q=80" },
+      { id: 402, name: "Dr. Pooja Chawla", specialty: "Nephrology & Renal Dialysis Unit", status: "available", phone: "9433088219", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&auto=format&fit=crop&q=80" },
+      { id: 403, name: "Dr. Amitava Roy", specialty: "Medical & Surgical Oncology", status: "available", phone: "9433088219", image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&auto=format&fit=crop&q=80" }
     ]
   }
 ];
 
-// Load cached live hospitals from localStorage if available, else start with default
-let liveHospitalsCache = (function() {
+// Load cached live hospitals from shared website database & localStorage if available
+function getSharedWebDatabaseHospitals() {
   try {
+    const webBranchesRaw = localStorage.getItem('medix_branches');
+    const webDoctorsRaw = localStorage.getItem('medix_doctors');
+    if (webBranchesRaw) {
+      const branches = JSON.parse(webBranchesRaw);
+      const docs = webDoctorsRaw ? JSON.parse(webDoctorsRaw) : [];
+      if (Array.isArray(branches) && branches.length > 0) {
+        return branches.map(b => {
+          // Find all individual doctors belonging to this specific hospital/branch
+          const branchDocs = docs.filter(d => d.branchId === b.id || (d.hospital && d.hospital.toLowerCase() === b.name.toLowerCase()));
+          const doctorsList = branchDocs.length > 0
+            ? branchDocs.map(d => ({
+                id: d.id,
+                name: d.name,
+                specialty: d.specialty || 'General & Clinical Specialist',
+                department: d.department || d.specialty || 'OPD Department',
+                qualification: d.qualification || 'MBBS, MD Specialist',
+                fee: d.fee || 800,
+                phone: d.contact || d.phone || b.adminPhone || '9804222142',
+                status: d.status || 'available',
+                image: d.image || d.avatarUrl || getDoctorPhotoUrl(d.name),
+                schedule: d.schedule || 'Mon-Sat 10:00 AM - 05:00 PM'
+              }))
+            : (b.branchHead
+                ? [{ id: 1, name: b.branchHead.split('(')[0].trim(), specialty: 'General & Clinical Specialist', status: 'available', phone: b.adminPhone || '9804222142', image: getDoctorPhotoUrl(b.branchHead) }]
+                : [{ id: 1, name: 'Dr . Jiarul Haque', specialty: 'General & Cardiology Medicine', status: 'available', phone: '9804222142', image: getDoctorPhotoUrl('Dr . Jiarul Haque') }]);
+
+          return {
+            id: b.id,
+            code: b.code || `HOSP-${b.id}`,
+            name: b.name,
+            location: b.location || 'Kolkata, West Bengal',
+            address: b.address || 'Newtown, Kolkata',
+            branchHead: b.branchHead || '',
+            status: b.status || 'active',
+            statusText: b.bedOccupancy ? `${b.bedOccupancy} • Live Web Desk` : 'Emergency & Clinical Desk Active (24x7)',
+            phone: b.phone || b.adminPhone || b.receptionCall || (b.name && b.name.toLowerCase().includes('ariyan') ? '+91 91443 76971' : '+91 98042 22142'),
+            email: b.adminEmail || 'ariyanhospital9@gmail.com',
+            doctors: doctorsList
+          };
+        });
+      }
+    }
     const cached = localStorage.getItem('medix_live_hospitals_cache');
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -10979,10 +11197,29 @@ let liveHospitalsCache = (function() {
     }
   } catch (_) {}
   return [...WEB_REGISTERED_HOSPITALS];
-})();
+}
+
+let liveHospitalsCache = getSharedWebDatabaseHospitals();
+
+let lastSyncedHospJSON = '';
 
 async function syncWebHospitalsAndDoctors() {
   try {
+    // 1. Instant Synchronous Read from Common LocalStorage Database
+    const localSynced = getSharedWebDatabaseHospitals();
+    const currentJSON = JSON.stringify(localSynced);
+    if (localSynced && localSynced.length > 0 && currentJSON !== lastSyncedHospJSON) {
+      lastSyncedHospJSON = currentJSON;
+      liveHospitalsCache = localSynced;
+      try {
+        localStorage.setItem('medix_live_hospitals_cache', JSON.stringify(liveHospitalsCache));
+      } catch (_) {}
+      populateHospitalSelect();
+      renderHospitalDirectory(document.getElementById('hosp-directory-search')?.value || '');
+      renderTopHospitalsSlider();
+    }
+
+    // 2. Asynchronous API fetch for Remote APK / Server Synchronization
     const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE)
       ? MEDIX_API_BASE
       : ((typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http')) 
@@ -10990,15 +11227,19 @@ async function syncWebHospitalsAndDoctors() {
           : 'http://localhost:3000');
 
     const [hospRes, docRes] = await Promise.all([
-      fetch(`${apiBase}/api/v1/hospitals`).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(`${apiBase}/api/v1/doctors`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`${apiBase}/api/v1/hospitals`, {
+        headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
+      }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`${apiBase}/api/v1/doctors`, {
+        headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
+      }).then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
 
     if (hospRes && hospRes.success && hospRes.data && hospRes.data.hospitals && hospRes.data.hospitals.length > 0) {
       const fetchedHosps = hospRes.data.hospitals;
       const allDocs = (docRes && docRes.success && docRes.data && docRes.data.doctors) ? docRes.data.doctors : [];
 
-      liveHospitalsCache = fetchedHosps.map(h => {
+      const mergedHosps = fetchedHosps.map(h => {
         const branchDocs = allDocs.filter(d => d.branchId === h.id);
         const docsList = branchDocs.length > 0
           ? branchDocs
@@ -11021,6 +11262,17 @@ async function syncWebHospitalsAndDoctors() {
         };
       });
 
+      // Include any newly added branch from local shared database
+      if (localSynced && localSynced.length > 0) {
+        localSynced.forEach(localH => {
+          if (!mergedHosps.some(mh => mh.id === localH.id || mh.name.toLowerCase() === localH.name.toLowerCase())) {
+            mergedHosps.push(localH);
+          }
+        });
+      }
+
+      liveHospitalsCache = mergedHosps;
+
       try {
         localStorage.setItem('medix_live_hospitals_cache', JSON.stringify(liveHospitalsCache));
       } catch (_) {}
@@ -11030,7 +11282,7 @@ async function syncWebHospitalsAndDoctors() {
       renderTopHospitalsSlider();
     }
   } catch (err) {
-    console.log('Synchronized with web-registered hospitals from local storage:', err);
+    console.log('Synchronized with web-registered hospitals from shared database:', err);
   }
 }
 
@@ -11072,13 +11324,16 @@ function updateReceivingHospitalInfo() {
   if (docSelect && selectedHosp) {
     const docs = (selectedHosp.doctors && selectedHosp.doctors.length > 0) 
       ? selectedHosp.doctors 
-      : [{ id: 1, name: selectedHosp.branchHead ? selectedHosp.branchHead.split('(')[0].trim() : 'Dr. Senior Consultant', specialty: 'General & Emergency Medicine', status: 'available' }];
+      : [{ id: 1, name: selectedHosp.branchHead ? selectedHosp.branchHead.split('(')[0].trim() : 'Dr. Senior Consultant', specialty: 'General & Emergency Medicine', status: 'available', image: '' }];
 
-    docSelect.innerHTML = docs.map(d => `
-      <option value="${d.id}" data-name="${d.name}" data-specialty="${d.specialty}" data-status="${d.status || 'available'}">
-        👨‍⚕️ ${d.name} (${d.specialty}) • [${(d.status || 'AVAILABLE').toUpperCase()}]
-      </option>
-    `).join('');
+    docSelect.innerHTML = docs.map(d => {
+      const photoUrl = getDoctorPhotoUrl(d.name, d.image || d.avatarUrl);
+      return `
+        <option value="${d.id}" data-name="${d.name}" data-specialty="${d.specialty || 'General Specialist'}" data-status="${d.status || 'available'}" data-image="${photoUrl}">
+          👨‍⚕️ ${d.name} (${d.specialty || 'Specialist'}) • [${(d.status || 'AVAILABLE').toUpperCase()}]
+        </option>
+      `;
+    }).join('');
 
     updateReceivingDoctorDetails();
   }
@@ -11087,12 +11342,47 @@ function updateReceivingHospitalInfo() {
 function updateReceivingDoctorDetails() {
   const docSelect = document.getElementById('refer-target-doctor');
   const deptSelect = document.getElementById('refer-target-dept');
-  if (!docSelect || !deptSelect) return;
+  if (!docSelect) return;
 
   const opt = docSelect.options[docSelect.selectedIndex];
   if (opt) {
-    const specialty = opt.getAttribute('data-specialty');
-    if (specialty) {
+    const docName = opt.getAttribute('data-name') || opt.textContent.split('(')[0].replace('👨‍⚕️', '').trim();
+    const specialty = opt.getAttribute('data-specialty') || 'General & Clinical Specialist';
+    const status = (opt.getAttribute('data-status') || 'available').toUpperCase();
+    const photo = opt.getAttribute('data-image') || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80';
+
+    // Update Doctor Visual Preview Card (Photo, Name, Specialty, Status & Hospital)
+    const imgEl = document.getElementById('refer-doc-img');
+    const nameEl = document.getElementById('refer-doc-name-preview');
+    const specEl = document.getElementById('refer-doc-spec-preview');
+    const statusEl = document.getElementById('refer-doc-status-badge');
+    const hospEl = document.getElementById('refer-doc-hosp-preview');
+
+    if (imgEl) {
+      imgEl.src = photo;
+      imgEl.alt = docName;
+    }
+    if (nameEl) nameEl.textContent = docName;
+    if (specEl) specEl.textContent = specialty;
+    if (statusEl) {
+      statusEl.textContent = status;
+      if (status === 'AVAILABLE') {
+        statusEl.style.color = '#10B981';
+        statusEl.style.borderColor = 'rgba(16,185,129,0.45)';
+        statusEl.style.background = 'rgba(16,185,129,0.18)';
+      } else {
+        statusEl.style.color = '#F59E0B';
+        statusEl.style.borderColor = 'rgba(245,158,11,0.45)';
+        statusEl.style.background = 'rgba(245,158,11,0.18)';
+      }
+    }
+
+    const hospSelect = document.getElementById('refer-target-hospital');
+    if (hospEl && hospSelect && hospSelect.options[hospSelect.selectedIndex]) {
+      hospEl.textContent = hospSelect.options[hospSelect.selectedIndex].textContent.replace('🏥', '').trim();
+    }
+
+    if (deptSelect && specialty) {
       for (let i = 0; i < deptSelect.options.length; i++) {
         if (specialty.toLowerCase().includes(deptSelect.options[i].value.toLowerCase().split('&')[0].trim())) {
           deptSelect.selectedIndex = i;
@@ -11223,7 +11513,64 @@ function executeHospitalReferral() {
       setTimeout(() => {
         const trackingToken = "REF-HOSP-2026-" + Math.floor(10000 + Math.random() * 90000);
 
-        // Remote Sync to Web Application Backend REST API
+        // Compute and Credit 15% Referral Commission on Hospital Billing to Doctor Wallet
+        let estHospitalBill = 20000;
+        if (urgency === 'EMERGENCY') { estHospitalBill = 30000; }
+        else if (urgency === 'URGENT') { estHospitalBill = 20000; }
+        else { estHospitalBill = 12000; }
+        const commAmount = Math.round(estHospitalBill * 0.15);
+
+        const referralRecord = {
+          id: Date.now(),
+          referralId: trackingToken,
+          patientId: activeReferralPatient.id || 1,
+          uhid: activeReferralPatient.uhid,
+          patientName: activeReferralPatient.name,
+          patientAge: activeReferralPatient.age || 45,
+          patientGender: activeReferralPatient.gender || 'Male',
+          patientPhone: activeReferralPatient.phone || '+91 98765 43210',
+          patientBlood: activeReferralPatient.blood || 'B+',
+          targetHospitalId: parseInt(targetHospitalId, 10) || 1,
+          targetHospitalCode: 'ARIYAN-HQ',
+          targetHospitalName: targetHospitalName,
+          targetHospitalLocation: 'Kolkata, West Bengal',
+          targetDoctorId: 1,
+          targetDoctorName: targetDoctorName,
+          targetDoctorSpecialty: targetDoctorSpecialty,
+          targetDepartment: targetDept,
+          urgencyLevel: urgency,
+          clinicalSummary: notes,
+          diagnosis: activeReferralPatient.condition || "Clinical Referral & Telemetry Transfer",
+          vitalsSummary: activeReferralPatient.vitals ? `BP: ${activeReferralPatient.vitals.bp || '130/80'}, HR: ${activeReferralPatient.vitals.hr || '78'} BPM, SpO2: ${activeReferralPatient.vitals.spo2 || '98%'}` : 'BP: 120/80 mmHg, HR: 72 BPM, SpO2: 99%',
+          referringDoctorId: STATE.currentDoctor.id || 1,
+          referringDoctorName: STATE.currentDoctor.name || "Dr. Sarah Williams",
+          referringDoctorChamber: STATE.currentDoctor.room || "Clinical Chamber",
+          referringDoctorPhone: STATE.currentDoctor.phone || "9804222142",
+          referringDoctorEmail: STATE.currentDoctor.email || "doctor@medix.hospital",
+          status: 'DISPATCHED',
+          createdAt: new Date().toISOString(),
+          receiptDate: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          estimatedBill: estHospitalBill,
+          referralCommission: commAmount
+        };
+
+        // 1. Instantly save to shared website database (localStorage)
+        try {
+          const rawExisting = localStorage.getItem('medix_hospital_referrals');
+          const existingList = rawExisting ? JSON.parse(rawExisting) : [];
+          existingList.unshift(referralRecord);
+          localStorage.setItem('medix_hospital_referrals', JSON.stringify(existingList));
+        } catch (_) {}
+
+        // 2. Broadcast CustomEvent and postMessage to website reception desk
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('medix_referral_dispatched', { detail: referralRecord }));
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'MEDIX_REFERRAL_DISPATCHED', referral: referralRecord }, '*');
+          }
+        }
+
+        // 3. Remote Sync to Web Application Backend REST API
         try {
           const apiBase = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http')) 
             ? window.location.origin 
@@ -11231,28 +11578,11 @@ function executeHospitalReferral() {
 
           fetch(`${apiBase}/api/v1/doctor/referrals`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              referralId: trackingToken,
-              patientId: activeReferralPatient.id || 1,
-              uhid: activeReferralPatient.uhid,
-              patientName: activeReferralPatient.name,
-              patientAge: activeReferralPatient.age || 45,
-              patientGender: activeReferralPatient.gender || 'Male',
-              targetHospitalId: targetHospitalId,
-              targetHospitalName: targetHospitalName,
-              targetDoctorName: targetDoctorName,
-              targetDoctorSpecialty: targetDoctorSpecialty,
-              targetDepartment: targetDept,
-              urgencyLevel: urgency,
-              clinicalSummary: notes,
-              diagnosis: activeReferralPatient.condition || "Cardiovascular Referral",
-              vitalsSummary: activeReferralPatient.vitals ? `BP: ${activeReferralPatient.vitals.bp || '130/80'}, HR: ${activeReferralPatient.vitals.hr || '78'} BPM, SpO2: ${activeReferralPatient.vitals.spo2 || '98%'}` : undefined,
-              referringDoctorId: STATE.currentDoctor.id || 1,
-              referringDoctorName: STATE.currentDoctor.name || "Dr. Sarah Williams",
-              referringDoctorChamber: STATE.currentDoctor.room || "Clinical Chamber",
-              referringDoctorPhone: STATE.currentDoctor.phone || "9804222142",
-            })
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan'
+            },
+            body: JSON.stringify(referralRecord)
           }).catch(e => console.log('Referral dispatched locally and queued for cloud sync:', e));
         } catch (_) {}
 
@@ -11280,13 +11610,7 @@ function executeHospitalReferral() {
         });
         updateNotifBadge();
 
-        // Compute and Credit 15% Referral Commission on Hospital Billing to Doctor Wallet
-        let estHospitalBill = 20000;
-        if (urgency === 'EMERGENCY') { estHospitalBill = 30000; }
-        else if (urgency === 'URGENT') { estHospitalBill = 20000; }
-        else { estHospitalBill = 12000; }
-        const commAmount = Math.round(estHospitalBill * 0.15);
-
+        // Credit Referral Commission on Hospital Billing to Doctor Wallet
         creditWallet(
           commAmount,
           'REFERRAL',
@@ -11728,6 +12052,8 @@ function renderTopHospitalsSlider() {
   }).join('');
 }
 
+const openHospitalDrawers = new Set();
+
 function renderHospitalDirectory(searchQuery = '') {
   const container = document.getElementById('hospital-directory-cards-container');
   if (!container) return;
@@ -11737,8 +12063,8 @@ function renderHospitalDirectory(searchQuery = '') {
     const q = searchQuery.toLowerCase();
     list = list.filter(h => 
       h.name.toLowerCase().includes(q) || 
-      h.location.toLowerCase().includes(q) ||
-      (h.address && h.address.toLowerCase().includes(q))
+      (h.location && h.location.toLowerCase().includes(q)) ||
+      (h.doctors && h.doctors.some(d => d.name.toLowerCase().includes(q) || d.specialty.toLowerCase().includes(q)))
     );
   }
 
@@ -11752,9 +12078,9 @@ function renderHospitalDirectory(searchQuery = '') {
 
   if (list.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding:30px 16px; color:#64748B;">
-        <i class="fa-solid fa-hospital" style="font-size:32px; opacity:0.4; margin-bottom:8px; display:block;"></i>
-        <strong>No hospitals found matching "${searchQuery}"</strong>
+      <div style="padding:32px 16px; text-align:center; color:#94A3B8;">
+        <i class="fa-solid fa-hospital" style="font-size:32px; margin-bottom:8px; opacity:0.5;"></i>
+        <p style="font-size:13px; font-weight:600;">No hospitals matching "${searchQuery}"</p>
       </div>
     `;
     return;
@@ -11763,7 +12089,7 @@ function renderHospitalDirectory(searchQuery = '') {
   container.innerHTML = list.map((h, idx) => {
     const photo = hospPhotos[idx % hospPhotos.length];
     const docCount = (h.doctors && h.doctors.length) || 2;
-    const isExpanded = h.isDrawerOpen || false;
+    const isExpanded = openHospitalDrawers.has(h.id);
 
     return `
       <div class="hosp-directory-card" id="hosp-dir-card-${h.id}">
@@ -11816,9 +12142,9 @@ function renderHospitalDirectory(searchQuery = '') {
 
           <!-- Action Buttons -->
           <div class="hosp-dir-actions-row">
-            <a href="tel:${h.phone || '+919804222142'}" class="btn-dir-call">
+            <button class="btn-dir-call" onclick="callHospitalReception('${h.name.replace(/'/g, "\\'")}', '${h.phone || '+91 91443 76971'}')">
               <i class="fa-solid fa-phone"></i> Call Now
-            </a>
+            </button>
             <button class="btn-dir-book" onclick="openReferWithHospital(${h.id})">
               <i class="fa-solid fa-calendar-plus"></i> Book Appointment
             </button>
@@ -11841,17 +12167,25 @@ function renderHospitalDirectory(searchQuery = '') {
               <div class="our-docs-drawer-panel">
                 ${(h.doctors && h.doctors.length > 0 ? h.doctors : [
                   { name: h.branchHead ? h.branchHead.split('(')[0].trim() : 'Dr. Senior Consultant', specialty: 'General & Internal Medicine' }
-                ]).map(d => `
-                  <div class="doc-drawer-item">
-                    <div>
-                      <strong>${d.name}</strong>
-                      <p>${d.specialty}</p>
+                ]).map(d => {
+                  const docPhoto = getDoctorPhotoUrl(d.name, d.image || d.avatarUrl);
+                  return `
+                    <div class="doc-drawer-item">
+                      <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                        <div class="doc-drawer-avatar" style="width:40px; height:40px; border-radius:50%; overflow:hidden; border:2px solid #0284C7; flex-shrink:0; background:#1E293B; box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+                          <img src="${docPhoto}" alt="${d.name}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                          <strong style="font-size:12px; font-weight:800; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${d.name}</strong>
+                          <p style="font-size:11px; color:#0284C7; font-weight:600; margin:1px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.specialty || 'General Specialist'}</p>
+                        </div>
+                      </div>
+                      <button class="btn-refer-doc-chip" onclick="openReferWithHospitalAndDoctor(${h.id}, '${d.name.replace(/'/g, "\\'")}')">
+                        <i class="fa-solid fa-calendar-check"></i> Book Now
+                      </button>
                     </div>
-                    <button class="btn-refer-doc-chip" onclick="openReferWithHospitalAndDoctor(${h.id}, '${d.name}')">
-                      <i class="fa-solid fa-paper-plane"></i> Refer
-                    </button>
-                  </div>
-                `).join('')}
+                  `;
+                }).join('')}
               </div>
             ` : ''}
           </div>
@@ -11862,16 +12196,76 @@ function renderHospitalDirectory(searchQuery = '') {
   }).join('');
 }
 
+let currentActiveCallPhone = '+919144376971';
+
+function callHospitalReception(hospName, phone) {
+  const cleanPhone = (phone || '+919144376971').replace(/[\s\-\(\)]/g, '');
+  currentActiveCallPhone = cleanPhone;
+
+  // Populate & open Call Modal
+  const nameEl = document.getElementById('modal-call-hosp-name');
+  const subEl = document.getElementById('modal-call-hosp-sub');
+  const phoneEl = document.getElementById('modal-call-phone-display');
+  const dialBtn = document.getElementById('modal-call-dial-btn');
+  const copyText = document.getElementById('btn-copy-num-text');
+
+  if (nameEl) nameEl.textContent = hospName || 'ARIYAN HOSPITAL MULTISPECIALITY';
+  if (subEl) subEl.textContent = hospName || 'ARIYAN HOSPITAL MULTISPECIALITY';
+  if (phoneEl) phoneEl.textContent = phone || '+91 91443 76971';
+  if (dialBtn) dialBtn.href = `tel:${cleanPhone}`;
+  if (copyText) copyText.textContent = 'Copy Phone Number';
+
+  const modal = document.getElementById('modal-hospital-call');
+  if (modal) modal.classList.remove('hidden');
+
+  playClinicalChime('chime');
+  showToast(`📞 Connecting to ${hospName} Reception (${phone || cleanPhone})...`, 'info');
+
+  // Trigger tel dialer automatically
+  try {
+    window.location.href = `tel:${cleanPhone}`;
+  } catch (_) {}
+}
+
+function copyReceptionNumber() {
+  const num = currentActiveCallPhone || '+919144376971';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(num).then(() => {
+      const copyText = document.getElementById('btn-copy-num-text');
+      if (copyText) copyText.textContent = '✅ Copied to Clipboard!';
+      showToast(`✅ Reception Number ${num} copied to clipboard!`, 'success');
+      playClinicalChime('success');
+    }).catch(() => {
+      fallbackCopyText(num);
+    });
+  } else {
+    fallbackCopyText(num);
+  }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  const copyText = document.getElementById('btn-copy-num-text');
+  if (copyText) copyText.textContent = '✅ Copied to Clipboard!';
+  showToast(`✅ Number ${text} copied!`, 'success');
+}
+
 function filterHospitalDirectory(val) {
   renderHospitalDirectory(val);
 }
 
 function toggleOurDoctorsDrawer(hospId) {
-  const h = liveHospitalsCache.find(x => x.id === hospId);
-  if (h) {
-    h.isDrawerOpen = !h.isDrawerOpen;
-    renderHospitalDirectory(document.getElementById('hosp-directory-search')?.value || '');
+  if (openHospitalDrawers.has(hospId)) {
+    openHospitalDrawers.delete(hospId);
+  } else {
+    openHospitalDrawers.add(hospId);
   }
+  renderHospitalDirectory(document.getElementById('hosp-directory-search')?.value || '');
 }
 
 function openReferWithHospital(hospId) {
@@ -11892,8 +12286,20 @@ function openReferWithHospitalAndDoctor(hospId, docName) {
     if (sel) {
       sel.value = hospId;
       updateReceivingHospitalInfo();
+
+      const docSel = document.getElementById('refer-target-doctor');
+      if (docSel && docName) {
+        for (let i = 0; i < docSel.options.length; i++) {
+          const optName = docSel.options[i].getAttribute('data-name') || docSel.options[i].text;
+          if (optName.toLowerCase().includes(docName.toLowerCase())) {
+            docSel.selectedIndex = i;
+            break;
+          }
+        }
+        updateReceivingDoctorDetails();
+      }
     }
-  }, 100);
+  }, 120);
 }
 
 function handleGlobalSearch(query) {
@@ -12059,9 +12465,24 @@ function renderAll() {
   initPromoBannerSlider();
 }
 
-// Periodic auto-sync with website core database (every 30 seconds)
+// Real-time synchronization listeners across tabs, iframes, and local storage
 if (typeof window !== 'undefined') {
-  setInterval(syncWebHospitalsAndDoctors, 30000);
+  // Sync on every storage modification from the website
+  window.addEventListener('storage', (e) => {
+    if (!e.key || e.key.startsWith('medix_')) {
+      syncWebHospitalsAndDoctors();
+    }
+  });
+
+  // Sync on direct postMessage broadcast from website store
+  window.addEventListener('message', (e) => {
+    if (e.data && (e.data.type === 'MEDIX_DB_SYNC' || e.data.type === 'MEDIX_DOCTOR_UPDATED' || e.data.type === 'MEDIX_HOSPITAL_UPDATED')) {
+      syncWebHospitalsAndDoctors();
+    }
+  });
+
+  // Background sync with common database (every 4 seconds)
+  setInterval(syncWebHospitalsAndDoctors, 4000);
 }
 
 // Kickstart on DOM load

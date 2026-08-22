@@ -184,6 +184,8 @@ export interface Patient {
   status: 'opd' | 'admitted' | 'discharged';
   address?: string;
   admittedDate?: string;
+  registeredBy?: string;
+  registrationDate?: string;
 }
 
 export interface Bed {
@@ -287,8 +289,8 @@ export const DEFAULT_SUPER_ADMIN_PROFILE: SuperAdminProfile = {
   managerName: 'Anichul Haque',
   ownerContact: '9804222142',
   managerContact: '9144376971',
-  receptionCall: '+917003831600',
-  receptionWhatsapp: '9733662319',
+  receptionCall: '+919144376971',
+  receptionWhatsapp: '7810900370',
   email: 'ariyanhospital9@gmail.com',
   password: 'admin@2019',
   address: 'Newtown, Noapara, Sukanta Polli Road, Kolkata 700157, West Bengal, India'
@@ -374,11 +376,78 @@ export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   }
 ];
 
+export interface HospitalReferral {
+  id: string | number;
+  referralId: string;
+  patientId: number;
+  uhid: string;
+  patientName: string;
+  patientAge: number;
+  patientGender: string;
+  patientPhone?: string;
+  patientBlood?: string;
+  targetHospitalId: number | string;
+  targetHospitalCode?: string;
+  targetHospitalName: string;
+  targetHospitalLocation?: string;
+  targetDoctorId?: number;
+  targetDoctorName?: string;
+  targetDoctorSpecialty?: string;
+  targetDepartment: string;
+  urgencyLevel: 'ROUTINE' | 'URGENT' | 'EMERGENCY';
+  clinicalSummary: string;
+  diagnosis: string;
+  vitalsSummary?: string;
+  referringDoctorId: number;
+  referringDoctorName: string;
+  referringDoctorChamber?: string;
+  referringDoctorPhone?: string;
+  referringDoctorEmail?: string;
+  status: 'PENDING' | 'DISPATCHED' | 'ACKNOWLEDGED' | 'ADMITTED';
+  createdAt: string;
+  receiptDate?: string;
+  estimatedBill?: number;
+  referralCommission?: number;
+}
+
+export const INITIAL_HOSPITAL_REFERRALS: HospitalReferral[] = [
+  {
+    id: 1,
+    referralId: 'REF-HOSP-2026-88192',
+    patientId: 1,
+    uhid: 'UHID-2026-0042',
+    patientName: 'Aarav Sharma',
+    patientAge: 45,
+    patientGender: 'Male',
+    patientPhone: '+91 98765 43210',
+    patientBlood: 'B+',
+    targetHospitalId: 1,
+    targetHospitalCode: 'ARIYAN-HQ',
+    targetHospitalName: 'ARIYAN HOSPITAL MULTISPECIALITY',
+    targetHospitalLocation: 'Kolkata, West Bengal',
+    targetDoctorId: 1,
+    targetDoctorName: 'Dr . Jiarul Haque',
+    targetDoctorSpecialty: 'General & Cardiology Medicine',
+    targetDepartment: 'Cardiovascular Surgery & Cath Lab',
+    urgencyLevel: 'EMERGENCY',
+    clinicalSummary: 'Acute Coronary Syndrome, multi-vessel CAD. Level-1 emergency standby and immediate bed allocation requested upon ambulance arrival.',
+    diagnosis: 'Acute Coronary Syndrome, STEMI',
+    vitalsSummary: 'BP: 145/95 mmHg, Pulse: 88 BPM, SpO2: 96%, Temp: 37.1°C',
+    referringDoctorId: 99,
+    referringDoctorName: 'Dr. Sarah Williams',
+    referringDoctorChamber: 'OPD Suite 302, 3rd Floor, Wing A',
+    referringDoctorPhone: '+91 98042 22142',
+    referringDoctorEmail: 'sarah.williams@medix.hospital',
+    status: 'DISPATCHED',
+    createdAt: new Date().toISOString(),
+    receiptDate: 'Today, 11:30 AM',
+    estimatedBill: 30000,
+    referralCommission: 4500,
+  }
+];
+
 export const INITIAL_MARKETING_REPRESENTATIVES: MarketingRepresentative[] = [];
 
 export const INITIAL_MARKETING_JOIN_REQUESTS: MarketingJoinRequest[] = [];
 
 export const INITIAL_MARKETING_EMAIL_LOGS: MarketingEmailDispatchLog[] = [];
-
-
-

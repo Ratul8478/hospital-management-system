@@ -2,7 +2,11 @@
 /vendor
 /.git
 /.env*
-/android-doctor
 /.gradle
 /.next
 /coverage
+Hospital_Android_Application/jdk*
+Hospital_Android_Application/doctor-android/.gradle
+Hospital_Android_Application/doctor-android/**/build
+*.apk
+*.zip

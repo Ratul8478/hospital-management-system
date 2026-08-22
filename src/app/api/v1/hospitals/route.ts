@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest } from '@/lib/api-auth';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -80,7 +82,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const authResult = verifyApiRequest(request, 'super_admin');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: Super Admin Master Key required to register new hospital branch.', authResult.statusCode || 401);
+    }
+
+    const rawBody = await request.json().catch(() => ({}));
+    const threatCheck = detectSuspiciousPayload(rawBody);
+    if (threatCheck.isSuspicious) {
+      return apiError('Security Alert: Malicious branch registration payload blocked by API Gateway.', 400);
+    }
+
+    const body = sanitizeObject(rawBody);
     if (!body.name || !body.code || !body.location) {
       return apiError('Hospital Name, Branch Code, and Location are mandatory fields.', 422);
     }

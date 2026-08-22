@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '@/lib/store';
-import { Doctor, Patient, Appointment, Bed, Medicine, LabRequest, MarketingRepresentative } from '@/lib/data';
+import { Doctor, Patient, Appointment, Bed, Medicine, LabRequest, MarketingRepresentative, HospitalReferral } from '@/lib/data';
 import { Navbar } from '@/components/Navbar';
 import {
   Users,
@@ -29,7 +29,18 @@ import {
   Phone,
   ShieldCheck,
   Activity,
-  DollarSign
+  DollarSign,
+  ArrowRightLeft,
+  FileText,
+  Printer,
+  Eye,
+  Send,
+  Download,
+  QrCode,
+  AlertCircle,
+  HeartPulse,
+  UserPlus,
+  FileCheck
 } from 'lucide-react';
 
 export default function ReceptionistHubPage() {
@@ -66,11 +77,15 @@ export default function ReceptionistHubPage() {
     updateMarketingRepresentative,
     deleteMarketingRepresentative,
     fireMarketingRepresentative,
+    hospitalReferrals,
+    addHospitalReferral,
+    updateHospitalReferralStatus,
+    deleteHospitalReferral,
   } = useApp();
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<
-    'doctors' | 'patients' | 'appointments' | 'beds' | 'pharmacy' | 'laboratory' | 'marketing'
+    'doctors' | 'patients' | 'appointments' | 'beds' | 'pharmacy' | 'laboratory' | 'marketing' | 'referrals'
   >('doctors');
 
   // Search & Filter State
@@ -124,11 +139,39 @@ export default function ReceptionistHubPage() {
     return marketingRepresentatives.filter(r => r.branchId === activeBranch.id);
   }, [marketingRepresentatives, selectedBranchId, activeBranch]);
 
+  const branchReferrals = useMemo(() => {
+    if (!hospitalReferrals) return [];
+    if (selectedBranchId === 'all') return hospitalReferrals;
+    return hospitalReferrals.filter(r => {
+      const targetId = Number(r.targetHospitalId);
+      const isIdMatch = !isNaN(targetId) && targetId === activeBranch.id;
+      const isCodeMatch = r.targetHospitalCode && activeBranch.code && r.targetHospitalCode.toLowerCase() === activeBranch.code.toLowerCase();
+      const isNameMatch = r.targetHospitalName && activeBranch.name && r.targetHospitalName.toLowerCase().includes(activeBranch.name.toLowerCase());
+      return isIdMatch || isCodeMatch || isNameMatch;
+    });
+  }, [hospitalReferrals, selectedBranchId, activeBranch]);
+
+  // Referral Filter & Viewing States
+  const [referralUrgencyFilter, setReferralUrgencyFilter] = useState<'all' | 'EMERGENCY' | 'URGENT' | 'ROUTINE'>('all');
+  const [referralStatusFilter, setReferralStatusFilter] = useState<'all' | 'DISPATCHED' | 'ACKNOWLEDGED' | 'ADMITTED'>('all');
+  const [viewingReferralSlip, setViewingReferralSlip] = useState<HospitalReferral | null>(null);
+
   // =========================================================================
   // MODAL STATES
   // =========================================================================
 
   // 1. Doctor Modals
+  const ALL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+  const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+
+  const compileDocScheduleString = (months: string[], days: string[], customDays: string, timing: string): string => {
+    const monthsStr = months.length === 12 || months.length === 0 ? 'Jan-Dec (All Months)' : months.join(', ');
+    const daysStr = days.length === 7 ? 'Mon-Sun (All Week)' : days.length === 6 && !days.includes('Sun') ? 'Mon-Sat' : days.length === 5 && !days.includes('Sat') && !days.includes('Sun') ? 'Mon-Fri (Weekdays)' : (days.length > 0 ? days.join(', ') : 'Special Days');
+    const customStr = customDays.trim() ? ` (Custom: ${customDays.trim()})` : '';
+    const timeStr = timing.trim() || '10:00 AM - 02:00 PM';
+    return `${monthsStr} • ${daysStr}${customStr} • ${timeStr}`;
+  };
+
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [docName, setDocName] = useState('');
@@ -136,7 +179,11 @@ export default function ReceptionistHubPage() {
   const [docQualification, setDocQualification] = useState('MD, MBBS');
   const [docFee, setDocFee] = useState('800');
   const [docPhone, setDocPhone] = useState('+91 9804222142');
-  const [docSchedule, setDocSchedule] = useState('10:00 AM - 02:00 PM (Mon-Sat)');
+  const [docScheduleMonths, setDocScheduleMonths] = useState<string[]>(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+  const [docScheduleDays, setDocScheduleDays] = useState<string[]>(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+  const [docScheduleCustomDays, setDocScheduleCustomDays] = useState<string>('');
+  const [docScheduleTiming, setDocScheduleTiming] = useState<string>('10:00 AM - 02:00 PM');
+  const [docSchedule, setDocSchedule] = useState('Jan-Dec (All Months) • Mon-Sat • 10:00 AM - 02:00 PM');
   const [docChamber, setDocChamber] = useState('OPD Chamber 102');
   const [docStatus, setDocStatus] = useState<'available' | 'busy' | 'off-duty'>('available');
   const [docImage, setDocImage] = useState('');
@@ -235,7 +282,11 @@ export default function ReceptionistHubPage() {
     setDocQualification('MD, MBBS');
     setDocFee('800');
     setDocPhone('+91 9804222142');
-    setDocSchedule('10:00 AM - 02:00 PM (Mon-Sat)');
+    setDocScheduleMonths(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+    setDocScheduleDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+    setDocScheduleCustomDays('');
+    setDocScheduleTiming('10:00 AM - 02:00 PM');
+    setDocSchedule('Jan-Dec (All Months) • Mon-Sat • 10:00 AM - 02:00 PM');
     setDocChamber('OPD Chamber 102');
     setDocStatus('available');
     setDocImage('');
@@ -250,7 +301,46 @@ export default function ReceptionistHubPage() {
     setDocQualification(doc.qualification || 'MD, MBBS');
     setDocFee(doc.fee.toString());
     setDocPhone(doc.contact);
-    setDocSchedule(doc.scheduleTime || '10:00 AM - 02:00 PM');
+
+    const raw = doc.scheduleTime || '10:00 AM - 02:00 PM (Mon-Sat)';
+    setDocSchedule(raw);
+
+    if (raw.includes('•')) {
+      const parts = raw.split('•').map(p => p.trim());
+      if (parts.length >= 3) {
+        // Part 1: Months
+        if (parts[0].includes('All Months') || parts[0].includes('Jan-Dec') || parts[0].includes('All Year')) {
+          setDocScheduleMonths(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+        } else {
+          const parsedMonths = ALL_MONTHS.filter(m => parts[0].includes(m));
+          setDocScheduleMonths(parsedMonths.length > 0 ? parsedMonths : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+        }
+        // Part 2: Days & Custom
+        const daysPart = parts[1];
+        const customMatch = daysPart.match(/\(Custom:\s*([^)]+)\)/i) || daysPart.match(/\[Custom:\s*([^\]]+)\]/i);
+        if (customMatch) {
+          setDocScheduleCustomDays(customMatch[1].trim());
+        } else {
+          setDocScheduleCustomDays('');
+        }
+        const parsedDays = ALL_DAYS.filter(d => daysPart.includes(d));
+        setDocScheduleDays(parsedDays.length > 0 ? parsedDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+        // Part 3: Timing
+        setDocScheduleTiming(parts[2] || '10:00 AM - 02:00 PM');
+      } else {
+        setDocScheduleMonths(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+        setDocScheduleDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+        setDocScheduleCustomDays('');
+        setDocScheduleTiming(raw);
+      }
+    } else {
+      setDocScheduleMonths(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+      const parsedDays = ALL_DAYS.filter(d => raw.includes(d));
+      setDocScheduleDays(parsedDays.length > 0 ? parsedDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+      setDocScheduleCustomDays('');
+      setDocScheduleTiming(raw.replace(/\([^)]+\)/g, '').trim() || '10:00 AM - 02:00 PM');
+    }
+
     setDocChamber(doc.chamberRoom || 'OPD Room 101');
     setDocStatus(doc.status);
     setDocImage(doc.image || '');
@@ -262,6 +352,8 @@ export default function ReceptionistHubPage() {
     e.preventDefault();
     if (!docName) return;
 
+    const compiledSchedule = compileDocScheduleString(docScheduleMonths, docScheduleDays, docScheduleCustomDays, docScheduleTiming);
+
     if (editingDoctor) {
       updateDoctor(editingDoctor.id, {
         name: docName.startsWith('Dr.') ? docName : `Dr. ${docName}`,
@@ -269,12 +361,12 @@ export default function ReceptionistHubPage() {
         qualification: docQualification,
         fee: parseFloat(docFee) || 800,
         contact: docPhone,
-        scheduleTime: docSchedule,
+        scheduleTime: compiledSchedule,
         chamberRoom: docChamber,
         status: docStatus,
         image: docImage || undefined,
       });
-      showToast(`Doctor ${docName} updated successfully!`);
+      showToast(`Doctor ${docName} schedule & profile updated!`);
     } else {
       addDoctor({
         branchId: activeBranch.id,
@@ -283,14 +375,14 @@ export default function ReceptionistHubPage() {
         qualification: docQualification,
         fee: parseFloat(docFee) || 800,
         contact: docPhone,
-        scheduleTime: docSchedule,
+        scheduleTime: compiledSchedule,
         chamberRoom: docChamber,
         status: docStatus,
         image: docImage || undefined,
         registeredBy: `Hospital Receptionist (${activeBranch.name})`,
         registrationDate: new Date().toISOString().split('T')[0],
       });
-      showToast(`Dr. ${docName} registered on Receptionist Desk!`);
+      showToast(`Dr. ${docName} registered with 3-part schedule!`);
     }
     setShowAddDoctorModal(false);
   };
@@ -343,7 +435,7 @@ export default function ReceptionistHubPage() {
       });
       showToast(`Patient ${patName} updated!`);
     } else {
-      const generatedUhid = `UHID-${activeBranch.code}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const generatedUhid = `UHID-${activeBranch.code}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
       addPatient({
         branchId: activeBranch.id,
         uhid: generatedUhid,
@@ -411,7 +503,7 @@ export default function ReceptionistHubPage() {
       });
       showToast(`Appointment for ${appPatientName} updated!`);
     } else {
-      const uhidToUse = appUhid || `UHID-${activeBranch.code}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const uhidToUse = appUhid || `UHID-${activeBranch.code}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
       addAppointment({
         branchId: activeBranch.id,
         patientName: appPatientName,
@@ -683,6 +775,78 @@ export default function ReceptionistHubPage() {
     }
   };
 
+  // 8. Referrals & Transfers Handlers
+  const handleAcknowledgeReferral = (ref: HospitalReferral) => {
+    updateHospitalReferralStatus(ref.id, 'ACKNOWLEDGED');
+    showToast(`✅ Referral #${ref.referralId} for ${ref.patientName} acknowledged by Reception Desk!`, 'success');
+  };
+
+  const handleAdmitReferralPatient = (ref: HospitalReferral) => {
+    const existingPat = branchPatients.find(p => p.uhid === ref.uhid || p.name.toLowerCase() === ref.patientName.toLowerCase());
+    if (!existingPat) {
+      addPatient({
+        branchId: activeBranch.id,
+        name: ref.patientName,
+        uhid: ref.uhid,
+        age: ref.patientAge,
+        gender: ref.patientGender,
+        bloodGroup: ref.patientBlood || 'B+',
+        phone: ref.patientPhone || '+91 98765 43210',
+        address: 'Referred from Doctor Application',
+        status: 'admitted',
+        condition: ref.diagnosis,
+        admittedDate: new Date().toISOString().split('T')[0],
+        registeredBy: `Inter-Hospital Transfer (${ref.referringDoctorName})`,
+      });
+    }
+
+    const availableBed = branchBeds.find(b => b.status === 'available');
+    if (availableBed) {
+      updateBed(availableBed.id, {
+        status: 'occupied',
+        patientName: ref.patientName,
+        patientUhid: ref.uhid,
+        admissionDate: new Date().toISOString().split('T')[0],
+        expectedDischargeDate: 'In 3 Days',
+        expectedReleaseTime: '12:00 PM',
+        assignedDoctor: ref.targetDoctorName || branchDoctors[0]?.name || 'Dr . Jiarul Haque',
+      });
+      updateHospitalReferralStatus(ref.id, 'ADMITTED', `Admitted to Bed ${availableBed.bedNumber} (${availableBed.wardType.toUpperCase()})`);
+      showToast(`🛏️ ${ref.patientName} directly admitted to Bed ${availableBed.bedNumber}!`, 'success');
+    } else {
+      updateHospitalReferralStatus(ref.id, 'ADMITTED', 'Direct Admission Queue Allocated');
+      showToast(`🛏️ ${ref.patientName} admitted to IPD Triage Queue!`, 'success');
+    }
+  };
+
+  const handleCreateOpdTokenForReferral = (ref: HospitalReferral) => {
+    const assignedDoctor = branchDoctors.find(d => d.name === ref.targetDoctorName) || branchDoctors[0];
+    const doctorName = assignedDoctor ? assignedDoctor.name : (ref.targetDoctorName || 'Dr . Jiarul Haque');
+    const dept = assignedDoctor ? assignedDoctor.specialty : ref.targetDepartment;
+
+    addAppointment({
+      branchId: activeBranch.id,
+      patientName: ref.patientName,
+      uhid: ref.uhid,
+      doctorName: doctorName,
+      department: dept,
+      appointmentDate: new Date().toISOString().split('T')[0],
+      appointmentTime: 'Immediate OPD Queue',
+      type: ref.urgencyLevel === 'EMERGENCY' ? 'Emergency' : 'OPD',
+      status: 'Waiting',
+    });
+
+    updateHospitalReferralStatus(ref.id, 'ACKNOWLEDGED', `OPD Priority Token Generated for ${doctorName}`);
+    showToast(`🩺 Priority OPD Token generated for ${ref.patientName} under ${doctorName}!`, 'success');
+  };
+
+  const handleDeleteReferral = (id: string | number, token: string) => {
+    if (confirm(`Remove referral receipt #${token} from reception queue?`)) {
+      deleteHospitalReferral(id);
+      showToast(`Referral receipt #${token} archived.`, 'error');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans pb-20">
       <Navbar />
@@ -747,7 +911,7 @@ export default function ReceptionistHubPage() {
 
       {/* QUICK STATS CARDS */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 -mt-4 w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 uppercase">Doctors</p>
             <p className="text-lg font-black text-slate-900 mt-0.5">{branchDoctors.length}</p>
@@ -777,6 +941,13 @@ export default function ReceptionistHubPage() {
           <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 uppercase">Marketing</p>
             <p className="text-lg font-black text-slate-900 mt-0.5">{branchMarketingReps.length} reps</p>
+          </div>
+          <div className="bg-white p-3.5 rounded-2xl border border-emerald-200 shadow-sm bg-linear-to-br from-white to-emerald-50/50">
+            <p className="text-[10px] font-black text-[#046a4e] uppercase flex items-center gap-1">
+              <ArrowRightLeft className="w-3 h-3" />
+              <span>Referrals</span>
+            </p>
+            <p className="text-lg font-black text-slate-900 mt-0.5">{branchReferrals.length} recpts</p>
           </div>
         </div>
       </div>
@@ -859,6 +1030,25 @@ export default function ReceptionistHubPage() {
             <Share2 className="w-4 h-4" />
             <span>7. Marketing Reps</span>
             <span className="ml-1 px-2 py-0.5 bg-black/10 rounded-full text-[10px]">{branchMarketingReps.length}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('referrals')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer relative ${
+              activeTab === 'referrals' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <ArrowRightLeft className="w-4 h-4 text-emerald-400" />
+            <span>8. App Referrals</span>
+            <span
+              className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                branchReferrals.some(r => r.urgencyLevel === 'EMERGENCY' && r.status !== 'ADMITTED')
+                  ? 'bg-rose-500 text-white animate-pulse'
+                  : 'bg-black/10'
+              }`}
+            >
+              {branchReferrals.length}
+            </span>
           </button>
         </div>
       </div>
@@ -1488,6 +1678,277 @@ export default function ReceptionistHubPage() {
             </div>
           </div>
         )}
+
+        {/* ========================================================================= */}
+        {/* TAB 8: INCOMING APP REFERRALS & TRANSFER RECEIPTS */}
+        {/* ========================================================================= */}
+        {activeTab === 'referrals' && (
+          <div className="space-y-5">
+            {/* Header & Live Stream Banner */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2.5 bg-emerald-50 text-[#046a4e] rounded-2xl border border-emerald-200">
+                    <ArrowRightLeft className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <span>Incoming App Referrals & Transfer Receipts</span>
+                      <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full uppercase tracking-wider">
+                        Live App Sync
+                      </span>
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Patients referred from the Doctor Mobile/Web Application to <strong className="text-slate-800">{activeBranch.name}</strong>. Receipts update automatically in real-time.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary Chips */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="px-3.5 py-2 bg-slate-50 rounded-2xl border border-slate-200 text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total Received</p>
+                  <p className="text-sm font-black text-slate-900">{branchReferrals.length}</p>
+                </div>
+                <div className="px-3.5 py-2 bg-rose-50 rounded-2xl border border-rose-200 text-center">
+                  <p className="text-[10px] font-bold text-rose-500 uppercase">Emergency Code Red</p>
+                  <p className="text-sm font-black text-rose-700">
+                    {branchReferrals.filter(r => r.urgencyLevel === 'EMERGENCY').length}
+                  </p>
+                </div>
+                <div className="px-3.5 py-2 bg-amber-50 rounded-2xl border border-amber-200 text-center">
+                  <p className="text-[10px] font-bold text-amber-500 uppercase">Urgent</p>
+                  <p className="text-sm font-black text-amber-700">
+                    {branchReferrals.filter(r => r.urgencyLevel === 'URGENT').length}
+                  </p>
+                </div>
+                <div className="px-3.5 py-2 bg-emerald-50 rounded-2xl border border-emerald-200 text-center">
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase">Admitted/Accepted</p>
+                  <p className="text-sm font-black text-emerald-800">
+                    {branchReferrals.filter(r => r.status === 'ADMITTED' || r.status === 'ACKNOWLEDGED').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Toolbar */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-black text-slate-700 mr-1">Urgency:</span>
+                {(['all', 'EMERGENCY', 'URGENT', 'ROUTINE'] as const).map(u => (
+                  <button
+                    key={u}
+                    onClick={() => setReferralUrgencyFilter(u)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                      referralUrgencyFilter === u
+                        ? u === 'EMERGENCY'
+                          ? 'bg-rose-600 text-white shadow-xs'
+                          : u === 'URGENT'
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'bg-[#046a4e] text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {u === 'all' ? 'All Urgencies' : u}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-black text-slate-700 mr-1">Status:</span>
+                {(['all', 'DISPATCHED', 'ACKNOWLEDGED', 'ADMITTED'] as const).map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setReferralStatusFilter(s)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                      referralStatusFilter === s
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {s === 'all' ? 'All Status' : s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Referrals List / Empty State */}
+            {branchReferrals.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm space-y-3">
+                <div className="h-16 w-16 bg-emerald-50 text-[#046a4e] rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+                  <ArrowRightLeft className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-black text-slate-900">No Patient Referrals Yet for {activeBranch.name}</h3>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  When doctors refer patients to this hospital from the Doctor App, their full clinical transfer receipts and telemetry data will arrive here immediately.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {branchReferrals
+                  .filter(r => (referralUrgencyFilter === 'all' || r.urgencyLevel === referralUrgencyFilter))
+                  .filter(r => (referralStatusFilter === 'all' || r.status === referralStatusFilter))
+                  .map((ref) => {
+                    const isEmergency = ref.urgencyLevel === 'EMERGENCY';
+                    const isUrgent = ref.urgencyLevel === 'URGENT';
+                    return (
+                      <div
+                        key={ref.id}
+                        className={`bg-white rounded-3xl border transition-all p-5 sm:p-6 shadow-sm hover:shadow-md ${
+                          isEmergency ? 'border-rose-300 ring-1 ring-rose-200' : isUrgent ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'
+                        }`}
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-4 border-b border-slate-100">
+                          {/* Left: Token & Patient Info */}
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-mono text-xs font-black text-[#046a4e] bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5">
+                                <QrCode className="w-3.5 h-3.5" />
+                                <span>{ref.referralId}</span>
+                              </span>
+
+                              <span
+                                className={`text-[10px] font-black uppercase px-3 py-1 rounded-xl border flex items-center gap-1 ${
+                                  isEmergency
+                                    ? 'bg-rose-100 text-rose-800 border-rose-300 animate-pulse'
+                                    : isUrgent
+                                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                    : 'bg-blue-100 text-blue-800 border-blue-300'
+                                }`}
+                              >
+                                <HeartPulse className="w-3.5 h-3.5" />
+                                <span>{ref.urgencyLevel} TRANSFER</span>
+                              </span>
+
+                              <span
+                                className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
+                                  ref.status === 'ADMITTED'
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                    : ref.status === 'ACKNOWLEDGED'
+                                    ? 'bg-blue-100 text-blue-800 border-blue-300'
+                                    : 'bg-purple-100 text-purple-800 border-purple-300'
+                                }`}
+                              >
+                                {ref.status}
+                              </span>
+
+                              <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>{ref.receiptDate || 'Today, Just Now'}</span>
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-baseline gap-3 pt-1">
+                              <h3 className="text-base sm:text-lg font-black text-slate-900">{ref.patientName}</h3>
+                              <span className="text-xs font-mono text-slate-500 font-bold">({ref.uhid})</span>
+                              <span className="text-xs text-slate-600 font-semibold">
+                                {ref.patientAge} Yrs • {ref.patientGender} • Blood: <strong className="text-rose-600">{ref.patientBlood || 'B+'}</strong>
+                              </span>
+                              {ref.patientPhone && (
+                                <span className="text-xs font-mono text-slate-700 font-medium">📞 {ref.patientPhone}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right: Actions */}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => setViewingReferralSlip(ref)}
+                              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>View Official Receipt</span>
+                            </button>
+
+                            {ref.status !== 'ACKNOWLEDGED' && ref.status !== 'ADMITTED' && (
+                              <button
+                                onClick={() => handleAcknowledgeReferral(ref)}
+                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Acknowledge</span>
+                              </button>
+                            )}
+
+                            {ref.status !== 'ADMITTED' && (
+                              <button
+                                onClick={() => handleAdmitReferralPatient(ref)}
+                                className="px-3.5 py-2 bg-[#046a4e] hover:bg-[#03523c] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                              >
+                                <BedDouble className="w-3.5 h-3.5" />
+                                <span>Admit to Bed</span>
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => handleCreateOpdTokenForReferral(ref)}
+                              className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-[#046a4e] border border-emerald-200 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer"
+                              title="Generate priority OPD appointment token"
+                            >
+                              <CalendarDays className="w-3.5 h-3.5" />
+                              <span>OPD Token</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteReferral(ref.id, ref.referralId)}
+                              className="p-2 bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 rounded-xl transition cursor-pointer"
+                              title="Archive / Remove Receipt"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Details Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs">
+                          {/* Referring Doctor */}
+                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase">Transferring Practitioner</p>
+                            <p className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                              <Stethoscope className="w-3.5 h-3.5 text-[#046a4e]" />
+                              <span>{ref.referringDoctorName}</span>
+                            </p>
+                            <p className="text-slate-600 font-medium">{ref.referringDoctorChamber || 'Doctor OPD Chamber'}</p>
+                            {ref.referringDoctorPhone && (
+                              <p className="text-slate-500 font-mono text-[11px]">📞 {ref.referringDoctorPhone}</p>
+                            )}
+                          </div>
+
+                          {/* Target Unit & Attending Specialist */}
+                          <div className="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-100 space-y-1">
+                            <p className="text-[10px] font-black text-emerald-700 uppercase">Destination Unit</p>
+                            <p className="font-extrabold text-slate-900 text-sm">{ref.targetDepartment}</p>
+                            <p className="text-slate-700 font-semibold">
+                              Attending: <strong className="text-[#046a4e]">{ref.targetDoctorName || 'Dr . Jiarul Haque'}</strong>
+                            </p>
+                            <p className="text-emerald-700 font-medium text-[11px]">{ref.targetDoctorSpecialty || 'Clinical Specialist'}</p>
+                          </div>
+
+                          {/* Vitals & Billing Telemetry */}
+                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase">Vitals & Financial Telemetry</p>
+                            <p className="text-slate-800 font-medium font-mono text-[11px]">{ref.vitalsSummary || 'BP: 120/80 mmHg • HR: 74 BPM • SpO2: 99%'}</p>
+                            <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 mt-1">
+                              <span className="text-slate-500 font-medium">Est. Bill: ₹{ref.estimatedBill ? ref.estimatedBill.toLocaleString('en-IN') : '20,000'}</span>
+                              <span className="text-[#046a4e] font-black">Commission: ₹{ref.referralCommission ? ref.referralCommission.toLocaleString('en-IN') : '3,000'} (15%)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Clinical Diagnosis & Transfer Notes */}
+                        <div className="mt-3.5 p-3.5 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-1 text-xs">
+                          <p className="text-[10px] font-black text-slate-500 uppercase">Clinical Diagnosis & Transfer Notes</p>
+                          <p className="font-bold text-slate-800">{ref.diagnosis}</p>
+                          <p className="text-slate-600 whitespace-pre-line leading-relaxed text-[11px]">{ref.clinicalSummary}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ========================================================================= */}
@@ -1619,26 +2080,203 @@ export default function ReceptionistHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Schedule Timetable</label>
-                  <input
-                    type="text"
-                    placeholder="10:00 AM - 02:00 PM (Mon-Sat)"
-                    value={docSchedule}
-                    onChange={(e) => setDocSchedule(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-medium outline-none focus:border-[#046a4e]"
-                  />
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">Chamber Room *</label>
+                <input
+                  type="text"
+                  placeholder="OPD Chamber 102"
+                  value={docChamber}
+                  onChange={(e) => setDocChamber(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-medium outline-none focus:border-[#046a4e]"
+                />
+              </div>
+
+              {/* 3-PART DOCTOR OPD SCHEDULING WORKSPACE */}
+              <div className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2">
+                  <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                    <CalendarDays className="w-4 h-4 text-[#046a4e]" />
+                    <span>Doctor OPD Scheduling Workspace (3-Part Config)</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-[#046a4e] bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                    Receptionist Timetable Matrix
+                  </span>
                 </div>
-                <div>
-                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Chamber Room</label>
-                  <input
-                    type="text"
-                    placeholder="OPD Chamber 102"
-                    value={docChamber}
-                    onChange={(e) => setDocChamber(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-medium outline-none focus:border-[#046a4e]"
-                  />
+
+                {/* PART 1: MONTHS SELECTION */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                      <span className="h-4 w-4 bg-[#046a4e] text-white rounded-full text-[9px] font-black inline-flex items-center justify-center">1</span>
+                      <span>Monthly Availability (Select Months)</span>
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setDocScheduleMonths(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
+                        className="text-[10px] font-bold text-[#046a4e] hover:underline cursor-pointer"
+                      >
+                        All Months
+                      </button>
+                      <span className="text-slate-300">•</span>
+                      <button
+                        type="button"
+                        onClick={() => setDocScheduleMonths(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'])}
+                        className="text-[10px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                      >
+                        Jan-Jun
+                      </button>
+                      <span className="text-slate-300">•</span>
+                      <button
+                        type="button"
+                        onClick={() => setDocScheduleMonths(['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])}
+                        className="text-[10px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                      >
+                        Jul-Dec
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Months Pills Grid */}
+                  <div className="grid grid-cols-6 sm:grid-cols-12 gap-1 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
+                    {ALL_MONTHS.map(m => {
+                      const isSelected = docScheduleMonths.includes(m);
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => {
+                            setDocScheduleMonths(prev =>
+                              prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]
+                            );
+                          }}
+                          className={`py-1 text-[10px] font-black rounded-lg transition cursor-pointer text-center ${
+                            isSelected
+                              ? 'bg-[#046a4e] text-white shadow-2xs'
+                              : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* PART 2: DAYS OF WEEK & CUSTOM DAYS SELECTION */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                    <span className="h-4 w-4 bg-[#046a4e] text-white rounded-full text-[9px] font-black inline-flex items-center justify-center">2</span>
+                    <span>Weekly Days & Custom Date Selection</span>
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* 2A: Weekly Days Selector */}
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Regular OPD Days</span>
+                        <button
+                          type="button"
+                          onClick={() => setDocScheduleDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'])}
+                          className="text-[10px] font-bold text-[#046a4e] hover:underline cursor-pointer"
+                        >
+                          Mon-Sat
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {ALL_DAYS.map(d => {
+                          const isSelected = docScheduleDays.includes(d);
+                          return (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => {
+                                setDocScheduleDays(prev =>
+                                  prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]
+                                );
+                              }}
+                              className={`flex-1 py-1 px-2 text-[10px] font-black rounded-lg transition cursor-pointer text-center ${
+                                isSelected
+                                  ? 'bg-[#046a4e] text-white shadow-2xs'
+                                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
+                              }`}
+                            >
+                              {d}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 2B: Custom Date / Specific Days Input */}
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Custom Dates / 2-3 Specific Days</span>
+                        <span className="text-[9px] font-medium text-slate-400">Optional</span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="e.g. 1st & 3rd Saturday, or 15th & 30th"
+                        value={docScheduleCustomDays}
+                        onChange={(e) => setDocScheduleCustomDays(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium outline-none focus:border-[#046a4e]"
+                      />
+                      <div className="flex flex-wrap gap-1">
+                        {['1st & 3rd Sat', '2nd & 4th Sun', 'Alternate Days'].map(preset => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => setDocScheduleCustomDays(preset)}
+                            className="text-[9px] font-semibold text-slate-600 bg-slate-100 hover:bg-emerald-50 hover:text-[#046a4e] px-1.5 py-0.5 rounded-md transition cursor-pointer"
+                          >
+                            +{preset}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PART 3: TIMING SELECTION */}
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                    <span className="h-4 w-4 bg-[#046a4e] text-white rounded-full text-[9px] font-black inline-flex items-center justify-center">3</span>
+                    <span>OPD Chamber Timing (Manually Filled Time Slots)</span>
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="sm:col-span-2">
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. 10:00 AM - 02:00 PM or 05:00 PM - 09:00 PM"
+                        value={docScheduleTiming}
+                        onChange={(e) => setDocScheduleTiming(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-[#046a4e] shadow-2xs"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 items-center">
+                      {['10 AM - 02 PM', '05 PM - 09 PM', '24x7 On-Call'].map(tPreset => (
+                        <button
+                          key={tPreset}
+                          type="button"
+                          onClick={() => setDocScheduleTiming(tPreset === '10 AM - 02 PM' ? '10:00 AM - 02:00 PM' : tPreset === '05 PM - 09 PM' ? '05:00 PM - 09:00 PM' : '24x7 Emergency On-Call')}
+                          className="flex-1 text-[9px] font-bold text-slate-700 bg-white border border-slate-200 hover:border-emerald-500 hover:text-[#046a4e] py-1 px-1.5 rounded-lg text-center transition cursor-pointer shadow-2xs"
+                        >
+                          {tPreset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* LIVE COMPILED SCHEDULE PREVIEW */}
+                <div className="p-2.5 bg-white rounded-xl border border-emerald-200 text-xs flex items-center gap-2">
+                  <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider shrink-0">Live Timetable:</span>
+                  <span className="font-bold text-slate-800 text-[11px] truncate">
+                    {compileDocScheduleString(docScheduleMonths, docScheduleDays, docScheduleCustomDays, docScheduleTiming)}
+                  </span>
                 </div>
               </div>
 
@@ -2362,6 +3000,149 @@ export default function ReceptionistHubPage() {
                 <span>Save Representative Details</span>
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: OFFICIAL DIGITAL REFERRAL SLIP & INTAKE RECEIPT */}
+      {/* ========================================================================= */}
+      {viewingReferralSlip && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-2xl border border-slate-200 shadow-2xl space-y-6 relative my-8 print:m-0 print:p-6 print:max-w-none print:shadow-none">
+            <button
+              onClick={() => setViewingReferralSlip(null)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 cursor-pointer print:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Hospital Official Header */}
+            <div className="text-center pb-4 border-b-2 border-slate-900 space-y-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-[#046a4e] rounded-full text-[10px] font-black tracking-widest uppercase border border-emerald-200">
+                <Building2 className="w-3.5 h-3.5" />
+                <span>OFFICIAL INTER-HOSPITAL REFERRAL & INTAKE RECEIPT</span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mt-1">
+                {viewingReferralSlip.targetHospitalName}
+              </h2>
+              <p className="text-xs font-medium text-slate-600">
+                Govt Reg No: WB.33735581 • Reception Call Helpline: +91 91443 76971 • Reception WhatsApp: +91 78109 00370
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Newtown, Sukanta Polli Road, Kolkata 700157, West Bengal, India
+              </p>
+            </div>
+
+            {/* Token & Urgency Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-3.5 bg-slate-100 rounded-2xl border border-slate-200 text-xs">
+              <div>
+                <span className="text-slate-500 font-medium">Tracking Receipt Token:</span>
+                <strong className="ml-1.5 font-mono text-[#046a4e] text-sm font-black">{viewingReferralSlip.referralId}</strong>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-xl font-black text-[10px] uppercase ${
+                  viewingReferralSlip.urgencyLevel === 'EMERGENCY'
+                    ? 'bg-rose-600 text-white'
+                    : viewingReferralSlip.urgencyLevel === 'URGENT'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-blue-600 text-white'
+                }`}>
+                  {viewingReferralSlip.urgencyLevel} PRIORITY
+                </span>
+                <span className="text-slate-500 font-semibold">{viewingReferralSlip.receiptDate || 'Today, Just Now'}</span>
+              </div>
+            </div>
+
+            {/* Patient Bio & Referring Doctor Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              {/* Patient Block */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Patient Identification</p>
+                <h4 className="text-base font-black text-slate-900">{viewingReferralSlip.patientName}</h4>
+                <p className="text-slate-700 font-mono font-bold">UHID: {viewingReferralSlip.uhid}</p>
+                <p className="text-slate-600">
+                  Age / Gender: <strong>{viewingReferralSlip.patientAge} Yrs / {viewingReferralSlip.patientGender}</strong>
+                </p>
+                <p className="text-slate-600">
+                  Blood Group: <strong className="text-rose-600">{viewingReferralSlip.patientBlood || 'B+'}</strong>
+                </p>
+                <p className="text-slate-600 font-mono">Contact: {viewingReferralSlip.patientPhone || '+91 98765 43210'}</p>
+              </div>
+
+              {/* Transfer Doctor Block */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Transferring Physician</p>
+                <h4 className="text-base font-black text-slate-900">{viewingReferralSlip.referringDoctorName}</h4>
+                <p className="text-slate-700 font-medium">{viewingReferralSlip.referringDoctorChamber || 'OPD Chamber Room'}</p>
+                <p className="text-slate-600 font-mono">Phone: {viewingReferralSlip.referringDoctorPhone || '+91 98042 22142'}</p>
+                <p className="text-slate-600">Email: {viewingReferralSlip.referringDoctorEmail || 'doctor@medix.hospital'}</p>
+                <p className="text-emerald-700 font-bold mt-1">Status: Verified App Practitioner</p>
+              </div>
+            </div>
+
+            {/* Target Department & Specialist Assignment */}
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs space-y-1.5">
+              <p className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Hospital Department & Attending Specialist Assignment</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-extrabold text-slate-900">{viewingReferralSlip.targetDepartment}</p>
+                  <p className="text-slate-700">
+                    Attending: <strong className="text-[#046a4e]">{viewingReferralSlip.targetDoctorName || 'Dr . Jiarul Haque'}</strong> ({viewingReferralSlip.targetDoctorSpecialty || 'Senior Consultant'})
+                  </p>
+                </div>
+                <span className="px-3 py-1 bg-emerald-200/80 text-emerald-950 font-black text-[10px] rounded-xl self-start sm:self-auto">
+                  {viewingReferralSlip.status} AT RECEPTION
+                </span>
+              </div>
+            </div>
+
+            {/* Clinical Diagnosis & Vitals */}
+            <div className="space-y-2 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase">Primary Diagnosis</p>
+                <p className="font-black text-slate-900 text-sm">{viewingReferralSlip.diagnosis}</p>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase">Vital Signs Telemetry at Dispatch</p>
+                <p className="font-mono text-slate-800 font-bold">{viewingReferralSlip.vitalsSummary || 'BP: 120/80 mmHg • HR: 74 BPM • SpO2: 99%'}</p>
+              </div>
+
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase">Clinical Transfer Rationale & Summary Notes</p>
+                <p className="text-slate-700 whitespace-pre-line leading-relaxed">{viewingReferralSlip.clinicalSummary}</p>
+              </div>
+            </div>
+
+            {/* Signature Lines */}
+            <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs">
+              <div className="border-t border-slate-400 pt-2 space-y-0.5">
+                <p className="font-black text-slate-900">{viewingReferralSlip.referringDoctorName}</p>
+                <p className="text-[10px] text-slate-500 font-medium">Referring Doctor Signature</p>
+              </div>
+              <div className="border-t border-slate-400 pt-2 space-y-0.5">
+                <p className="font-black text-slate-900">{activeBranch.name} Front Desk</p>
+                <p className="text-[10px] text-slate-500 font-medium">Receptionist Intake & Triage Stamp</p>
+              </div>
+            </div>
+
+            {/* Print and Close Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 print:hidden">
+              <button
+                onClick={() => setViewingReferralSlip(null)}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs rounded-full transition cursor-pointer"
+              >
+                Close Slip
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-6 py-2.5 bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs rounded-full shadow-lg transition flex items-center gap-2 cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print Official Slip</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest } from '@/lib/api-auth';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -8,6 +10,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || searchParams.get('doctorId') || undefined;
 
@@ -26,6 +33,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+    }
+
     let body: any;
     try {
       body = await request.json();

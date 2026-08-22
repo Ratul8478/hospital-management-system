@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest } from '@/lib/api-auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -8,9 +9,14 @@ export async function OPTIONS() {
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> | { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Session Token required', authResult.statusCode || 401);
+    }
+
     const params = await Promise.resolve(context.params);
     const { id } = params;
 

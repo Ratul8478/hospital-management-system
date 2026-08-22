@@ -36,7 +36,10 @@ const INJECTION_PATTERNS = [
   /(;\s*--)/,
   /(\b--\s*$)/,
   /(\/\*.*\*\/)/,
-  /(\$where\b|\$regex\b|\$gt\b|\$lt\b|\$ne\b)/i,
+  /(\$where\b|\$regex\b|\$gt\b|\$lt\b|\$ne\b|\$eq\b)/i,
+  /(\|\|\s*['"]?[^'"]*['"]?\s*===?\s*['"]?[^'"]*['"]?)/i,
+  /(\bor\b\s+['"]?1['"]?\s*=\s*['"]?1['"]?)/i,
+  /(\bor\b\s+true\b)/i,
   /(\.\.\/|\.\.\\)/, // Path Traversal
   /(<script\b[^>]*>([\s\S]*?)<\/script>)/i, // Inline scripts
   /(javascript\s*:|vbscript\s*:|data\s*:text\/html)/i, // Malicious URI schemes
@@ -61,7 +64,7 @@ export function sanitizeString(input: unknown): string {
 }
 
 /**
- * Deep sanitization for incoming request bodies and nested objects
+ * Deep sanitization for incoming request bodies and nested objects (with Prototype Pollution defense)
  */
 export function sanitizeObject<T>(data: T): T {
   if (data === null || data === undefined) {
@@ -77,8 +80,12 @@ export function sanitizeObject<T>(data: T): T {
   }
 
   if (typeof data === 'object') {
-    const sanitizedObj: Record<string, any> = {};
+    const sanitizedObj: Record<string, any> = Object.create(null);
     for (const [key, value] of Object.entries(data)) {
+      // Guard against Prototype Pollution attack vectors (__proto__, constructor, prototype)
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       const sanitizedKey = sanitizeString(key);
       sanitizedObj[sanitizedKey] = sanitizeObject(value);
     }
@@ -86,6 +93,56 @@ export function sanitizeObject<T>(data: T): T {
   }
 
   return data;
+}
+
+/**
+ * Validates whether an image URL / Data URI is safe from XSS, SSRF, and script injection
+ */
+export function validateSafeImageUrl(url: unknown): boolean {
+  if (typeof url !== 'string' || !url.trim()) return false;
+  const cleanUrl = url.trim();
+
+  // Allow standard Base64 image payloads
+  if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(cleanUrl)) {
+    return true;
+  }
+
+  // Allow secure HTTPS image URLs
+  if (/^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s<>"'`]*)?$/i.test(cleanUrl)) {
+    // Disallow dangerous schemes or embedded scripts
+    if (/(javascript\s*:|vbscript\s*:|data\s*:text|<script)/i.test(cleanUrl)) {
+      return false;
+    }
+    return true;
+  }
+
+  // Allow local static assets
+  if (/^\/[a-zA-Z0-9_\-./]+\.(png|jpg|jpeg|webp|svg|gif|ico)$/i.test(cleanUrl)) {
+    return !cleanUrl.includes('..');
+  }
+
+  return false;
+}
+
+/**
+ * Sanitizes file names to defend against Path Traversal (CWE-22)
+ */
+export function sanitizeFileName(fileName: unknown): string {
+  if (typeof fileName !== 'string') return 'file_upload';
+  return fileName
+    .replace(/[/\\]+/g, '_')
+    .replace(/^\.+/, '')
+    .replace(/\.\./g, '')
+    .replace(/^_+/, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .slice(0, 100);
+}
+
+/**
+ * Generates a cryptographically secure 6-digit OTP using CSPRNG
+ */
+export function generateSecureOtp(): string {
+  return crypto.randomInt(100000, 1000000).toString();
 }
 
 /**
@@ -129,7 +186,7 @@ export function timingSafeEqual(a: string, b: string): boolean {
 }
 
 /**
- * Cryptographically secure token generator
+ * Cryptographically secure token generator using CSPRNG
  */
 export function generateSecureToken(bytes: number = 32): string {
   return crypto.randomBytes(bytes).toString('hex');

@@ -1545,6 +1545,21 @@
                 <!-- Populated dynamically based on selected hospital -->
               </select>
             </div>
+
+            <!-- Doctor Visual Profile Card / Image Badge shown during selection -->
+            <div id="refer-doc-preview-card" style="display:flex; align-items:center; gap:12px; margin-top:10px; padding:10px 12px; background:rgba(2,132,199,0.12); border:1px solid rgba(2,132,199,0.35); border-radius:10px;">
+              <div id="refer-doc-img-wrap" style="width:48px; height:48px; border-radius:50%; overflow:hidden; border:2px solid #0284C7; flex-shrink:0; background:#1E293B; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                <img id="refer-doc-img" src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80" alt="Doctor Photo" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=200&auto=format&fit=crop&q=80'">
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <strong id="refer-doc-name-preview" style="color:#FFFFFF; font-size:13px; font-weight:700;">Dr . Jiarul Haque</strong>
+                  <span id="refer-doc-status-badge" style="font-size:9px; font-weight:800; color:#10B981; background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.45); padding:1px 6px; border-radius:9999px;">AVAILABLE</span>
+                </div>
+                <span id="refer-doc-spec-preview" style="color:#38BDF8; font-size:11px; display:block; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">General & Cardiology Medicine</span>
+                <small id="refer-doc-hosp-preview" style="color:#94A3B8; font-size:10px; display:block;">ARIYAN HOSPITAL MULTISPECIALITY</small>
+              </div>
+            </div>
           </div>
 
           <!-- Target Department -->
@@ -2374,6 +2389,57 @@
       <div class="modal-panel-footer">
         <button class="btn-modal-cancel" onclick="closeModal('modal-mobile-install')">Close</button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================
+       MODAL: DIRECT HOSPITAL RECEPTION DESK CALL & HOTLINE
+       ======================================================== -->
+  <div id="modal-hospital-call" class="modal-backdrop-blur hidden">
+    <div class="modal-dialog-panel" style="max-width:440px;">
+      
+      <div class="modal-panel-header">
+        <div class="modal-title-wrap">
+          <div class="modal-icon-badge" style="background:rgba(16,185,129,0.15); color:#10B981;">
+            <i class="fa-solid fa-phone-volume"></i>
+          </div>
+          <div>
+            <h3 id="modal-call-hosp-name" style="font-size:15px; color:#ffffff;">ARIYAN HOSPITAL MULTISPECIALITY</h3>
+            <p>Direct Reception Desk & Emergency Hotline</p>
+          </div>
+        </div>
+        <button class="btn-modal-close" onclick="closeModal('modal-hospital-call')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-panel-body" style="text-align:center; padding:20px 16px;">
+        <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, #10B981 0%, #059669 100%); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; box-shadow:0 8px 24px rgba(16,185,129,0.35);">
+          <i class="fa-solid fa-phone" style="font-size:26px; color:#FFFFFF;"></i>
+        </div>
+
+        <span style="font-size:11px; color:#10B981; font-weight:800; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); padding:3px 10px; border-radius:9999px; display:inline-block; margin-bottom:8px;">
+          <i class="fa-solid fa-circle-check"></i> OFFICIAL RECEPTION DESK (24x7)
+        </span>
+
+        <h2 id="modal-call-phone-display" style="font-size:26px; color:#FFFFFF; font-weight:800; letter-spacing:1px; margin:8px 0 16px;">
+          +91 91443 76971
+        </h2>
+
+        <p style="font-size:12px; color:var(--text-sub); margin-bottom:20px; line-height:1.5;">
+          Direct connection to the reception desk triage coordinator at <strong id="modal-call-hosp-sub" style="color:var(--text-main);">ARIYAN HOSPITAL MULTISPECIALITY</strong>.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <a id="modal-call-dial-btn" href="tel:+919144376971" class="btn-sign-rx" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); text-decoration:none; justify-content:center; font-size:14px; padding:12px 16px;">
+            <i class="fa-solid fa-phone"></i> Call Direct via Phone Dialer
+          </a>
+
+          <button class="btn-prof-action" onclick="copyReceptionNumber()" style="width:100%; justify-content:center; background:rgba(255,255,255,0.06); border:1px solid var(--border-color); color:var(--text-main);">
+            <i class="fa-solid fa-copy"></i> <span id="btn-copy-num-text">Copy Phone Number</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 

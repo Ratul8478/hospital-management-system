@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import {
   Branch,
   INITIAL_BRANCHES,
@@ -346,6 +347,37 @@ class BackendRepository {
     return newBranch;
   }
 
+  public syncBranchesFromWeb(branchesList: Branch[]): void {
+    if (Array.isArray(branchesList) && branchesList.length > 0) {
+      this.branches = [...branchesList];
+    }
+  }
+
+  public syncDoctorsFromWeb(doctorsList: any[]): void {
+    if (Array.isArray(doctorsList) && doctorsList.length > 0) {
+      this.doctors = doctorsList.map((doc, idx) => {
+        const branch = this.branches.find(b => b.id === doc.branchId) || this.branches[0];
+        return {
+          id: doc.id || (idx + 1),
+          branchId: doc.branchId || branch.id,
+          branchCode: branch.code,
+          branchName: branch.name,
+          name: doc.name,
+          email: doc.email || `doctor${doc.id || idx + 1}@medix.local`,
+          phone: doc.contact || doc.phone || '+91 9804222142',
+          specialty: doc.specialty || 'General Medicine',
+          department: doc.specialty ? doc.specialty.split('&')[0].trim() : 'General',
+          qualification: doc.qualification || 'MD, MBBS',
+          registrationNumber: `WB-MED-${doc.id || idx + 1}-2026`,
+          fee: typeof doc.fee === 'number' ? doc.fee : parseFloat(doc.fee) || 800,
+          status: doc.status || 'available',
+          role: 'doctor',
+          permissions: [...DEFAULT_DOCTOR_PERMISSIONS],
+        };
+      });
+    }
+  }
+
   // ---------------- AUTH & DOCTOR METHODS ----------------
   public authenticateDoctor(emailOrPhone: string, password?: string): {
     doctor: DoctorUser;
@@ -479,7 +511,7 @@ class BackendRepository {
     }
   ): HospitalReferralRecord {
     const nextId = Math.max(...this.referrals.map((r) => r.id), 0) + 1;
-    const trackingToken = data.referralId || `REF-HOSP-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    const trackingToken = data.referralId || `REF-HOSP-2026-${crypto.randomInt(10000, 100000)}`;
 
     const newReferral: HospitalReferralRecord = {
       ...data,

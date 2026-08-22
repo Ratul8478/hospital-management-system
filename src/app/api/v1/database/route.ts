@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
 import { DEFAULT_SUPER_ADMIN_PROFILE } from '@/lib/data';
+import { verifyApiRequest } from '@/lib/api-auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -9,6 +10,15 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    // Defend against outsider hackers: Enforce API Key / Authorization Token Check
+    const authResult = verifyApiRequest(request, 'super_admin');
+    if (!authResult.authenticated) {
+      return apiError(
+        authResult.error || 'Access Denied: Super Admin API Key or Valid Token required to access database export.',
+        authResult.statusCode || 401
+      );
+    }
+
     const branches = backendStore.getBranches();
     const doctors = backendStore.getAllDoctors();
 
@@ -109,5 +119,37 @@ export async function GET(request: NextRequest) {
     );
   } catch (err: any) {
     return apiError(err?.message || 'Failed to export databases.', 500);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key required to sync live database.', authResult.statusCode || 401);
+    }
+
+    const body = await request.json().catch(() => ({}));
+    if (body.branches && Array.isArray(body.branches)) {
+      backendStore.syncBranchesFromWeb(body.branches);
+    }
+    if (body.doctors && Array.isArray(body.doctors)) {
+      backendStore.syncDoctorsFromWeb(body.doctors);
+    }
+
+    return apiSuccess(
+      {
+        totalBranches: backendStore.getBranches().length,
+        totalDoctors: backendStore.getAllDoctors().length,
+        branches: backendStore.getBranches(),
+        doctors: backendStore.getAllDoctors(),
+      },
+      {
+        message: 'Server database synchronized with web and mobile clients successfully.',
+      }
+    );
+  } catch (err: any) {
+    console.error('Database POST sync error:', err);
+    return apiError(err?.message || 'Failed to sync database to server.', 500);
   }
 }

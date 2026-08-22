@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { INITIAL_MARKETING_JOIN_REQUESTS, INITIAL_MARKETING_REPRESENTATIVES, INITIAL_MARKETING_EMAIL_LOGS, MarketingEmailDispatchLog } from '@/lib/data';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
 let marketingRequests = [...INITIAL_MARKETING_JOIN_REQUESTS];
 let marketingReps = [...INITIAL_MARKETING_REPRESENTATIVES];
@@ -12,7 +14,17 @@ export async function POST(
   try {
     const { id } = await params;
     const reqId = parseInt(id, 10);
-    const body = await request.json().catch(() => ({}));
+    const rawBody = await request.json().catch(() => ({}));
+    
+    const threatCheck = detectSuspiciousPayload(rawBody);
+    if (threatCheck.isSuspicious) {
+      return NextResponse.json(
+        { success: false, error: 'Security warning: Malicious payload blocked.' },
+        { status: 400 }
+      );
+    }
+
+    const body = sanitizeObject(rawBody);
     const { superAdminName, securityToken } = body;
 
     const targetReq = marketingRequests.find(r => r.id === reqId);
@@ -25,7 +37,7 @@ export async function POST(
 
     // STRICT PROTOCOL: Only Super Admin Master approval can generate Reference ID and dispatch email
     const approverName = superAdminName || 'Anichul Haque (Super Admin HQ Master)';
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const randomSuffix = crypto.randomInt(1000, 10000);
     const generatedRefId = `REF-MKT-B${targetReq.targetBranchId}-${randomSuffix}`;
     const approvalDate = new Date().toISOString().split('T')[0];
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);

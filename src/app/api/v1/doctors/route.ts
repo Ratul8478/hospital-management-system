@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest } from '@/lib/api-auth';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -68,7 +70,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key required to register new medical doctor.', authResult.statusCode || 401);
+    }
+
+    const rawBody = await request.json().catch(() => ({}));
+    const threatCheck = detectSuspiciousPayload(rawBody);
+    if (threatCheck.isSuspicious) {
+      return apiError('Security Alert: Malicious registration payload blocked by API Gateway.', 400);
+    }
+
+    const body = sanitizeObject(rawBody);
     if (!body.name || !body.email || !body.referenceId) {
       return apiError('Doctor Full Name, Practitioner Email, and Reference ID are mandatory.', 422);
     }

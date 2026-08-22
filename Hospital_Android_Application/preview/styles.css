@@ -5605,14 +5605,30 @@ body {
 }
 
 .btn-refer-doc-chip {
-  background: #0D5C58;
+  background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
   color: #FFFFFF !important;
   border: none;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-  padding: 5px 10px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-refer-doc-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.45);
+}
+
+.btn-refer-doc-chip:active {
+  transform: translateY(0);
 }
 
 /* 9. Purple Bottom Navigation Bar (Matching Screenshots) */

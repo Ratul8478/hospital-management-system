@@ -96,8 +96,8 @@ export async function POST(req: Request) {
       otpToken,
       deliveryMode: emailResult.mode,
       deliveryInfo: emailResult.info,
-      // Provide instant backup OTP code when SMTP credentials are not yet supplied in env
-      devOtp: hasRealSmtp ? undefined : otp,
+      // Provide backup OTP code only in non-production local development when SMTP is not configured
+      devOtp: (process.env.NODE_ENV !== 'production' && !hasRealSmtp) ? otp : undefined,
     });
   } catch (error: any) {
     console.error('[SEND OTP API ERROR]:', error);

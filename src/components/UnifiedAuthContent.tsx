@@ -173,7 +173,7 @@ export function UnifiedAuthContent({ defaultTab = 'register' }: { defaultTab?: '
         setSuccessMsg(`Doctor Registration Successful for ${targetBranchObj.code}!`);
         setTimeout(() => router.push('/dashboard/doctor'), 1200);
       } else if (regRole === 'patient') {
-        const newUhid = `UHID-B${targetBranchObj.id}-20260811-${Math.floor(1000 + Math.random() * 9000)}`;
+        const newUhid = `UHID-B${targetBranchObj.id}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Date.now().toString().slice(-4)}`;
         setGeneratedUhid(newUhid);
         addPatient({
           branchId: targetBranchObj.id,

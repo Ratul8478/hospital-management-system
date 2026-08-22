@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server';
+import crypto from 'crypto';
 import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
+import { verifyApiRequest } from '@/lib/api-auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -8,6 +11,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+    }
+
     const { searchParams } = new URL(request.url);
     const doctorIdParam = searchParams.get('doctorId');
     const date = searchParams.get('date') || undefined;
@@ -44,6 +52,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+    }
+
     let body: any;
     try {
       body = await request.json();
@@ -51,6 +64,12 @@ export async function POST(request: NextRequest) {
       return apiError('Invalid JSON payload in request body', 400);
     }
 
+    const threatCheck = detectSuspiciousPayload(body);
+    if (threatCheck.isSuspicious) {
+      return apiError('Malicious input pattern rejected by security firewall', 400);
+    }
+
+    const sanitizedBody = sanitizeObject(body);
     const {
       patientId,
       uhid,
@@ -63,7 +82,7 @@ export async function POST(request: NextRequest) {
       scheduledTime,
       reason,
       notes,
-    } = body || {};
+    } = sanitizedBody || {};
 
     if (!patientName || typeof patientName !== 'string') {
       return apiError('Missing required field: patientName', 422, { field: 'patientName' });
@@ -74,10 +93,10 @@ export async function POST(request: NextRequest) {
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const generatedUhid = uhid || `UHID-${todayStr.replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedUhid = uhid || `UHID-${todayStr.replace(/-/g, '')}-${crypto.randomInt(1000, 10000)}`;
 
     const newFollowup = backendStore.createFollowUp({
-      patientId: patientId ? parseInt(patientId, 10) : Math.floor(100 + Math.random() * 900),
+      patientId: patientId ? parseInt(patientId, 10) : crypto.randomInt(100, 1000),
       uhid: generatedUhid,
       patientName,
       patientPhone: patientPhone || '9804222142',
