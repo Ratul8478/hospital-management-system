@@ -3,6 +3,7 @@ import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
 import { DEFAULT_SUPER_ADMIN_PROFILE } from '@/lib/data';
 import { verifyApiRequest } from '@/lib/api-auth';
+import { saveRoster } from '@/lib/roster-store';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -136,6 +137,16 @@ export async function POST(request: NextRequest) {
     if (body.doctors && Array.isArray(body.doctors)) {
       backendStore.syncDoctorsFromWeb(body.doctors);
     }
+
+    // Persist the roster outside this invocation's memory. Without this, the
+    // hospitals and doctors a receptionist just registered would live only in
+    // the RAM of whichever serverless instance served this request, and the
+    // Medix Doctor Android app polling /api/v1/hospitals would keep receiving
+    // the seeded demo roster.
+    await saveRoster({
+      branches: Array.isArray(body.branches) ? body.branches : backendStore.getBranches(),
+      doctors: Array.isArray(body.doctors) ? body.doctors : backendStore.getAllDoctors(),
+    });
 
     return apiSuccess(
       {

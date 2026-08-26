@@ -11827,6 +11827,22 @@ const WEB_REGISTERED_HOSPITALS = [
   }
 ];
 
+// True only when this WebView actually shares the web app's own localStorage
+// database - i.e. the page is running inside the website or an embedded frame.
+// In the packaged Android app it is always false, because there the only local
+// copy of the roster is `medix_live_hospitals_cache`, which we wrote ourselves
+// from a previous API response.
+function hasWebAppDatabase() {
+  try {
+    const raw = localStorage.getItem('medix_branches');
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch (_) {
+    return false;
+  }
+}
+
 // Load cached live hospitals from shared website database & localStorage if available
 function getSharedWebDatabaseHospitals() {
   try {
@@ -11987,8 +12003,12 @@ async function syncWebHospitalsAndDoctors() {
         };
       });
 
-      // Include any newly added branch from local shared database
-      if (localSynced && localSynced.length > 0) {
+      // Merge in hospitals that exist in the web app's own database but have not
+      // reached the API yet. Skipped unless this page really shares that
+      // database: in the Android app `localSynced` is our own cache of an
+      // earlier API response, so merging it back would resurrect a hospital
+      // that was removed on the web, on every single poll, forever.
+      if (hasWebAppDatabase() && localSynced && localSynced.length > 0) {
         localSynced.forEach(localH => {
           if (!mergedHosps.some(mh => mh.id === localH.id || mh.name.toLowerCase() === localH.name.toLowerCase())) {
             mergedHosps.push(localH);

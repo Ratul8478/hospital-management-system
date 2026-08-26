@@ -8918,19 +8918,19 @@ body {
       </div>
 
       <div class="modal-panel-body" style="padding:16px; overflow-y:auto; font-size:12px; color:var(--text-sub); line-height:1.6;">
-        <h4 style="font-size:13px; font-weight:800; color:var(--text-main); margin:0 0 6px;">1. Medical Practitioner Platform &amp; Referral System</h4>
+        <h4 style="font-size:13px; font-weight:800; color:var(--text-main); margin:0 0 6px;">1. Medical Practitioner Platform &amp; Marketing System</h4>
         <p style="margin-bottom:12px;">
-          The Medix Clinical Referral Platform connects certified medical doctors and verified healthcare institutions. All referral requests are encrypted and dispatched directly to the chosen hospital's clinical admissions and triage department.
+          The Medix Clinical Marketing Platform connects certified medical doctors and verified healthcare institutions. All marketing requests are encrypted and dispatched directly to the chosen hospital's clinical admissions and triage department.
         </p>
 
         <h4 style="font-size:13px; font-weight:800; color:var(--text-main); margin:0 0 6px;">2. Patient Health Data Privacy &amp; Confidentiality</h4>
         <p style="margin-bottom:12px;">
-          Patient identifiable information (UHID, diagnosis, vitals, contact details) is handled in strict compliance with applicable Digital Personal Data Protection laws. Data is only accessible by the referring practitioner and the receiving hospital reception/triage desk.
+          Patient identifiable information (UHID, diagnosis, vitals, contact details) is handled in strict compliance with applicable Digital Personal Data Protection laws. Data is only accessible by the marketing practitioner and the receiving hospital reception/triage desk.
         </p>
 
-        <h4 style="font-size:13px; font-weight:800; color:var(--text-main); margin:0 0 6px;">3. Clinical Referral Bonus &amp; Payout Terms</h4>
+        <h4 style="font-size:13px; font-weight:800; color:var(--text-main); margin:0 0 6px;">3. Clinical Marketing Bonus &amp; Payout Terms</h4>
         <p style="margin-bottom:12px;">
-          Referral incentives and clinical facilitation bonuses are credited upon confirmed institutional patient admission. Payouts are executed via standard IMPS/UPI banking channels to the registered practitioner account.
+          Marketing incentives and clinical facilitation bonuses are credited upon confirmed institutional patient admission. Payouts are executed via standard IMPS/UPI banking channels to the registered practitioner account.
         </p>
 
         <h4 style="font-size:13px; font-weight:800; color:var(--text-main); margin:0 0 6px;">4. Medical Responsibility Disclaimer</h4>
@@ -11827,6 +11827,22 @@ const WEB_REGISTERED_HOSPITALS = [
   }
 ];
 
+// True only when this WebView actually shares the web app's own localStorage
+// database - i.e. the page is running inside the website or an embedded frame.
+// In the packaged Android app it is always false, because there the only local
+// copy of the roster is `medix_live_hospitals_cache`, which we wrote ourselves
+// from a previous API response.
+function hasWebAppDatabase() {
+  try {
+    const raw = localStorage.getItem('medix_branches');
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0;
+  } catch (_) {
+    return false;
+  }
+}
+
 // Load cached live hospitals from shared website database & localStorage if available
 function getSharedWebDatabaseHospitals() {
   try {
@@ -11987,8 +12003,12 @@ async function syncWebHospitalsAndDoctors() {
         };
       });
 
-      // Include any newly added branch from local shared database
-      if (localSynced && localSynced.length > 0) {
+      // Merge in hospitals that exist in the web app's own database but have not
+      // reached the API yet. Skipped unless this page really shares that
+      // database: in the Android app `localSynced` is our own cache of an
+      // earlier API response, so merging it back would resurrect a hospital
+      // that was removed on the web, on every single poll, forever.
+      if (hasWebAppDatabase() && localSynced && localSynced.length > 0) {
         localSynced.forEach(localH => {
           if (!mergedHosps.some(mh => mh.id === localH.id || mh.name.toLowerCase() === localH.name.toLowerCase())) {
             mergedHosps.push(localH);

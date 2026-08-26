@@ -3,6 +3,11 @@ import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
 import { verifyApiRequest } from '@/lib/api-auth';
 import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
+import { hydrateBackendStore } from '@/lib/roster-store';
+
+// Polled alongside /api/v1/hospitals by the Medix Doctor Android app, so the
+// same freshness requirement applies here.
+export const dynamic = 'force-dynamic';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -10,6 +15,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    // Pull the live web-registered roster into this invocation before reading
+    // it. A no-op when no roster store is configured, in which case the seeded
+    // doctors from data.ts are served exactly as before.
+    await hydrateBackendStore();
+
     const { searchParams } = new URL(request.url);
     const branchIdStr = searchParams.get('branchId') || searchParams.get('hospitalId');
     const status = searchParams.get('status')?.toLowerCase();

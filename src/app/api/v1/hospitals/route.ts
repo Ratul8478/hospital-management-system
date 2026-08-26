@@ -3,6 +3,12 @@ import { backendStore } from '@/lib/backend-store';
 import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
 import { verifyApiRequest } from '@/lib/api-auth';
 import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
+import { hydrateBackendStore } from '@/lib/roster-store';
+
+// The Medix Doctor Android app polls this endpoint every few seconds to pick up
+// hospitals and doctors registered on the web. A cached response would freeze
+// that roster, so this handler must always run.
+export const dynamic = 'force-dynamic';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -10,6 +16,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
+    // Pull the live web-registered roster into this invocation before reading
+    // it. A no-op when no roster store is configured, in which case the seeded
+    // branches from data.ts are served exactly as before.
+    await hydrateBackendStore();
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const facilityType = searchParams.get('facilityType');

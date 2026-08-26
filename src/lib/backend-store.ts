@@ -76,6 +76,8 @@ export interface DoctorUser {
   role: 'doctor';
   permissions: string[];
   avatarUrl?: string;
+  scheduleTime?: string;
+  chamberRoom?: string;
 }
 
 export interface AuthSession {
@@ -377,20 +379,26 @@ class BackendRepository {
         const branch = this.branches.find(b => b.id === doc.branchId) || this.branches[0];
         return {
           id: doc.id || (idx + 1),
-          branchId: doc.branchId || branch.id,
-          branchCode: branch.code,
-          branchName: branch.name,
+          branchId: doc.branchId || branch?.id || 1,
+          branchCode: branch?.code || 'ARIYAN-HQ',
+          branchName: branch?.name || 'ARIYAN HOSPITAL MULTISPECIALITY',
           name: doc.name,
           email: doc.email || `doctor${doc.id || idx + 1}@medix.local`,
           phone: doc.contact || doc.phone || '+91 9804222142',
           specialty: doc.specialty || 'General Medicine',
-          department: doc.specialty ? doc.specialty.split('&')[0].trim() : 'General',
+          department: doc.department || (doc.specialty ? doc.specialty.split('&')[0].trim() : 'General'),
           qualification: doc.qualification || 'MD, MBBS',
           registrationNumber: `WB-MED-${doc.id || idx + 1}-2026`,
           fee: typeof doc.fee === 'number' ? doc.fee : parseFloat(doc.fee) || 800,
           status: doc.status || 'available',
           role: 'doctor',
           permissions: [...DEFAULT_DOCTOR_PERMISSIONS],
+          // Carried through so a doctor registered on the web keeps their
+          // portrait and chamber schedule in the Android app. Dropping these
+          // here used to leave every synced doctor with a blank photo.
+          avatarUrl: doc.avatarUrl || doc.image || doc.photo || '',
+          scheduleTime: doc.scheduleTime || doc.schedule || '',
+          chamberRoom: doc.chamberRoom || '',
         };
       });
     }
