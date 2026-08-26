@@ -17,7 +17,7 @@ export interface Branch {
   bedOccupancy: string;
   bedOccupiedCount?: number;
   bedTotalCount?: number;
-  facilityType?: 'Hospital' | 'Nursing Home' | 'Diagnostic Center';
+  facilityType?: 'Hospital' | 'Nursing Home' | 'Diagnostic Center' | 'Super-Specialty Center' | 'Maternity Hospital' | 'Super-Specialty Institute';
   govRegNumber?: string;
 }
 
@@ -306,19 +306,85 @@ export const INITIAL_BRANCHES: Branch[] = [
     branchHead: 'Dr . Jiarul Haque (Owner & Medical Director)',
     adminName: 'Anichul Haque (Super Admin)',
     adminEmail: 'ariyanhospital9@gmail.com',
-    adminPhone: '9144376971',
+    adminPhone: '+91 91443 76971',
     status: 'active',
     badgeStatus: 'ACTIVE',
     revenue: 0,
     todayRevenueFormatted: '₹ 0',
     patientCount: 0,
-    activeConsultants: 0,
-    bedOccupancy: '0 / 0 Beds',
-    bedOccupiedCount: 0,
-    bedTotalCount: 0,
+    activeConsultants: 4,
+    bedOccupancy: 'Emergency & ICU Beds Ready (24x7)',
+    bedOccupiedCount: 14,
+    bedTotalCount: 40,
     facilityType: 'Hospital',
     govRegNumber: 'WB.33735581',
   },
+  {
+    id: 2,
+    code: 'MEDIX-TRAUMA',
+    name: 'Medix Specialty & Trauma Center',
+    location: 'Kolkata, West Bengal',
+    address: 'EM Bypass Connector, Salt Lake Sector V, Kolkata 700091',
+    branchHead: 'Dr. Robert Jenkins (Chief of Surgery)',
+    adminName: 'Dr. Robert Jenkins',
+    adminEmail: 'trauma@medix.hospital',
+    adminPhone: '+91 98310 99482',
+    status: 'active',
+    badgeStatus: 'ACTIVE',
+    revenue: 0,
+    todayRevenueFormatted: '₹ 0',
+    patientCount: 0,
+    activeConsultants: 3,
+    bedOccupancy: 'Level-1 Trauma & Emergency Standby',
+    bedOccupiedCount: 22,
+    bedTotalCount: 50,
+    facilityType: 'Super-Specialty Center',
+    govRegNumber: 'WB.33991204',
+  },
+  {
+    id: 3,
+    code: 'MEDIX-MATERNITY',
+    name: 'Medix Mother & Child Super-Specialty',
+    location: 'Kolkata, West Bengal',
+    address: 'Park Circus Clinical Corridor, Kolkata 700017',
+    branchHead: 'Dr. Sunita Roy (Head of Neonatology)',
+    adminName: 'Dr. Sunita Roy',
+    adminEmail: 'maternity@medix.hospital',
+    adminPhone: '+91 97480 12345',
+    status: 'active',
+    badgeStatus: 'ACTIVE',
+    revenue: 0,
+    todayRevenueFormatted: '₹ 0',
+    patientCount: 0,
+    activeConsultants: 3,
+    bedOccupancy: 'NICU Level-3 & Birthing Ready',
+    bedOccupiedCount: 18,
+    bedTotalCount: 35,
+    facilityType: 'Maternity Hospital',
+    govRegNumber: 'WB.33876109',
+  },
+  {
+    id: 4,
+    code: 'MEDIX-NEURO',
+    name: 'Kolkata Institute of Neurosciences & Nephrology',
+    location: 'Kolkata, West Bengal',
+    address: 'AJC Bose Road, Mullick Bazar, Kolkata 700020',
+    branchHead: 'Dr. Debanjan Ghosh (Director of Neuro Sciences)',
+    adminName: 'Dr. Debanjan Ghosh',
+    adminEmail: 'neuro@medix.hospital',
+    adminPhone: '+91 94330 88219',
+    status: 'active',
+    badgeStatus: 'ACTIVE',
+    revenue: 0,
+    todayRevenueFormatted: '₹ 0',
+    patientCount: 0,
+    activeConsultants: 3,
+    bedOccupancy: 'Acute Stroke & 24x7 Hemodialysis Unit',
+    bedOccupiedCount: 29,
+    bedTotalCount: 60,
+    facilityType: 'Super-Specialty Institute',
+    govRegNumber: 'WB.33654128',
+  }
 ];
 
 export const INITIAL_BRANCH_ADMINS: BranchAdminUser[] = [
@@ -338,15 +404,195 @@ export const INITIAL_BRANCH_ADMINS: BranchAdminUser[] = [
 
 export const INITIAL_ADMIN_APPLICATIONS: AdminApplicationRequest[] = [];
 
-export const INITIAL_DOCTORS: Doctor[] = [
+export const INITIAL_DOCTORS: (Doctor & { image?: string; rating?: string; experience?: string; qualification?: string })[] = [
+  // Ariyan Hospital
   {
-    id: 1,
+    id: 101,
+    branchId: 1,
+    name: 'Dr. Sabyachi Mondal',
+    specialty: 'Medicine & Critical Care',
+    department: 'Critical Care & Medicine',
+    qualification: 'MBBS, MD',
+    rating: '0.0',
+    experience: '7 years experience',
+    fee: 700,
+    status: 'available',
+    contact: '+91 91443 76971',
+    image: ''
+  },
+  {
+    id: 102,
     branchId: 1,
     name: 'Dr . Jiarul Haque',
     specialty: 'General & Cardiology Medicine',
+    department: 'Cardiology',
+    qualification: 'MBBS, MD (Cardio)',
+    rating: '0.0',
+    experience: '12 years experience',
     fee: 800,
     status: 'available',
-    contact: '9804222142'
+    contact: '+91 91443 76971',
+    image: ''
+  },
+  {
+    id: 103,
+    branchId: 1,
+    name: 'Dr. Sarah Williams',
+    specialty: 'Interventional Cardiology & Cath Lab',
+    department: 'Cardiology',
+    qualification: 'MD, DM (Cardio), FACC',
+    rating: '0.0',
+    experience: '10 years experience',
+    fee: 900,
+    status: 'available',
+    contact: '+91 91443 76971',
+    image: ''
+  },
+  {
+    id: 104,
+    branchId: 1,
+    name: 'Dr. Ananya Sen',
+    specialty: 'Obstetrics & High-Risk Pregnancy',
+    department: 'Obstetrics & Gynecology',
+    qualification: 'MBBS, MS (OBG)',
+    rating: '0.0',
+    experience: '8 years experience',
+    fee: 750,
+    status: 'available',
+    contact: '+91 91443 76971',
+    image: ''
+  },
+
+  // Medix Specialty & Trauma Center
+  {
+    id: 201,
+    branchId: 2,
+    name: 'Dr. Robert Jenkins',
+    specialty: 'Trauma & Orthopedic Surgery',
+    department: 'Orthopedics',
+    qualification: 'MS (Ortho), MCh',
+    rating: '0.0',
+    experience: '15 years experience',
+    fee: 1000,
+    status: 'available',
+    contact: '+91 98310 99482',
+    image: ''
+  },
+  {
+    id: 202,
+    branchId: 2,
+    name: 'Dr. Vikram Malhotra',
+    specialty: 'Emergency Triage & Acute Critical Care',
+    department: 'Emergency Medicine',
+    qualification: 'MD (Emergency Med)',
+    rating: '0.0',
+    experience: '9 years experience',
+    fee: 850,
+    status: 'available',
+    contact: '+91 98310 99482',
+    image: ''
+  },
+  {
+    id: 203,
+    branchId: 2,
+    name: 'Dr. Priya Nair',
+    specialty: 'Neurology & Neurosurgery',
+    department: 'Neurology',
+    qualification: 'DM (Neuro), MCh',
+    rating: '0.0',
+    experience: '11 years experience',
+    fee: 950,
+    status: 'available',
+    contact: '+91 98310 99482',
+    image: ''
+  },
+
+  // Medix Mother & Child Super-Specialty
+  {
+    id: 301,
+    branchId: 3,
+    name: 'Dr. Sunita Roy',
+    specialty: 'Obstetrics, Gynecology & Pediatrics',
+    department: 'Pediatrics',
+    qualification: 'MD (Pediatrics), DCH',
+    rating: '0.0',
+    experience: '14 years experience',
+    fee: 800,
+    status: 'available',
+    contact: '+91 97480 12345',
+    image: ''
+  },
+  {
+    id: 302,
+    branchId: 3,
+    name: 'Dr. Rajesh Sharma',
+    specialty: 'Pediatric & Neonatal Intensive Care',
+    department: 'NICU & Pediatrics',
+    qualification: 'MD (Ped), DM (Neonatology)',
+    rating: '0.0',
+    experience: '10 years experience',
+    fee: 900,
+    status: 'available',
+    contact: '+91 97480 12345',
+    image: ''
+  },
+  {
+    id: 303,
+    branchId: 3,
+    name: 'Dr. Meera Banerjee',
+    specialty: 'Fetal Medicine & Advanced Gynecology',
+    department: 'Gynecology',
+    qualification: 'MS (OBG), Fellowship Fetal Med',
+    rating: '0.0',
+    experience: '12 years experience',
+    fee: 850,
+    status: 'available',
+    contact: '+91 97480 12345',
+    image: ''
+  },
+
+  // Kolkata Institute of Neurosciences & Nephrology
+  {
+    id: 401,
+    branchId: 4,
+    name: 'Dr. Debanjan Ghosh',
+    specialty: 'Neurology & Neurosurgery',
+    department: 'Neurosurgery',
+    qualification: 'MCh (Neurosurgery), FINR',
+    rating: '0.0',
+    experience: '16 years experience',
+    fee: 1200,
+    status: 'available',
+    contact: '+91 94330 88219',
+    image: ''
+  },
+  {
+    id: 402,
+    branchId: 4,
+    name: 'Dr. Pooja Chawla',
+    specialty: 'Nephrology & Renal Dialysis Unit',
+    department: 'Nephrology',
+    qualification: 'DM (Nephrology), DNB',
+    rating: '0.0',
+    experience: '8 years experience',
+    fee: 900,
+    status: 'available',
+    contact: '+91 94330 88219',
+    image: ''
+  },
+  {
+    id: 403,
+    branchId: 4,
+    name: 'Dr. Amitava Roy',
+    specialty: 'Medical & Surgical Oncology',
+    department: 'Oncology',
+    qualification: 'MD, DM (Medical Oncology)',
+    rating: '0.0',
+    experience: '13 years experience',
+    fee: 1100,
+    status: 'available',
+    contact: '+91 94330 88219',
+    image: ''
   }
 ];
 
@@ -400,9 +646,22 @@ export interface HospitalReferral {
   vitalsSummary?: string;
   referringDoctorId: number;
   referringDoctorName: string;
+  referringDoctorSpecialty?: string;
+  referringDoctorQualification?: string;
+  referringDoctorRegNo?: string;
+  referringDoctorHospital?: string;
   referringDoctorChamber?: string;
   referringDoctorPhone?: string;
   referringDoctorEmail?: string;
+  // Connected Marketing Representative (PRO / Marketing Man) Profile
+  marketingRepId?: string | number;
+  marketingRepName?: string;
+  marketingRepCode?: string;
+  marketingRepPhone?: string;
+  marketingRepEmail?: string;
+  marketingRepTerritory?: string;
+  marketingRepCommissionRate?: string | number;
+  marketingRepRole?: string;
   status: 'PENDING' | 'DISPATCHED' | 'ACKNOWLEDGED' | 'ADMITTED';
   createdAt: string;
   receiptDate?: string;
@@ -410,41 +669,7 @@ export interface HospitalReferral {
   referralCommission?: number;
 }
 
-export const INITIAL_HOSPITAL_REFERRALS: HospitalReferral[] = [
-  {
-    id: 1,
-    referralId: 'REF-HOSP-2026-88192',
-    patientId: 1,
-    uhid: 'UHID-2026-0042',
-    patientName: 'Aarav Sharma',
-    patientAge: 45,
-    patientGender: 'Male',
-    patientPhone: '+91 98765 43210',
-    patientBlood: 'B+',
-    targetHospitalId: 1,
-    targetHospitalCode: 'ARIYAN-HQ',
-    targetHospitalName: 'ARIYAN HOSPITAL MULTISPECIALITY',
-    targetHospitalLocation: 'Kolkata, West Bengal',
-    targetDoctorId: 1,
-    targetDoctorName: 'Dr . Jiarul Haque',
-    targetDoctorSpecialty: 'General & Cardiology Medicine',
-    targetDepartment: 'Cardiovascular Surgery & Cath Lab',
-    urgencyLevel: 'EMERGENCY',
-    clinicalSummary: 'Acute Coronary Syndrome, multi-vessel CAD. Level-1 emergency standby and immediate bed allocation requested upon ambulance arrival.',
-    diagnosis: 'Acute Coronary Syndrome, STEMI',
-    vitalsSummary: 'BP: 145/95 mmHg, Pulse: 88 BPM, SpO2: 96%, Temp: 37.1°C',
-    referringDoctorId: 99,
-    referringDoctorName: 'Dr. Sarah Williams',
-    referringDoctorChamber: 'OPD Suite 302, 3rd Floor, Wing A',
-    referringDoctorPhone: '+91 98042 22142',
-    referringDoctorEmail: 'sarah.williams@medix.hospital',
-    status: 'DISPATCHED',
-    createdAt: new Date().toISOString(),
-    receiptDate: 'Today, 11:30 AM',
-    estimatedBill: 30000,
-    referralCommission: 4500,
-  }
-];
+export const INITIAL_HOSPITAL_REFERRALS: HospitalReferral[] = [];
 
 export const INITIAL_MARKETING_REPRESENTATIVES: MarketingRepresentative[] = [];
 

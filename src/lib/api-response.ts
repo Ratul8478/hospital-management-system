@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-Doctor-Id, X-Branch-Id',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, X-Doctor-Id, X-Branch-Id, x-api-key, X-API-Key',
   'Access-Control-Max-Age': '86400',
 };
 

@@ -39,9 +39,22 @@ export interface HospitalReferralRecord {
   vitalsSummary?: string;
   referringDoctorId: number;
   referringDoctorName: string;
+  referringDoctorSpecialty?: string;
+  referringDoctorQualification?: string;
+  referringDoctorRegNo?: string;
+  referringDoctorHospital?: string;
   referringDoctorChamber?: string;
   referringDoctorPhone?: string;
   referringDoctorEmail?: string;
+  // Connected Marketing Representative (PRO) Profile
+  marketingRepId?: string | number;
+  marketingRepName?: string;
+  marketingRepCode?: string;
+  marketingRepPhone?: string;
+  marketingRepEmail?: string;
+  marketingRepTerritory?: string;
+  marketingRepCommissionRate?: string | number;
+  marketingRepRole?: string;
   status: 'PENDING' | 'DISPATCHED' | 'ACKNOWLEDGED' | 'ADMITTED';
   createdAt: string;
 }
@@ -247,23 +260,28 @@ const DEFAULT_DOCTOR_PERMISSIONS = [
 // Seed doctors across all web-registered hospital branches dynamically mapped from INITIAL_DOCTORS
 const SEED_DOCTOR_USERS: DoctorUser[] = INITIAL_DOCTORS.map(doc => {
   const branch = INITIAL_BRANCHES.find(b => b.id === doc.branchId) || INITIAL_BRANCHES[0];
-  return {
+  const user: DoctorUser = {
     id: doc.id,
     branchId: doc.branchId,
     branchCode: branch.code,
     branchName: branch.name,
     name: doc.name,
-    email: doc.id === 1 ? 'ariyanhospital9@gmail.com' : (doc.id === 99 ? 'dr.sarah@medix.com' : `doctor${doc.id}@${branch.code.toLowerCase().replace(/[^a-z0-9]/g, '')}.local`),
+    email: doc.id === 101 ? 'sabyachi.mondal@ariyan.hospital' : (doc.id === 102 ? 'ariyanhospital9@gmail.com' : `doctor${doc.id}@${branch.code.toLowerCase().replace(/[^a-z0-9]/g, '')}.local`),
     phone: doc.contact,
     specialty: doc.specialty,
-    department: doc.specialty.split('&')[0].trim(),
-    qualification: doc.id === 1 ? 'MD (Gen Med), DNB (Cardiology)' : (doc.id === 99 ? 'MD, DM (Cardiology), FACC' : 'MS / MD Specialist'),
+    department: (doc as any).department || doc.specialty.split('&')[0].trim(),
+    qualification: (doc as any).qualification || 'MBBS, MD',
     registrationNumber: `WB-MED-${doc.id}-2026`,
-    fee: doc.fee,
+    fee: doc.fee || 700,
     status: doc.status,
     role: 'doctor',
     permissions: [...DEFAULT_DOCTOR_PERMISSIONS],
+    avatarUrl: (doc as any).image || '',
   };
+  (user as any).image = (doc as any).image || '';
+  (user as any).rating = (doc as any).rating || '5.0';
+  (user as any).experience = (doc as any).experience || '7 years experience';
+  return user;
 });
 
 const SEED_PATIENTS: PatientRecord[] = [];
@@ -456,6 +474,10 @@ class BackendRepository {
     referenceId: string;
     branchId?: number;
     fee?: number;
+    image?: string;
+    avatarUrl?: string;
+    rating?: string;
+    experience?: string;
   }): DoctorUser {
     const nextId = Math.max(...this.doctors.map((d) => d.id), 100) + 1;
     const branch = data.branchId
@@ -477,12 +499,16 @@ class BackendRepository {
       department: data.department || (data.specialty ? data.specialty.split('&')[0].trim() : 'General Medicine'),
       qualification: data.qualification || 'MD, MBBS (Verified Practitioner)',
       registrationNumber: `REG-${data.referenceId || nextId}-${new Date().getFullYear()}`,
-      fee: data.fee || 800,
+      fee: data.fee || 700,
       status: 'available',
       role: 'doctor',
       permissions: DEFAULT_DOCTOR_PERMISSIONS,
-      avatarUrl: '/images/logo.png',
+      avatarUrl: data.avatarUrl || data.image || '',
     };
+
+    (newDoctor as any).image = data.image || data.avatarUrl || '';
+    (newDoctor as any).rating = data.rating || '5.0';
+    (newDoctor as any).experience = data.experience || '7 years experience';
 
     this.doctors.push(newDoctor);
     return newDoctor;

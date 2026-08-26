@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '@/lib/store';
-import { Doctor, Patient, Appointment, Bed, Medicine, LabRequest, MarketingRepresentative, HospitalReferral } from '@/lib/data';
+import { Doctor, Patient, Appointment, Bed, Medicine, LabRequest, MarketingRepresentative, MarketingJoinRequest, HospitalReferral } from '@/lib/data';
 import { Navbar } from '@/components/Navbar';
 import {
   Users,
@@ -40,7 +40,17 @@ import {
   AlertCircle,
   HeartPulse,
   UserPlus,
-  FileCheck
+  FileCheck,
+  Copy,
+  Briefcase,
+  Mail,
+  PhoneCall,
+  ExternalLink,
+  RefreshCw,
+  IdCard,
+  Filter,
+  Check,
+  Ban
 } from 'lucide-react';
 
 export default function ReceptionistHubPage() {
@@ -74,9 +84,17 @@ export default function ReceptionistHubPage() {
     updateLabRequest,
     deleteLabRequest,
     marketingRepresentatives,
+    marketingJoinRequests,
+    addMarketingRepresentative,
     updateMarketingRepresentative,
     deleteMarketingRepresentative,
     fireMarketingRepresentative,
+    reinstateMarketingRepresentative,
+    approveMarketingJoinRequest,
+    rejectMarketingJoinRequest,
+    submitMarketingJoinRequest,
+    branchAdminPreApproveMarketingRequest,
+    superAdminFinalApproveMarketingRequest,
     hospitalReferrals,
     addHospitalReferral,
     updateHospitalReferralStatus,
@@ -138,6 +156,11 @@ export default function ReceptionistHubPage() {
     if (selectedBranchId === 'all') return marketingRepresentatives;
     return marketingRepresentatives.filter(r => r.branchId === activeBranch.id);
   }, [marketingRepresentatives, selectedBranchId, activeBranch]);
+
+  const branchMarketingRequests = useMemo(() => {
+    if (selectedBranchId === 'all') return marketingJoinRequests;
+    return marketingJoinRequests.filter(r => r.targetBranchId === activeBranch.id);
+  }, [marketingJoinRequests, selectedBranchId, activeBranch]);
 
   const branchReferrals = useMemo(() => {
     if (!hospitalReferrals) return [];
@@ -249,12 +272,30 @@ export default function ReceptionistHubPage() {
   const [labStatus, setLabStatus] = useState<LabRequest['status']>('pending');
   const [labPrice, setLabPrice] = useState('450');
 
-  // 7. Marketing Rep Modal
+  // 7. Marketing Rep & Join Requests States
+  const [marketingFilter, setMarketingFilter] = useState<'all' | 'active' | 'pending' | 'inactive'>('all');
+  const [marketingSearchQuery, setMarketingSearchQuery] = useState('');
+  const [showAddRepModal, setShowAddRepModal] = useState(false);
   const [editingRep, setEditingRep] = useState<MarketingRepresentative | null>(null);
+  const [viewingRep, setViewingRep] = useState<MarketingRepresentative | null>(null);
+  const [viewingRequest, setViewingRequest] = useState<MarketingJoinRequest | null>(null);
+
+  // Edit Rep Form
   const [repName, setRepName] = useState('');
   const [repPhone, setRepPhone] = useState('');
   const [repTerritory, setRepTerritory] = useState('');
   const [repCommission, setRepCommission] = useState('10');
+
+  // Onboard New Rep Form
+  const [newRepName, setNewRepName] = useState('');
+  const [newRepPhone, setNewRepPhone] = useState('');
+  const [newRepEmail, setNewRepEmail] = useState('');
+  const [newRepGender, setNewRepGender] = useState<'Male' | 'Female' | 'Other'>('Male');
+  const [newRepTerritory, setNewRepTerritory] = useState('');
+  const [newRepDistrict, setNewRepDistrict] = useState('Kolkata');
+  const [newRepCommission, setNewRepCommission] = useState('10');
+  const [newRepExperience, setNewRepExperience] = useState('2');
+  const [newRepAadhar, setNewRepAadhar] = useState('');
 
   // File Upload Helper
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -744,7 +785,93 @@ export default function ReceptionistHubPage() {
     }
   };
 
-  // 7. Marketing Reps
+  // 7. Marketing Reps & Join Requests Handlers
+  const handleOpenAddRep = () => {
+    setNewRepName('');
+    setNewRepPhone('');
+    setNewRepEmail('');
+    setNewRepGender('Male');
+    setNewRepTerritory(`${activeBranch.name} & Surrounding District`);
+    setNewRepDistrict(activeBranch.location.split(',')[0] || 'Kolkata');
+    setNewRepCommission('10');
+    setNewRepExperience('2');
+    setNewRepAadhar('');
+    setShowAddRepModal(true);
+  };
+
+  const handleOnboardNewRep = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRepName.trim() || !newRepPhone.trim()) {
+      showToast('Representative Full Name and Phone Number are required', 'error');
+      return;
+    }
+
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const generatedRefId = `REF-MKT-B${activeBranch.id}-${randomSuffix}`;
+    const approvalDate = new Date().toISOString().split('T')[0];
+
+    addMarketingRepresentative({
+      referenceId: generatedRefId,
+      branchId: activeBranch.id,
+      branchCode: activeBranch.code,
+      branchName: activeBranch.name,
+      name: newRepName.trim(),
+      gender: newRepGender,
+      fatherOrMotherName: 'Guardian',
+      dob: '1995-01-01',
+      bloodGroup: 'O+',
+      aadharNumber: newRepAadhar.trim() || 'XXXX-XXXX-XXXX',
+      panNumber: 'XXXXX0000X',
+      drivingLicenceNumber: 'DL-XXXXX',
+      address: `${newRepTerritory.trim() || 'District Area'}, ${newRepDistrict}`,
+      pinCode: '700157',
+      district: newRepDistrict,
+      state: 'West Bengal',
+      country: 'India',
+      email: newRepEmail.trim() || `rep.${newRepName.toLowerCase().replace(/[^a-z0-9]/g, '')}@medix.local`,
+      emailVerified: true,
+      phone: newRepPhone.trim(),
+      territory: newRepTerritory.trim() || `${activeBranch.name} Catchment Zone`,
+      experienceYears: parseInt(newRepExperience, 10) || 1,
+      status: 'active',
+      referredPatientsCount: 0,
+      totalCommissionEarned: 0,
+      pendingPayout: 0,
+      commissionRate: newRepCommission.includes('%') ? newRepCommission : `${newRepCommission}%`,
+      hiredBy: `Reception Desk (${activeBranch.name})`
+    });
+
+    showToast(`✅ Marketing Representative ${newRepName} onboarded with ID: ${generatedRefId}`, 'success');
+    setShowAddRepModal(false);
+  };
+
+  const handleApprovePendingRequest = (req: MarketingJoinRequest) => {
+    const generatedId = superAdminFinalApproveMarketingRequest(req.id, `Reception Desk (${activeBranch.name})`);
+    showToast(`✅ Approved! Marketing Representative ID Issued: ${generatedId || 'Active'}`, 'success');
+    setViewingRequest(null);
+  };
+
+  const handleRejectPendingRequest = (req: MarketingJoinRequest) => {
+    if (confirm(`Reject Marketing join request for ${req.name}?`)) {
+      rejectMarketingJoinRequest(req.id);
+      showToast(`Marketing application for ${req.name} rejected.`, 'error');
+      setViewingRequest(null);
+    }
+  };
+
+  const handleToggleRepStatus = (rep: MarketingRepresentative) => {
+    const newStatus = rep.status === 'active' ? 'inactive' : 'active';
+    updateMarketingRepresentative(rep.id, { status: newStatus });
+    showToast(`Marketing Rep ${rep.name} status updated to ${newStatus.toUpperCase()}`);
+  };
+
+  const handleCopyId = (idString: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(idString);
+      showToast(`📋 Copied ID: ${idString}`, 'success');
+    }
+  };
+
   const handleOpenEditRep = (r: MarketingRepresentative) => {
     setEditingRep(r);
     setRepName(r.name);
@@ -940,7 +1067,12 @@ export default function ReceptionistHubPage() {
           </div>
           <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 uppercase">Marketing</p>
-            <p className="text-lg font-black text-slate-900 mt-0.5">{branchMarketingReps.length} reps</p>
+            <p className="text-lg font-black text-slate-900 mt-0.5">
+              {branchMarketingReps.filter(r => r.status === 'active').length} Active
+            </p>
+            <p className="text-[10px] text-amber-600 font-bold">
+              {branchMarketingRequests.filter(r => r.status.startsWith('pending')).length} Pending
+            </p>
           </div>
           <div className="bg-white p-3.5 rounded-2xl border border-emerald-200 shadow-sm bg-linear-to-br from-white to-emerald-50/50">
             <p className="text-[10px] font-black text-[#046a4e] uppercase flex items-center gap-1">
@@ -1023,13 +1155,20 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('marketing')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer relative ${
               activeTab === 'marketing' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <Share2 className="w-4 h-4" />
             <span>7. Marketing Reps</span>
-            <span className="ml-1 px-2 py-0.5 bg-black/10 rounded-full text-[10px]">{branchMarketingReps.length}</span>
+            <span className="ml-1 px-2 py-0.5 bg-black/10 rounded-full text-[10px]">
+              {branchMarketingReps.filter(r => r.status === 'active').length}
+            </span>
+            {branchMarketingRequests.some(r => r.status.startsWith('pending')) && (
+              <span className="px-1.5 py-0.5 bg-amber-500 text-white rounded-full text-[9px] font-black animate-pulse" title="Pending Applications">
+                {branchMarketingRequests.filter(r => r.status.startsWith('pending')).length} Pending
+              </span>
+            )}
           </button>
 
           <button
@@ -1611,71 +1750,419 @@ export default function ReceptionistHubPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 7: MARKETING REPRESENTATIVES */}
+        {/* TAB 7: MARKETING REPRESENTATIVES & REFERRAL AGENTS (COMPLETE LIVE HUB) */}
         {/* ========================================================================= */}
         {activeTab === 'marketing' && (
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-              <div>
-                <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <Share2 className="w-5 h-5 text-[#046a4e]" />
-                  <span>Marketing Representatives & Referral Agents</span>
-                </h2>
-                <p className="text-xs text-slate-500">
-                  View and manage marketing personnel assigned to this hospital, edit territory, commission, or fire.
-                </p>
+          <div className="space-y-6">
+            {/* Header & Live Metric Summary Banner */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="p-3 bg-emerald-50 text-[#046a4e] rounded-2xl border border-emerald-200 shadow-xs">
+                  <Share2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <span>Field Marketing Representatives & Referral Agents</span>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full uppercase tracking-wider">
+                      Live Hospital CRM
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Manage active field marketing agents (PROs), track unique Marketing Reference IDs, review pending join requests, and monitor commission tiers for <strong className="text-slate-800">{activeBranch.name}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={handleOpenAddRep}
+                  className="px-4 py-2.5 bg-linear-to-r from-[#046a4e] to-emerald-700 hover:from-[#03523c] hover:to-emerald-800 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>+ Onboard Marketing Rep</span>
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {branchMarketingReps.map((rep) => (
-                <div key={rep.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
-                      {rep.referenceId}
-                    </span>
-                    <span
-                      className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
-                        rep.status === 'active'
-                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                          : 'bg-rose-100 text-rose-800 border-rose-300'
-                      }`}
-                    >
-                      {rep.status}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-sm">{rep.name}</h3>
-                    <p className="text-xs text-slate-500">{rep.territory}</p>
-                  </div>
-
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1">
-                    <p className="text-slate-700 font-medium">📞 {rep.phone}</p>
-                    <p className="text-slate-700 font-medium">✉️ {rep.email}</p>
-                    <p className="text-[#046a4e] font-black mt-1">
-                      Commission: {rep.commissionRate || '10%'} per referral
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                    <button
-                      onClick={() => handleOpenEditRep(rep)}
-                      className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold text-center cursor-pointer"
-                    >
-                      Edit Info
-                    </button>
-                    <button
-                      onClick={() => handleFireRep(rep.id, rep.name)}
-                      className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl border border-rose-200 cursor-pointer"
-                      title="Fire / Purge Rep"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            {/* Metrics Chips Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Active Field Agents</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-xl font-black text-slate-900">
+                    {branchMarketingReps.filter(r => r.status === 'active').length}
+                  </p>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    Active IDs
+                  </span>
                 </div>
-              ))}
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Pending Applications</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <p className="text-xl font-black text-amber-700">
+                    {branchMarketingRequests.filter(r => r.status.startsWith('pending')).length}
+                  </p>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                    Awaiting Review
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assigned Branch</p>
+                <p className="text-sm font-black text-slate-900 mt-1 truncate">
+                  {activeBranch.code}
+                </p>
+                <p className="text-[10px] font-medium text-slate-500 truncate">{activeBranch.name}</p>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Default Commission</p>
+                <p className="text-xl font-black text-[#046a4e] mt-1">10%</p>
+                <p className="text-[10px] font-bold text-slate-500">Per Inpatient Referral</p>
+              </div>
             </div>
+
+            {/* Filter Tabs & Search Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+              <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setMarketingFilter('all')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    marketingFilter === 'all'
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  All ({branchMarketingReps.length + branchMarketingRequests.filter(r => r.status.startsWith('pending')).length})
+                </button>
+
+                <button
+                  onClick={() => setMarketingFilter('active')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    marketingFilter === 'active'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-emerald-700 hover:bg-emerald-50'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                  <span>Active Reps ({branchMarketingReps.filter(r => r.status === 'active').length})</span>
+                </button>
+
+                <button
+                  onClick={() => setMarketingFilter('pending')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    marketingFilter === 'pending'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'text-amber-700 hover:bg-amber-50'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-300" />
+                  <span>Pending ({branchMarketingRequests.filter(r => r.status.startsWith('pending')).length})</span>
+                </button>
+
+                <button
+                  onClick={() => setMarketingFilter('inactive')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    marketingFilter === 'inactive'
+                      ? 'bg-slate-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Inactive / Suspended ({branchMarketingReps.filter(r => r.status !== 'active').length})
+                </button>
+              </div>
+
+              {/* Search Box */}
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search Name, ID (REF-MKT-..), Phone, Territory..."
+                  value={marketingSearchQuery}
+                  onChange={(e) => setMarketingSearchQuery(e.target.value)}
+                  className="w-full pl-9.5 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-[#046a4e] focus:bg-white transition"
+                />
+                {marketingSearchQuery && (
+                  <button
+                    onClick={() => setMarketingSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* SECTION A: PENDING JOIN APPLICATIONS (KE PENDING E ACCHE) */}
+            {/* ========================================================================= */}
+            {(marketingFilter === 'all' || marketingFilter === 'pending') && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-800 flex items-center gap-2 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 w-fit">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Pending Candidate Applications ({branchMarketingRequests.filter(r => r.status.startsWith('pending')).length})</span>
+                  </h3>
+                </div>
+
+                {branchMarketingRequests.filter(r => r.status.startsWith('pending')).length === 0 ? (
+                  marketingFilter === 'pending' ? (
+                    <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center space-y-2 shadow-xs">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 mx-auto flex items-center justify-center border border-amber-200">
+                        <CheckCircle2 className="w-6 h-6" />
+                      </div>
+                      <h4 className="font-extrabold text-slate-900 text-sm">No Pending Applications</h4>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto">
+                        All marketing candidate applications for {activeBranch.name} have been reviewed. No pending requests.
+                      </p>
+                    </div>
+                  ) : null
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {branchMarketingRequests
+                      .filter(r => r.status.startsWith('pending'))
+                      .filter(r => {
+                        const q = marketingSearchQuery.toLowerCase().trim();
+                        if (!q) return true;
+                        return (
+                          r.name.toLowerCase().includes(q) ||
+                          `APP-REQ-${r.id}`.toLowerCase().includes(q) ||
+                          r.phone.includes(q) ||
+                          r.email.toLowerCase().includes(q) ||
+                          r.territory.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((req) => (
+                        <div
+                          key={req.id}
+                          className="bg-white rounded-3xl border-2 border-amber-200 p-5 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden"
+                        >
+                          {/* Top Status Bar */}
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-[11px] font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                              APP-REQ-#{req.id}
+                            </span>
+                            <span className="text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                              <span>{req.status === 'pending_super_admin_approval' ? 'Pending Super Admin' : 'Pending Review'}</span>
+                            </span>
+                          </div>
+
+                          {/* Candidate Bio */}
+                          <div>
+                            <h4 className="font-black text-slate-900 text-sm">{req.name}</h4>
+                            <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-slate-400" />
+                              <span>{req.territory} ({req.district})</span>
+                            </p>
+                          </div>
+
+                          {/* Contact & Application Data */}
+                          <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-100 text-xs space-y-1.5">
+                            <p className="text-slate-700 font-semibold flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-slate-400" />
+                              <a href={`tel:${req.phone}`} className="hover:text-amber-800 font-mono">{req.phone}</a>
+                            </p>
+                            <p className="text-slate-700 font-semibold flex items-center gap-1.5 truncate">
+                              <Mail className="w-3.5 h-3.5 text-slate-400" />
+                              <a href={`mailto:${req.email}`} className="hover:text-amber-800">{req.email}</a>
+                            </p>
+                            <div className="flex items-center justify-between pt-1 border-t border-amber-200/60 text-[11px]">
+                              <span className="text-amber-800 font-bold">Target: {req.expectedMonthlyReferrals || 5} Ref/Mo</span>
+                              <span className="text-slate-500 font-medium">Applied: {req.appliedDate}</span>
+                            </div>
+                            {req.qualificationsOrNotes && (
+                              <p className="text-[10px] text-slate-600 bg-white/70 p-2 rounded-xl border border-amber-100 mt-1 italic">
+                                &ldquo;{req.qualificationsOrNotes}&rdquo;
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              onClick={() => handleApprovePendingRequest(req)}
+                              className="flex-1 py-2 bg-[#046a4e] hover:bg-[#03523c] text-white rounded-xl text-xs font-black text-center cursor-pointer shadow-xs transition flex items-center justify-center gap-1.5"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Approve & Issue ID</span>
+                            </button>
+                            <button
+                              onClick={() => setViewingRequest(req)}
+                              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl cursor-pointer transition"
+                              title="View Full Dossier"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRejectPendingRequest(req)}
+                              className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl border border-rose-200 cursor-pointer transition"
+                              title="Reject Application"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION B: ACTIVE MARKETING REPRESENTATIVES (KE ACTIVE ACCHE) */}
+            {/* ========================================================================= */}
+            {(marketingFilter === 'all' || marketingFilter === 'active' || marketingFilter === 'inactive') && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#046a4e] flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 w-fit">
+                    <UserCheck className="w-3.5 h-3.5 text-[#046a4e]" />
+                    <span>Registered Field Marketing Agents ({branchMarketingReps.length})</span>
+                  </h3>
+                </div>
+
+                {branchMarketingReps.length === 0 ? (
+                  <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center space-y-3 shadow-xs">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#046a4e] mx-auto flex items-center justify-center border border-emerald-200">
+                      <Users className="w-7 h-7" />
+                    </div>
+                    <h4 className="font-black text-slate-900 text-base">No Marketing Representatives Registered Yet</h4>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                      There are currently no active marketing representatives registered for <strong>{activeBranch.name}</strong>. Click below to onboard a real field agent and generate an official Reference ID.
+                    </p>
+                    <button
+                      onClick={handleOpenAddRep}
+                      className="px-5 py-2.5 bg-[#046a4e] hover:bg-[#03523c] text-white rounded-2xl text-xs font-black inline-flex items-center gap-2 shadow-md transition cursor-pointer mt-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>+ Onboard First Marketing Rep</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {branchMarketingReps
+                      .filter(rep => {
+                        if (marketingFilter === 'active') return rep.status === 'active';
+                        if (marketingFilter === 'inactive') return rep.status !== 'active';
+                        return true;
+                      })
+                      .filter(rep => {
+                        const q = marketingSearchQuery.toLowerCase().trim();
+                        if (!q) return true;
+                        return (
+                          rep.name.toLowerCase().includes(q) ||
+                          rep.referenceId.toLowerCase().includes(q) ||
+                          rep.phone.includes(q) ||
+                          rep.email.toLowerCase().includes(q) ||
+                          rep.territory.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((rep) => (
+                        <div
+                          key={rep.id}
+                          className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs hover:shadow-md transition-all space-y-4"
+                        >
+                          {/* Card Header: Reference ID & Status Badge */}
+                          <div className="flex items-center justify-between gap-2">
+                            <button
+                              onClick={() => handleCopyId(rep.referenceId)}
+                              className="font-mono text-xs font-black text-purple-800 bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-full border border-purple-200 flex items-center gap-1.5 transition cursor-pointer"
+                              title="Click to copy Marketing Reference ID"
+                            >
+                              <span>{rep.referenceId}</span>
+                              <Copy className="w-3 h-3 text-purple-600" />
+                            </button>
+
+                            <span
+                              className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full border flex items-center gap-1 ${
+                                rep.status === 'active'
+                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                  : 'bg-rose-100 text-rose-800 border-rose-300'
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${rep.status === 'active' ? 'bg-emerald-600' : 'bg-rose-600'}`} />
+                              <span>{rep.status}</span>
+                            </span>
+                          </div>
+
+                          {/* Rep Name & Territory */}
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                              <span>{rep.name}</span>
+                              <span className="text-[10px] font-normal text-slate-400">({rep.gender || 'Agent'})</span>
+                            </h4>
+                            <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-slate-400" />
+                              <span>{rep.territory}</span>
+                            </p>
+                          </div>
+
+                          {/* Contact & Performance Matrix */}
+                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs space-y-1.5">
+                            <p className="text-slate-700 font-semibold flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-slate-400" />
+                              <a href={`tel:${rep.phone}`} className="hover:text-[#046a4e] font-mono">{rep.phone}</a>
+                            </p>
+                            <p className="text-slate-700 font-semibold flex items-center gap-1.5 truncate">
+                              <Mail className="w-3.5 h-3.5 text-slate-400" />
+                              <a href={`mailto:${rep.email}`} className="hover:text-[#046a4e]">{rep.email}</a>
+                            </p>
+                            <div className="flex items-center justify-between pt-1.5 border-t border-slate-200/70 text-xs">
+                              <span className="text-[#046a4e] font-black">
+                                Commission: {rep.commissionRate || '10%'}
+                              </span>
+                              <span className="text-slate-600 font-bold">
+                                {rep.referredPatientsCount || 0} Referred
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Card Footer Actions */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <button
+                              onClick={() => handleOpenEditRep(rep)}
+                              className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold text-center cursor-pointer transition"
+                            >
+                              Edit Info
+                            </button>
+                            <button
+                              onClick={() => setViewingRep(rep)}
+                              className="p-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl border border-purple-200 cursor-pointer transition"
+                              title="View Marketing ID Card / Dossier"
+                            >
+                              <IdCard className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleToggleRepStatus(rep)}
+                              className={`p-1.5 rounded-xl border cursor-pointer transition ${
+                                rep.status === 'active'
+                                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                              }`}
+                              title={rep.status === 'active' ? "Suspend Representative" : "Re-activate Representative"}
+                            >
+                              {rep.status === 'active' ? <Ban className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => handleFireRep(rep.id, rep.name)}
+                              className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl border border-rose-200 cursor-pointer transition"
+                              title="Fire / Purge Representative"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -1900,38 +2387,73 @@ export default function ReceptionistHubPage() {
                           </div>
                         </div>
 
-                        {/* Details Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 text-xs">
-                          {/* Referring Doctor */}
-                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase">Transferring Practitioner</p>
+                        {/* Details Grid (4-Column Matrix: Doctor, Marketing Rep, Destination, Vitals) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-4 text-xs">
+                          {/* 1. Referring Doctor Details */}
+                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Transferring Doctor</p>
+                              <span className="text-[9px] font-black text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded-md">Verified</span>
+                            </div>
                             <p className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
                               <Stethoscope className="w-3.5 h-3.5 text-[#046a4e]" />
                               <span>{ref.referringDoctorName}</span>
                             </p>
-                            <p className="text-slate-600 font-medium">{ref.referringDoctorChamber || 'Doctor OPD Chamber'}</p>
-                            {ref.referringDoctorPhone && (
-                              <p className="text-slate-500 font-mono text-[11px]">📞 {ref.referringDoctorPhone}</p>
+                            <p className="text-slate-700 font-semibold text-[11px]">{ref.referringDoctorSpecialty || 'General & Cardiology Medicine'}</p>
+                            {ref.referringDoctorQualification && (
+                              <p className="text-slate-500 text-[10px]">{ref.referringDoctorQualification}</p>
                             )}
+                            <p className="text-slate-600 font-medium text-[11px] truncate">{ref.referringDoctorChamber || 'OPD Chamber Room'}</p>
+                            <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 mt-1 text-[10px] text-slate-500 font-mono">
+                              <span>Reg: {ref.referringDoctorRegNo || 'MDX-DOC-8841'}</span>
+                              <span>📞 {ref.referringDoctorPhone || '+91 98042 22142'}</span>
+                            </div>
                           </div>
 
-                          {/* Target Unit & Attending Specialist */}
-                          <div className="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-100 space-y-1">
-                            <p className="text-[10px] font-black text-emerald-700 uppercase">Destination Unit</p>
-                            <p className="font-extrabold text-slate-900 text-sm">{ref.targetDepartment}</p>
-                            <p className="text-slate-700 font-semibold">
+                          {/* 2. Marketing Executive / PRO Profile */}
+                          <div className="bg-blue-50/60 p-3.5 rounded-2xl border border-blue-200/70 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-[10px] font-black text-blue-800 uppercase tracking-wider">Marketing Rep (PRO)</p>
+                              <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded-md">Field Ref</span>
+                            </div>
+                            <p className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                              <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                              <span>{ref.marketingRepName || 'Self-Referred / Direct Patient'}</span>
+                            </p>
+                            <p className="text-blue-900 font-bold font-mono text-[11px]">
+                              {ref.marketingRepCode ? `Code: ${ref.marketingRepCode}` : 'Direct Walk-in'}
+                            </p>
+                            <p className="text-slate-600 font-medium text-[11px] flex items-center gap-1 truncate">
+                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span>{ref.marketingRepTerritory || 'Direct Hospital Catchment'}</span>
+                            </p>
+                            <div className="flex items-center justify-between pt-1 border-t border-blue-200/60 mt-1 text-[10px]">
+                              <span className="text-blue-700 font-bold">{ref.marketingRepCommissionRate ? `Commission: ${ref.marketingRepCommissionRate}` : 'Direct Intake'}</span>
+                              <span className="text-slate-600 font-mono">{ref.marketingRepPhone ? `📞 ${ref.marketingRepPhone}` : '—'}</span>
+                            </div>
+                          </div>
+
+                          {/* 3. Target Unit & Attending Specialist */}
+                          <div className="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-200/70 space-y-1">
+                            <p className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Destination Unit</p>
+                            <p className="font-extrabold text-slate-900 text-sm truncate">{ref.targetDepartment}</p>
+                            <p className="text-slate-700 font-semibold text-[11px]">
                               Attending: <strong className="text-[#046a4e]">{ref.targetDoctorName || 'Dr . Jiarul Haque'}</strong>
                             </p>
                             <p className="text-emerald-700 font-medium text-[11px]">{ref.targetDoctorSpecialty || 'Clinical Specialist'}</p>
+                            <div className="pt-1 border-t border-emerald-200/60 mt-1 text-[10px] text-emerald-800 font-bold flex items-center gap-1">
+                              <Building2 className="w-3 h-3 text-[#046a4e]" />
+                              <span className="truncate">{activeBranch.name}</span>
+                            </div>
                           </div>
 
-                          {/* Vitals & Billing Telemetry */}
-                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 space-y-1">
-                            <p className="text-[10px] font-black text-slate-400 uppercase">Vitals & Financial Telemetry</p>
+                          {/* 4. Vitals & Financial Telemetry */}
+                          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Vitals & Billing</p>
                             <p className="text-slate-800 font-medium font-mono text-[11px]">{ref.vitalsSummary || 'BP: 120/80 mmHg • HR: 74 BPM • SpO2: 99%'}</p>
                             <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 mt-1">
-                              <span className="text-slate-500 font-medium">Est. Bill: ₹{ref.estimatedBill ? ref.estimatedBill.toLocaleString('en-IN') : '20,000'}</span>
-                              <span className="text-[#046a4e] font-black">Commission: ₹{ref.referralCommission ? ref.referralCommission.toLocaleString('en-IN') : '3,000'} (15%)</span>
+                              <span className="text-slate-500 font-medium">Est: ₹{ref.estimatedBill ? ref.estimatedBill.toLocaleString('en-IN') : '20,000'}</span>
+                              <span className="text-[#046a4e] font-black">Doc Comm: ₹{ref.referralCommission ? ref.referralCommission.toLocaleString('en-IN') : '3,000'}</span>
                             </div>
                           </div>
                         </div>
@@ -3054,9 +3576,9 @@ export default function ReceptionistHubPage() {
               </div>
             </div>
 
-            {/* Patient Bio & Referring Doctor Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              {/* Patient Block */}
+            {/* Patient Bio, Referring Doctor & Marketing Rep Profile Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+              {/* 1. Patient Block */}
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Patient Identification</p>
                 <h4 className="text-base font-black text-slate-900">{viewingReferralSlip.patientName}</h4>
@@ -3070,14 +3592,39 @@ export default function ReceptionistHubPage() {
                 <p className="text-slate-600 font-mono">Contact: {viewingReferralSlip.patientPhone || '+91 98765 43210'}</p>
               </div>
 
-              {/* Transfer Doctor Block */}
+              {/* 2. Transfer Doctor Block */}
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Transferring Physician</p>
                 <h4 className="text-base font-black text-slate-900">{viewingReferralSlip.referringDoctorName}</h4>
-                <p className="text-slate-700 font-medium">{viewingReferralSlip.referringDoctorChamber || 'OPD Chamber Room'}</p>
-                <p className="text-slate-600 font-mono">Phone: {viewingReferralSlip.referringDoctorPhone || '+91 98042 22142'}</p>
-                <p className="text-slate-600">Email: {viewingReferralSlip.referringDoctorEmail || 'doctor@medix.hospital'}</p>
-                <p className="text-emerald-700 font-bold mt-1">Status: Verified App Practitioner</p>
+                <p className="text-slate-800 font-bold text-[11px]">{viewingReferralSlip.referringDoctorSpecialty || 'Cardiology & Critical Care'}</p>
+                {viewingReferralSlip.referringDoctorQualification && (
+                  <p className="text-slate-500 text-[10px]">{viewingReferralSlip.referringDoctorQualification}</p>
+                )}
+                <p className="text-slate-700 font-medium text-[11px] truncate">{viewingReferralSlip.referringDoctorChamber || 'OPD Chamber Room'}</p>
+                <p className="text-slate-600 font-mono text-[11px]">Phone: {viewingReferralSlip.referringDoctorPhone || '+91 98042 22142'}</p>
+                <p className="text-emerald-700 font-bold text-[10px] mt-1">Council Reg: {viewingReferralSlip.referringDoctorRegNo || 'MDX-DOC-8841'}</p>
+              </div>
+
+              {/* 3. Connected Field Marketing Executive / PRO Block */}
+              <div className="p-4 bg-blue-50/70 rounded-2xl border border-blue-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black text-blue-800 uppercase tracking-wider">Marketing Rep (PRO)</p>
+                  <span className="text-[9px] font-black text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">Field Ref</span>
+                </div>
+                <h4 className="text-base font-black text-slate-900 flex items-center gap-1.5">
+                  <UserCheck className="w-4 h-4 text-blue-600" />
+                  <span>{viewingReferralSlip.marketingRepName || 'Self-Referred / Direct Patient'}</span>
+                </h4>
+                <p className="text-blue-900 font-mono font-bold text-xs">
+                  {viewingReferralSlip.marketingRepCode ? `Agent ID: ${viewingReferralSlip.marketingRepCode}` : 'Direct Hospital Walk-in'}
+                </p>
+                <p className="text-slate-700 font-medium text-[11px]">
+                  Territory: <strong>{viewingReferralSlip.marketingRepTerritory || 'Direct Catchment Zone'}</strong>
+                </p>
+                <p className="text-slate-600 font-mono text-[11px]">Phone: {viewingReferralSlip.marketingRepPhone || '—'}</p>
+                <p className="text-blue-700 font-bold text-[10px] mt-1">
+                  Doctor Relationship: {viewingReferralSlip.marketingRepCommissionRate ? `${viewingReferralSlip.marketingRepCommissionRate} Tier` : 'Direct Admission (Standard)'}
+                </p>
               </div>
             </div>
 
@@ -3115,11 +3662,15 @@ export default function ReceptionistHubPage() {
               </div>
             </div>
 
-            {/* Signature Lines */}
-            <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs">
+            {/* Signature Lines (3-Way Verification: Doctor, Marketing Rep, Reception Desk) */}
+            <div className="pt-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-xs">
               <div className="border-t border-slate-400 pt-2 space-y-0.5">
                 <p className="font-black text-slate-900">{viewingReferralSlip.referringDoctorName}</p>
                 <p className="text-[10px] text-slate-500 font-medium">Referring Doctor Signature</p>
+              </div>
+              <div className="border-t border-blue-400 pt-2 space-y-0.5 bg-blue-50/30 rounded-b-xl">
+                <p className="font-black text-blue-950">{viewingReferralSlip.marketingRepName || 'Self-Referred / Patient Direct'}</p>
+                <p className="text-[10px] text-blue-700 font-medium">Field Marketing (PRO) Verification</p>
               </div>
               <div className="border-t border-slate-400 pt-2 space-y-0.5">
                 <p className="font-black text-slate-900">{activeBranch.name} Front Desk</p>
@@ -3141,6 +3692,374 @@ export default function ReceptionistHubPage() {
               >
                 <Printer className="w-4 h-4" />
                 <span>Print Official Slip</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 9: ONBOARD NEW MARKETING REPRESENTATIVE */}
+      {/* ========================================================================= */}
+      {showAddRepModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-slate-200 shadow-2xl space-y-5 relative my-8">
+            <button
+              onClick={() => setShowAddRepModal(false)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#046a4e] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                Live Field Onboarding
+              </span>
+              <h3 className="font-black text-xl text-slate-900 mt-1 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-[#046a4e]" />
+                <span>Onboard Marketing Representative</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Register a new field marketing agent for <strong>{activeBranch.name}</strong>. An official Marketing Reference ID will be generated automatically.
+              </p>
+            </div>
+
+            <form onSubmit={handleOnboardNewRep} className="space-y-4 text-xs font-medium">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Full Legal Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rahul Sen"
+                    value={newRepName}
+                    onChange={(e) => setNewRepName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Gender</label>
+                  <select
+                    value={newRepGender}
+                    onChange={(e) => setNewRepGender(e.target.value as any)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold outline-none"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Phone Number (Calling / WhatsApp) *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98000 12345"
+                    value={newRepPhone}
+                    onChange={(e) => setNewRepPhone(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-mono outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="rep@email.com"
+                    value={newRepEmail}
+                    onChange={(e) => setNewRepEmail(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Assigned Territory / Catchment *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Barasat, Newtown & Salt Lake"
+                    value={newRepTerritory}
+                    onChange={(e) => setNewRepTerritory(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">District / City</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. North 24 Parganas"
+                    value={newRepDistrict}
+                    onChange={(e) => setNewRepDistrict(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs outline-none focus:border-[#046a4e]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Commission Rate (% per referral)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={newRepCommission}
+                    onChange={(e) => setNewRepCommission(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold outline-none text-[#046a4e]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">Experience (Years)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={newRepExperience}
+                    onChange={(e) => setNewRepExperience(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">Aadhar / ID Number (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 5621-8841-9923"
+                  value={newRepAadhar}
+                  onChange={(e) => setNewRepAadhar(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-mono outline-none"
+                />
+              </div>
+
+              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 text-[11px] text-emerald-900 space-y-1">
+                <p className="font-black flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-[#046a4e]" />
+                  <span>Automatic Reference ID Issuance</span>
+                </p>
+                <p className="text-emerald-800">
+                  Submitting will generate a permanent reference ID (e.g. <code>REF-MKT-B{activeBranch.id}-XXXX</code>) linked to {activeBranch.name}.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3.5 bg-linear-to-r from-[#046a4e] to-emerald-700 hover:from-[#03523c] hover:to-emerald-800 text-white font-black text-xs rounded-full shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>Issue Reference ID & Activate Marketing Rep</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 10: MARKETING REPRESENTATIVE DIGITAL ID CARD & DOSSIER */}
+      {/* ========================================================================= */}
+      {viewingRep && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-slate-200 shadow-2xl space-y-6 relative my-8 print:m-0 print:p-6 print:max-w-none print:shadow-none">
+            <button
+              onClick={() => setViewingRep(null)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 cursor-pointer print:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Official Hospital ID Header */}
+            <div className="text-center space-y-1 pb-4 border-b border-slate-200">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-[#046a4e] rounded-full border border-emerald-200 text-[10px] font-black uppercase tracking-widest">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Authorized Hospital Field Credential</span>
+              </div>
+              <h3 className="font-black text-xl text-slate-900">{activeBranch.name}</h3>
+              <p className="text-xs text-slate-500 font-mono">{activeBranch.address || activeBranch.location}</p>
+            </div>
+
+            {/* Rep ID Badge Card */}
+            <div className="bg-linear-to-br from-emerald-950 via-slate-900 to-emerald-900 text-white p-6 rounded-3xl shadow-xl space-y-5 relative overflow-hidden">
+              <div className="absolute -right-6 -top-6 w-32 h-32 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+
+              <div className="flex items-start justify-between relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-400/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 font-black text-lg">
+                    {viewingRep.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-base text-white">{viewingRep.name}</h4>
+                    <p className="text-[11px] text-emerald-300 font-semibold">Field Marketing Executive (PRO)</p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                    {viewingRep.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Reference ID Banner */}
+              <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/15 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] uppercase tracking-widest text-emerald-200 font-bold">Marketing Reference ID</p>
+                  <p className="font-mono font-black text-sm text-white tracking-wider">{viewingRep.referenceId}</p>
+                </div>
+                <button
+                  onClick={() => handleCopyId(viewingRep.referenceId)}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition cursor-pointer"
+                  title="Copy ID"
+                >
+                  <Copy className="w-4 h-4 text-white" />
+                </button>
+              </div>
+
+              {/* Credentials Details Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                <div>
+                  <p className="text-[10px] text-emerald-300 font-semibold">Territory</p>
+                  <p className="font-bold text-white truncate">{viewingRep.territory}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-emerald-300 font-semibold">Contact Phone</p>
+                  <p className="font-mono font-bold text-white">{viewingRep.phone}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-emerald-300 font-semibold">Commission Tier</p>
+                  <p className="font-bold text-emerald-300">{viewingRep.commissionRate || '10%'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-emerald-300 font-semibold">Approved Date</p>
+                  <p className="font-mono text-white text-[11px]">{viewingRep.approvedDate || 'Active'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance & Verification Box */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Referred Inpatient Admissions:</span>
+                <strong className="font-black text-slate-900">{viewingRep.referredPatientsCount || 0} Patients</strong>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Email Address:</span>
+                <span className="font-mono text-slate-800">{viewingRep.email}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">Government ID / Aadhar:</span>
+                <span className="font-mono text-slate-800">{viewingRep.aadharNumber || 'Verified On File'}</span>
+              </div>
+            </div>
+
+            {/* Print and Close Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 print:hidden">
+              <button
+                onClick={() => setViewingRep(null)}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs rounded-full transition cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-6 py-2.5 bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs rounded-full shadow-lg transition flex items-center gap-2 cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print ID Badge</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 11: PENDING APPLICATION REVIEW DOSSIER */}
+      {/* ========================================================================= */}
+      {viewingRequest && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-lg border border-slate-200 shadow-2xl space-y-6 relative my-8">
+            <button
+              onClick={() => setViewingRequest(null)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                Candidate Join Dossier
+              </span>
+              <h3 className="font-black text-xl text-slate-900 mt-1">
+                Application APP-REQ-#{viewingRequest.id}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Review applicant profile and decide on onboarding for <strong>{activeBranch.name}</strong>.
+              </p>
+            </div>
+
+            <div className="bg-amber-50/50 p-5 rounded-3xl border border-amber-200 space-y-3 text-xs">
+              <div className="flex items-center justify-between pb-3 border-b border-amber-200/70">
+                <div>
+                  <h4 className="font-black text-slate-900 text-base">{viewingRequest.name}</h4>
+                  <p className="text-slate-600 text-xs">{viewingRequest.gender || 'Male'} • Applied on {viewingRequest.appliedDate}</p>
+                </div>
+                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                  {viewingRequest.status}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <p className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">📞 Phone:</span>
+                  <strong className="font-mono text-slate-900">{viewingRequest.phone}</strong>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">✉️ Email:</span>
+                  <span className="font-mono text-slate-900">{viewingRequest.email}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">📍 Proposed Territory:</span>
+                  <strong className="text-slate-900">{viewingRequest.territory} ({viewingRequest.district})</strong>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">🎯 Expected Monthly Referrals:</span>
+                  <strong className="text-[#046a4e]">{viewingRequest.expectedMonthlyReferrals || 5} Patients / Month</strong>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">💼 Experience:</span>
+                  <span className="text-slate-900">{viewingRequest.experienceYears || 2} Years</span>
+                </p>
+              </div>
+
+              {viewingRequest.qualificationsOrNotes && (
+                <div className="pt-2 border-t border-amber-200/70">
+                  <p className="text-[10px] font-bold text-amber-900 uppercase">Applicant Statement:</p>
+                  <p className="text-xs text-slate-700 bg-white p-3 rounded-2xl border border-amber-200 mt-1 italic">
+                    &ldquo;{viewingRequest.qualificationsOrNotes}&rdquo;
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => handleRejectPendingRequest(viewingRequest)}
+                className="flex-1 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs rounded-full border border-rose-200 transition cursor-pointer"
+              >
+                Reject Application
+              </button>
+              <button
+                onClick={() => handleApprovePendingRequest(viewingRequest)}
+                className="flex-2 py-3 bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs rounded-full shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>Approve & Issue Marketing ID</span>
               </button>
             </div>
           </div>

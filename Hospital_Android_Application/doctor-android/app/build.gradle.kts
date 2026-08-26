@@ -24,9 +24,18 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "API_BASE_URL", "\"https://hospital-management-system-using-an.vercel.app/api/v1/\"")
+        buildConfigField("String", "API_BASE_URL", "\"https://medix-hospital-system.vercel.app/api/v1/\"")
         buildConfigField("String", "CLIENT_VERSION", "\"2.0.0\"")
         buildConfigField("String", "CLIENT_PLATFORM", "\"android-doctor\"")
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../release-key.jks")
+            storePassword = "medix1234"
+            keyAlias = "medix" 
+            keyPassword = "medix1234"
+        }
     }
 
     buildTypes {
@@ -34,7 +43,7 @@ android {
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-DEBUG"
-            buildConfigField("String", "API_BASE_URL", "\"https://hospital-management-system-using-an.vercel.app/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://medix-hospital-system.vercel.app/api/v1/\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -44,18 +53,18 @@ android {
             initWith(getByName("debug"))
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-STAGING"
-            buildConfigField("String", "API_BASE_URL", "\"https://staging-api.hms-health.internal/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://medix-hospital-system.vercel.app/api/v1/\"")
             matchingFallbacks += listOf("debug")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            buildConfigField("String", "API_BASE_URL", "\"https://hospital-management-system-using-an.vercel.app/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://medix-hospital-system.vercel.app/api/v1/\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug") // Configurable for production keystore
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
