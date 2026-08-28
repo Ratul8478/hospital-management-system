@@ -38,6 +38,8 @@
 
 import { backendStore } from './backend-store';
 import { Branch } from './data';
+import { db } from './firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/+$/, '');
 const SUPABASE_SERVICE_ROLE_KEY =
@@ -53,11 +55,11 @@ export interface RosterSnapshot {
 }
 
 /**
- * Whether a durable roster store is wired up. When false, the web app and the
- * Android app both fall back to the seeded roster from data.ts.
+ * Whether a durable roster store is wired up.
+ * Supports Firebase Firestore (default primary realtime DB) and Supabase.
  */
 export function isRosterStoreConfigured(): boolean {
-  return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+  return true;
 }
 
 function rosterHeaders(): Record<string, string> {
@@ -69,8 +71,7 @@ function rosterHeaders(): Record<string, string> {
 }
 
 /**
- * Supabase is a hard dependency for nothing here: a slow or unreachable store
- * must never stall an API response, so every call is bounded by a timeout.
+ * Supabase fallback fetcher.
  */
 async function rosterFetch(path: string, init: RequestInit): Promise<Response> {
   const controller = new AbortController();
@@ -88,91 +89,102 @@ async function rosterFetch(path: string, init: RequestInit): Promise<Response> {
 }
 
 /**
- * Persist the full roster as one snapshot. Writing the whole list (rather than
- * diffing) is what makes removal propagate: whatever is absent from the
- * snapshot is gone for every reader on the next poll.
+ * Persist the full roster as one snapshot to Firebase Firestore and Supabase.
  */
 export async function saveRoster(snapshot: RosterSnapshot): Promise<boolean> {
-  if (!isRosterStoreConfigured()) return false;
+  let savedToFirebase = false;
 
+  // 1. Save to Firebase Firestore Realtime Database
   try {
-    const res = await rosterFetch(ROSTER_TABLE, {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({
-        id: ROSTER_ROW_ID,
-        data: {
-          branches: Array.isArray(snapshot.branches) ? snapshot.branches : [],
-          doctors: Array.isArray(snapshot.doctors) ? snapshot.doctors : [],
-        },
-        updated_at: new Date().toISOString(),
-      }),
-    });
-
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      console.error(`[roster-store] save failed (${res.status}): ${detail}`);
-      return false;
+    if (Array.isArray(snapshot.branches) && snapshot.branches.length > 0) {
+      await setDoc(doc(db, "medix_realtime_db", "branches"), { data: snapshot.branches });
     }
-    return true;
-  } catch (err) {
-    console.error('[roster-store] save error:', err);
-    return false;
+    if (Array.isArray(snapshot.doctors) && snapshot.doctors.length > 0) {
+      await setDoc(doc(db, "medix_realtime_db", "doctors"), { data: snapshot.doctors });
+    }
+    savedToFirebase = true;
+  } catch (fbErr) {
+    console.warn('[roster-store] Firebase save notice:', fbErr);
   }
+
+  // 2. Secondary fallback save to Supabase if configured
+  if (Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)) {
+    try {
+      await rosterFetch(ROSTER_TABLE, {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({
+          id: ROSTER_ROW_ID,
+          data: {
+            branches: Array.isArray(snapshot.branches) ? snapshot.branches : [],
+            doctors: Array.isArray(snapshot.doctors) ? snapshot.doctors : [],
+          },
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    } catch (_) {}
+  }
+
+  return savedToFirebase;
 }
 
 /**
- * Read the stored snapshot. Returns null when the store is unconfigured,
- * unreachable, empty, or holding something unusable — every one of which means
- * "keep serving what backendStore already has".
+ * Read the stored snapshot from Firebase Firestore (primary) or Supabase (secondary).
  */
 export async function loadRoster(): Promise<RosterSnapshot | null> {
-  if (!isRosterStoreConfigured()) return null;
-
+  // 1. Primary: Load directly from Firebase Firestore
   try {
-    const res = await rosterFetch(
-      `${ROSTER_TABLE}?id=eq.${ROSTER_ROW_ID}&select=data`,
-      { method: 'GET' }
-    );
+    const branchesDoc = await getDoc(doc(db, "medix_realtime_db", "branches"));
+    const doctorsDoc = await getDoc(doc(db, "medix_realtime_db", "doctors"));
 
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      console.error(`[roster-store] load failed (${res.status}): ${detail}`);
-      return null;
+    const branchesData = branchesDoc.exists() ? branchesDoc.data()?.data : null;
+    const doctorsData = doctorsDoc.exists() ? doctorsDoc.data()?.data : null;
+
+    if ((Array.isArray(branchesData) && branchesData.length > 0) || 
+        (Array.isArray(doctorsData) && doctorsData.length > 0)) {
+      return {
+        branches: Array.isArray(branchesData) ? branchesData : [],
+        doctors: Array.isArray(doctorsData) ? doctorsData : [],
+      };
     }
-
-    const rows = await res.json().catch(() => null);
-    const data = Array.isArray(rows) && rows.length > 0 ? rows[0]?.data : null;
-    if (!data || typeof data !== 'object') return null;
-
-    return {
-      branches: Array.isArray(data.branches) ? data.branches : [],
-      doctors: Array.isArray(data.doctors) ? data.doctors : [],
-    };
-  } catch (err) {
-    console.error('[roster-store] load error:', err);
-    return null;
+  } catch (fbErr) {
+    console.warn('[roster-store] Firebase read fallback:', fbErr);
   }
+
+  // 2. Secondary: Load from Supabase if configured
+  if (Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)) {
+    try {
+      const res = await rosterFetch(
+        `${ROSTER_TABLE}?id=eq.${ROSTER_ROW_ID}&select=data`,
+        { method: 'GET' }
+      );
+
+      if (res.ok) {
+        const rows = await res.json().catch(() => null);
+        const data = Array.isArray(rows) && rows.length > 0 ? rows[0]?.data : null;
+        if (data && typeof data === 'object') {
+          return {
+            branches: Array.isArray(data.branches) ? data.branches : [],
+            doctors: Array.isArray(data.doctors) ? data.doctors : [],
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[roster-store] Supabase read error:', err);
+    }
+  }
+
+  return null;
 }
 
 /**
  * Replay the stored snapshot into backendStore so the /api/v1/hospitals and
- * /api/v1/doctors handlers below serve live web-registered data instead of the
- * seeded demo roster.
- *
- * Branches are synced first on purpose: syncDoctorsFromWeb resolves each
- * doctor's branchCode and branchName against the current branch list, so
- * doctors synced before their branch would be attached to the wrong hospital.
- *
- * Returns true when live data was applied.
+ * /api/v1/doctors handlers serve live web-registered data.
  */
 export async function hydrateBackendStore(): Promise<boolean> {
   const snapshot = await loadRoster();
   if (!snapshot) return false;
 
-  // Empty lists are treated as "nothing stored yet" rather than "delete
-  // everything" — backendStore's own sync methods guard on this too, so a
-  // failed or half-written snapshot can never wipe the roster.
   const applied =
     snapshot.branches.length > 0 || snapshot.doctors.length > 0;
 

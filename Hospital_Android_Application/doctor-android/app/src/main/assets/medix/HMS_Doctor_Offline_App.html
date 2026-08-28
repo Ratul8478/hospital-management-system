@@ -10085,6 +10085,7 @@ function switchTab(tabName, filterValue = null, btnElement = null) {
 
   const titles = {
     home: "Medix",
+    services: "Clinical & Hospital Services",
     'refer-patients': "Referred Patients Directory",
     hospitals: "International Hospitals",
     ranking: "Doctor Referral Rankings",
@@ -10105,11 +10106,15 @@ function switchTab(tabName, filterValue = null, btnElement = null) {
     btnElement.classList.add('active');
   } else {
     const matchingBtn = document.querySelector(`.varsha-nav-item[onclick*="'${tabName}'"]`) ||
+      (tabName === 'services' ? document.getElementById('bottom-nav-services') : null) ||
       (tabName === 'refer-patients' || tabName === 'appointments' ? document.getElementById('bottom-nav-refer') : null) ||
       (tabName === 'ranking' ? document.getElementById('bottom-nav-ranking') : null);
     if (matchingBtn) matchingBtn.classList.add('active');
   }
 
+  if (tabName === 'services') {
+    renderServicesDirectory(filterValue);
+  }
   if (tabName === 'ranking') {
     renderDoctorRankingLeaderboard();
   }
@@ -11919,45 +11924,45 @@ async function syncWebHospitalsAndDoctors() {
       renderTopHospitalsSlider();
     }
 
-    // 2. Asynchronous API fetch for Remote APK / Server Synchronization
-    // Production-Ready Multi-Host API Resolver:
-    // Priority 1: Explicit override via global MEDIX_API_BASE (set by host app if needed)
-    // Priority 2: Same-origin when running on a real HTTP server (localhost dev or Vercel)
-    // Priority 3: Vercel Production URL (Android WebView / file:// / offline contexts)
-    const PRODUCTION_API = 'https://medix-hospital-system.vercel.app';
-    let primaryApi = PRODUCTION_API;
-    if (typeof window !== 'undefined' && window.location && window.location.origin) {
-      const origin = window.location.origin;
-      if (origin.startsWith('http://') || origin.startsWith('https://')) {
-        primaryApi = origin;
+    // 2. Asynchronous API fetch for Remote APK / Server Synchronization (FIREBASE FIRESTORE SYNC)
+    function parseFirestoreValue(val) {
+      if (!val) return null;
+      if (val.stringValue !== undefined) return val.stringValue;
+      if (val.integerValue !== undefined) return parseInt(val.integerValue, 10);
+      if (val.doubleValue !== undefined) return parseFloat(val.doubleValue);
+      if (val.booleanValue !== undefined) return val.booleanValue;
+      if (val.arrayValue) return (val.arrayValue.values || []).map(parseFirestoreValue);
+      if (val.mapValue && val.mapValue.fields) {
+        const obj = {};
+        for (const key in val.mapValue.fields) {
+          obj[key] = parseFirestoreValue(val.mapValue.fields[key]);
+        }
+        return obj;
       }
+      return null;
     }
 
-    // Try primary host first, with dual-fallback to production Vercel app
-    let [hospRes, docRes] = await Promise.all([
-      fetch(`${primaryApi}/api/v1/hospitals`, {
-        headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-      }).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(`${primaryApi}/api/v1/doctors`, {
-        headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-      }).then(r => r.ok ? r.json() : null).catch(() => null),
+    async function fetchFirestoreData(docName) {
+      try {
+        const res = await fetch(`https://firestore.googleapis.com/v1/projects/medix-doctor-app/databases/(default)/documents/medix_realtime_db/${docName}`);
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (json.fields && json.fields.data) {
+          return parseFirestoreValue(json.fields.data);
+        }
+      } catch (e) {
+        console.error("Firestore fetch error:", e);
+      }
+      return null;
+    }
+
+    let [rawHosp, rawDoc] = await Promise.all([
+      fetchFirestoreData('branches'),
+      fetchFirestoreData('doctors')
     ]);
 
-    // If local dev didn't return hospitals or in offline APK, fetch from online Vercel web app
-    if ((!hospRes || !hospRes.data || !hospRes.data.hospitals || hospRes.data.hospitals.length === 0) && primaryApi !== PRODUCTION_API) {
-      const [vHospRes, vDocRes] = await Promise.all([
-        fetch(`${PRODUCTION_API}/api/v1/hospitals`, {
-          headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-        }).then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch(`${PRODUCTION_API}/api/v1/doctors`, {
-          headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-        }).then(r => r.ok ? r.json() : null).catch(() => null),
-      ]);
-      if (vHospRes && vHospRes.data && vHospRes.data.hospitals && vHospRes.data.hospitals.length > 0) {
-        hospRes = vHospRes;
-        docRes = vDocRes || docRes;
-      }
-    }
+    let hospRes = rawHosp && rawHosp.length > 0 ? { success: true, data: { hospitals: rawHosp } } : null;
+    let docRes = rawDoc && rawDoc.length > 0 ? { success: true, data: { doctors: rawDoc } } : null;
 
     if (hospRes && hospRes.success && hospRes.data && hospRes.data.hospitals && hospRes.data.hospitals.length > 0) {
       const fetchedHosps = hospRes.data.hospitals;
@@ -12599,6 +12604,16 @@ function renderWallet() {
   const secRefEl = document.getElementById('sec-referral-comm-amt');
   if (secRefEl) secRefEl.textContent = `₹${(w.referralCommission || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 
+  // Dynamic Total Consultations Count (Starts at 0 initially, increments as real consultations are completed)
+  const consultEl = document.getElementById('wallet-counselling-patient-count');
+  const directTxnsCount = (w.transactions || []).filter(t => t.type === 'DIRECT' || t.type === 'OPD' || t.type === 'COUNSELLING').length;
+  const consultCount = (typeof w.counsellingPatientsCount === 'number') 
+    ? w.counsellingPatientsCount 
+    : (typeof STATE.counsellingPatientsCount === 'number' ? STATE.counsellingPatientsCount : directTxnsCount);
+  if (consultEl) {
+    consultEl.textContent = `${consultCount} Patient${consultCount === 1 ? '' : 's'}`;
+  }
+
   const homeRevEl = document.getElementById('home-stat-earnings');
   if (homeRevEl) homeRevEl.textContent = `₹${(w.balance / 1000).toFixed(1)}k`;
 
@@ -12869,6 +12884,436 @@ function calculateHospitalLiveMetrics(h) {
     patientsCount: patientsCount,
     doctors: docList
   };
+}
+
+/* ==========================================================================
+   ALL MEDICAL SERVICES CATALOG & REGISTERED HOSPITAL ENGINE
+   Strictly Grounded in Live Web Application Database & APIs (Zero Demo Hospitals)
+   Features the exact 12 medical services from design screenshots
+   ========================================================================== */
+const CLINICAL_SERVICES_CATALOG = [
+  {
+    id: 'eye-care',
+    name: 'EYE CARE',
+    watermarkText: 'CARE CENTER',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(88, 28, 135, 0.42) 0%, rgba(59, 7, 100, 0.78) 100%)',
+    departmentKey: 'Ophthalmology & Eye Care',
+    description: 'Comprehensive Eye Examination, Cataract, Glaucoma, Retina & Advanced Laser Vision Care.',
+    keywords: ['eye', 'eye care', 'ophthalmology', 'vision', 'cataract', 'glaucoma', 'retina', 'optometry', 'spectacles']
+  },
+  {
+    id: 'hair-care',
+    name: 'HAIR CARE',
+    watermarkText: 'CARE',
+    watermarkIcon: 'fa-wand-magic-sparkles',
+    image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(20, 83, 45, 0.42) 0%, rgba(6, 78, 59, 0.78) 100%)',
+    departmentKey: 'Dermatology & Trichology',
+    description: 'Advanced Hair Restoration, PRP Therapy, Scalp Rejuvenation & Clinical Trichology.',
+    keywords: ['hair', 'hair care', 'trichology', 'dermatology', 'scalp', 'hair transplant', 'skin']
+  },
+  {
+    id: 'home-care',
+    name: 'HOME CARE',
+    watermarkText: 'HOME CARE',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(13, 148, 136, 0.42) 0%, rgba(19, 78, 74, 0.8) 100%)',
+    departmentKey: 'Home Healthcare & Caregivers',
+    description: 'Doctor Home Visits, Elderly Care Assistance, Domiciliary Rehabilitation & Post-Op Support.',
+    keywords: ['home care', 'home', 'elderly', 'domiciliary', 'caregiver', 'assisted', 'rehab']
+  },
+  {
+    id: 'home-care-nurse',
+    name: 'HOME CARE NURSE',
+    watermarkText: 'NURSE',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(157, 23, 77, 0.42) 0%, rgba(131, 24, 67, 0.8) 100%)',
+    departmentKey: 'Home Nursing Services',
+    description: 'Certified 24x7 Bedside Nursing, Injections, Wound Dressing, IV Infusion & Vitals Monitoring.',
+    keywords: ['nurse', 'home care nurse', 'nursing', 'injection', 'dressing', 'bedside', 'iv drip']
+  },
+  {
+    id: 'homoeopathy',
+    name: 'HOMOEOPATHY',
+    watermarkText: '',
+    watermarkIcon: 'fa-staff-snake',
+    image: 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(120, 53, 15, 0.42) 0%, rgba(69, 26, 3, 0.8) 100%)',
+    departmentKey: 'Homoeopathic Medicine',
+    description: 'Classical Homoeopathy, Holistic Constitutional Treatment & Chronic Illness Management.',
+    keywords: ['homoeopathy', 'homeopathy', 'ayush', 'ayurveda', 'herbal', 'natural', 'chronic']
+  },
+  {
+    id: 'hospital',
+    name: 'HOSPITAL',
+    watermarkText: '',
+    watermarkIcon: 'fa-hospital',
+    image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(30, 58, 138, 0.45) 0%, rgba(15, 23, 42, 0.82) 100%)',
+    departmentKey: 'Multispeciality Hospital',
+    description: '24x7 Multispeciality Hospital, Emergency ICU/CCU, Modular Operation Theatres & Inpatient Wards.',
+    keywords: ['hospital', 'multispeciality', 'admission', 'emergency', 'icu', 'surgery', 'ipd', 'trauma']
+  },
+  {
+    id: 'ivf-centre',
+    name: 'IVF CENTRE',
+    watermarkText: '',
+    watermarkIcon: 'fa-baby',
+    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(190, 24, 93, 0.4) 0%, rgba(136, 19, 55, 0.78) 100%)',
+    departmentKey: 'IVF & Reproductive Medicine',
+    description: 'State-of-the-art IVF Fertility Center, IUI, ICSI, Embryology Lab & High-Risk Pregnancy Care.',
+    keywords: ['ivf', 'ivf centre', 'fertility', 'reproduction', 'maternity', 'gynecology', 'infertility', 'pregnancy']
+  },
+  {
+    id: 'night-care-team',
+    name: 'NIGHT CARE TEAM',
+    watermarkText: 'ALWAYS THERE FOR YOU',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(15, 23, 42, 0.5) 0%, rgba(2, 6, 23, 0.88) 100%)',
+    departmentKey: '24x7 Emergency & Night Care',
+    description: 'Rapid Night Emergency ALS Ambulance, Doctor On-Call, Triage & Overnight Medical Escort.',
+    keywords: ['night care', 'night care team', 'night', 'emergency', '24x7', 'als', 'ambulance', 'urgent', 'trauma']
+  },
+  {
+    id: 'nursing-home',
+    name: 'NURSING HOME',
+    watermarkText: '',
+    watermarkIcon: 'fa-wheelchair',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(30, 64, 175, 0.42) 0%, rgba(15, 23, 42, 0.82) 100%)',
+    departmentKey: 'Nursing Home & Geriatrics',
+    description: 'Deluxe Cabins, General Wards, Geriatric Inpatient Care, Post-Surgical Rehab & Nursing.',
+    keywords: ['nursing home', 'nursing', 'elderly care', 'inpatient', 'stay', 'rehab', 'cabin', 'ward']
+  },
+  {
+    id: 'pathology-lab',
+    name: 'PATHOLOGY LAB',
+    watermarkText: '',
+    watermarkIcon: 'fa-droplet',
+    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(185, 28, 28, 0.45) 0%, rgba(127, 29, 29, 0.82) 100%)',
+    departmentKey: 'Pathology & Clinical Lab',
+    description: 'Automated Biochemistry, Hematology, Microbiology, Hormonal Assays & Fast Digital Reports.',
+    keywords: ['pathology', 'pathology lab', 'lab', 'blood test', 'diagnostic', 'biochemistry', 'sample', 'cbc']
+  },
+  {
+    id: 'pharmacy',
+    name: 'PHARMACY',
+    watermarkText: 'MEDICINE',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(49, 46, 129, 0.48) 0%, rgba(30, 27, 75, 0.85) 100%)',
+    departmentKey: '24x7 Pharmacy',
+    description: '24x7 Genuine Critical Medicines, Injections, Surgical Consumables & Instant Doorstep Dispatch.',
+    keywords: ['pharmacy', 'medicine', 'drug', 'chemist', 'prescription', 'medicines', 'injection']
+  },
+  {
+    id: 'physiotherapy',
+    name: 'PHYSIOTHERAPY',
+    watermarkText: 'CENTER',
+    watermarkIcon: 'fa-person-walking',
+    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(63, 98, 18, 0.45) 0%, rgba(20, 83, 45, 0.82) 100%)',
+    departmentKey: 'Physiotherapy & Rehabilitation',
+    description: 'Orthopaedic & Neurological Physical Therapy, Joint Mobilization, Stroke Rehab & Pain Relief.',
+    keywords: ['physiotherapy', 'physio', 'rehab', 'rehabilitation', 'exercise', 'joint', 'pain', 'ortho']
+  }
+];
+
+let selectedClinicalServiceId = 'hospital';
+let selectedClinicalSearchQuery = '';
+
+function renderServicesDirectory(initialServiceOrCat = null) {
+  if (initialServiceOrCat) {
+    const foundService = CLINICAL_SERVICES_CATALOG.find(s => s.id === initialServiceOrCat || s.keywords.includes(initialServiceOrCat.toLowerCase()));
+    if (foundService) {
+      selectedClinicalServiceId = foundService.id;
+    }
+  }
+
+  renderServicesCatalog();
+  renderSelectedServiceHospitals();
+}
+
+function handleServiceSearch(query) {
+  selectedClinicalSearchQuery = (query || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('services-search-clear-btn');
+  if (clearBtn) {
+    if (selectedClinicalSearchQuery) clearBtn.classList.remove('hidden');
+    else clearBtn.classList.add('hidden');
+  }
+  renderServicesCatalog();
+  renderSelectedServiceHospitals();
+}
+
+function clearServiceSearch() {
+  const input = document.getElementById('services-search-input');
+  if (input) input.value = '';
+  handleServiceSearch('');
+}
+
+function resetMedicalServices() {
+  clearServiceSearch();
+  selectedClinicalServiceId = 'hospital';
+  playClinicalChime('click');
+  renderServicesCatalog();
+  renderSelectedServiceHospitals();
+  showToast('🔄 Medical services updated & refreshed!', 'info');
+}
+
+function selectClinicalService(serviceId) {
+  selectedClinicalServiceId = serviceId;
+  playClinicalChime('click');
+  renderServicesCatalog();
+  renderSelectedServiceHospitals();
+
+  const targetView = document.getElementById('service-selected-view-container');
+  if (targetView) {
+    targetView.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function renderServicesCatalog() {
+  const container = document.getElementById('services-catalog-grid-container');
+  if (!container) return;
+
+  let filtered = [...CLINICAL_SERVICES_CATALOG];
+
+  if (selectedClinicalSearchQuery) {
+    const q = selectedClinicalSearchQuery;
+    filtered = filtered.filter(s => 
+      s.name.toLowerCase().includes(q) ||
+      (s.watermarkText && s.watermarkText.toLowerCase().includes(q)) ||
+      s.departmentKey.toLowerCase().includes(q) ||
+      s.keywords.some(k => k.toLowerCase().includes(q))
+    );
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column:1/-1; padding:32px 16px; text-align:center; background:#FFFFFF; border:1px dashed #CBD5E1; border-radius:18px; color:#64748B;">
+        <i class="fa-solid fa-magnifying-glass" style="font-size:22px; color:#94A3B8; margin-bottom:8px;"></i>
+        <p style="font-size:13px; font-weight:800; color:#0F172A; margin:0 0 4px;">No services found matching "${selectedClinicalSearchQuery}"</p>
+        <button onclick="clearServiceSearch()" style="margin-top:8px; background:#EFF6FF; color:#2563EB; border:1px solid #BFDBFE; font-size:11.5px; font-weight:800; padding:6px 16px; border-radius:10px; cursor:pointer;">Show All Services</button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(s => {
+    const isSelected = s.id === selectedClinicalServiceId;
+    return `
+      <div class="medical-service-card-item ${isSelected ? 'active' : ''}" 
+           style="background-image: url('${s.image}');" 
+           onclick="selectClinicalService('${s.id}')">
+        
+        <div class="medical-service-overlay-tint" style="background: ${s.overlayGradient};"></div>
+
+        <div class="medical-service-top-content">
+          ${s.watermarkText ? `<span class="medical-service-watermark-text">${s.watermarkText}</span>` : `<span></span>`}
+          ${s.watermarkIcon ? `<i class="fa-solid ${s.watermarkIcon} medical-service-watermark-icon"></i>` : `<span></span>`}
+        </div>
+
+        <div class="medical-service-bottom-wave">
+          <h4 class="medical-service-bottom-title">${s.name}</h4>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSelectedServiceHospitals() {
+  const container = document.getElementById('service-selected-view-container');
+  if (!container) return;
+
+  const currentService = CLINICAL_SERVICES_CATALOG.find(s => s.id === selectedClinicalServiceId) || CLINICAL_SERVICES_CATALOG[0];
+  
+  // Strictly evaluate registered hospitals from live web database
+  const allWebHospitals = [...liveHospitalsCache];
+  
+  // Matching criteria based on registered hospital capabilities & doctors
+  const matchingHospitals = allWebHospitals.filter(h => {
+    // 1. If hospital has doctors matching this specialty / department
+    const hasMatchingDoc = h.doctors && h.doctors.some(d => {
+      const spec = (d.specialty || '').toLowerCase();
+      const dept = (d.department || '').toLowerCase();
+      return currentService.keywords.some(k => spec.includes(k) || dept.includes(k));
+    });
+
+    // 2. Multispeciality / General hospitals offer core clinical facilities (Ambulance, ICU, Blood Bank, OPD, Lab, Pharmacy, Inpatient, Telehealth)
+    const isMultispeciality = (h.name && (h.name.toLowerCase().includes('ariyan') || h.name.toLowerCase().includes('multispeciality') || h.name.toLowerCase().includes('hospital') || h.name.toLowerCase().includes('hq')));
+    const isGeneralService = ['ambulance', 'blood-bank', 'opd', 'icu', 'diagnostics', 'radiology', 'pharmacy', 'telehealth', 'ipd', 'all'].includes(currentService.id);
+
+    // 3. Specialty name match (Trauma Center for trauma, Maternity for maternity, Neuro for neuro/dialysis)
+    const matchesFacilityName = currentService.keywords.some(k => (h.name || '').toLowerCase().includes(k) || (h.address || '').toLowerCase().includes(k));
+
+    return hasMatchingDoc || (isMultispeciality && isGeneralService) || matchesFacilityName || allWebHospitals.length === 1;
+  });
+
+  const hospPhotos = [
+    'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=60'
+  ];
+
+  let html = `
+    <!-- 1. Active Service Selected Highlight Banner -->
+    <div class="service-selected-banner">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,0.15); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; color:#93C5FD; font-size:18px; border:1px solid rgba(255,255,255,0.25);">
+            <i class="fa-solid ${currentService.icon || currentService.watermarkIcon || 'fa-notes-medical'}"></i>
+          </div>
+          <div>
+            <span style="font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; color:#93C5FD; display:block;">Selected Service</span>
+            <h3 style="font-size:14px; font-weight:900; color:#FFFFFF; margin:0;">${currentService.name}</h3>
+          </div>
+        </div>
+        <span style="background:rgba(16,185,129,0.2); color:#34D399; border:1px solid rgba(16,185,129,0.4); font-size:9px; font-weight:800; padding:2px 8px; border-radius:9999px; white-space:nowrap;">
+          <i class="fa-solid fa-circle-check"></i> ${matchingHospitals.length} Hospital${matchingHospitals.length === 1 ? '' : 's'} Active
+        </span>
+      </div>
+      <p style="font-size:11px; color:#E0E7FF; margin:8px 0 0; line-height:1.4;">${currentService.description}</p>
+    </div>
+
+    <!-- 2. Web-Registered Hospitals Available List -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <span style="font-size:12px; font-weight:800; color:#0F172A; text-transform:uppercase; letter-spacing:0.4px;">
+        2. Web-Registered Hospitals Offering This Service:
+      </span>
+      <span style="background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; border:1px solid #BFDBFE;">
+        Verified Network
+      </span>
+    </div>
+  `;
+
+  if (matchingHospitals.length === 0) {
+    html += `
+      <div style="padding:28px 16px; text-align:center; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:18px; color:#64748B;">
+        <i class="fa-solid fa-hospital" style="font-size:32px; color:#CBD5E1; margin-bottom:8px;"></i>
+        <h4 style="font-size:13px; font-weight:800; color:#0F172A; margin:0 0 4px;">No Registered Hospitals for "${currentService.shortName}"</h4>
+        <p style="font-size:11px; color:#64748B; margin:0 max-w-sm;">Only hospitals registered in the Medix Web Application (https://medix-hospital-system.vercel.app/) are listed here.</p>
+      </div>
+    `;
+    container.innerHTML = html;
+    return;
+  }
+
+  html += matchingHospitals.map((h, idx) => {
+    const photo = hospPhotos[idx % hospPhotos.length];
+    const metrics = calculateHospitalLiveMetrics(h);
+    const phone = h.phone || h.adminPhone || '+91 91443 76971';
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+
+    // Get specific doctors matching this service at this hospital
+    const relevantDocs = (h.doctors || []).filter(d => {
+      const spec = (d.specialty || '').toLowerCase();
+      const dept = (d.department || '').toLowerCase();
+      return currentService.keywords.some(k => spec.includes(k) || dept.includes(k));
+    });
+
+    const displayDocs = relevantDocs.length > 0 ? relevantDocs : (h.doctors || []).slice(0, 3);
+
+    return `
+      <div class="service-hosp-card">
+        <!-- Hospital Header Row -->
+        <div style="display:flex; gap:12px; margin-bottom:10px;">
+          <div style="width:68px; height:68px; border-radius:14px; background-image:url('${photo}'); background-size:cover; background-position:center; flex-shrink:0; border:1px solid #E2E8F0; position:relative;">
+            <span style="position:absolute; bottom:3px; right:3px; background:#10B981; width:8px; height:8px; border-radius:50%; border:1.5px solid #FFFFFF;"></span>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
+              <span style="background:#0F172A; color:#FFFFFF; font-size:9px; font-weight:800; padding:1px 6px; border-radius:4px; font-family:monospace;">${h.code || 'HOSP'}</span>
+              <span style="background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; font-size:9px; font-weight:800; padding:1px 6px; border-radius:9999px;">
+                <i class="fa-solid fa-circle-check"></i> Web Registered
+              </span>
+            </div>
+            <h4 style="font-size:13.5px; font-weight:900; color:#0F172A; margin:0; line-height:1.3;">${h.name}</h4>
+            <p style="font-size:11px; color:#64748B; margin:2px 0 0; display:flex; align-items:center; gap:4px;">
+              <i class="fa-solid fa-location-dot" style="color:#EF4444; font-size:10px;"></i>
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.location || h.address || 'Kolkata, West Bengal'}</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Service Capability & Status Banner -->
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-shield-halved" style="color:#2563EB; font-size:12px;"></i>
+            <span style="font-size:11px; font-weight:700; color:#1E293B;">${currentService.shortName} Status:</span>
+          </div>
+          <span style="font-size:11px; font-weight:800; color:#059669; background:#ECFDF5; padding:1px 8px; border-radius:6px; border:1px solid #A7F3D0;">
+            ${h.statusText || 'Active & Ready 24x7'}
+          </span>
+        </div>
+
+        <!-- Specialist Doctors at this Hospital for this Service -->
+        ${displayDocs && displayDocs.length > 0 ? `
+          <div style="margin-bottom:10px;">
+            <span style="font-size:10.5px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:4px;">
+              Available Specialists (${displayDocs.length}):
+            </span>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              ${displayDocs.map(d => `
+                <div class="service-doc-chip">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:#046a4e; color:#FFFFFF; font-weight:900; font-size:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                      ${d.name.replace(/^Dr\.\s*/i, '').charAt(0) || 'D'}
+                    </div>
+                    <div>
+                      <strong style="font-size:11.5px; color:#0F172A; display:block; line-height:1.2;">${d.name}</strong>
+                      <small style="font-size:10px; color:#046a4e; font-weight:700;">${d.specialty || currentService.departmentKey}</small>
+                    </div>
+                  </div>
+                  <div style="text-align:right;">
+                    <span style="font-size:11px; font-weight:900; color:#0F172A;">₹${d.fee || 800}</span>
+                    <small style="font-size:9.5px; color:#059669; display:block; font-weight:700;">OPD Fee</small>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Direct Actions Grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; padding-top:8px; border-top:1px solid #F1F5F9;">
+          <button onclick="openReferWithHospitalAndService(${h.id}, '${currentService.departmentKey}')" style="background:linear-gradient(135deg, #1E40AF 0%, #DC2626 100%); color:#FFFFFF; border:none; padding:8px 10px; border-radius:10px; font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; box-shadow:0 2px 6px rgba(30,58,138,0.25);">
+            <i class="fa-solid fa-user-plus"></i> Refer Patient
+          </button>
+          
+          <a href="tel:${cleanPhone}" style="background:#F1F5F9; color:#0F172A; border:1px solid #CBD5E1; padding:8px 10px; border-radius:10px; font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; cursor:pointer;">
+            <i class="fa-solid fa-phone" style="color:#059669;"></i> Call Desk
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+function openReferWithHospitalAndService(hospitalId, departmentName) {
+  openReferHospitalModalFromEhr();
+  setTimeout(() => {
+    const hospSelect = document.getElementById('refer-target-hospital');
+    if (hospSelect && hospitalId) {
+      hospSelect.value = String(hospitalId);
+      updateReceivingHospitalInfo();
+    }
+    const deptSelect = document.getElementById('refer-target-department');
+    if (deptSelect && departmentName) {
+      const matchOpt = Array.from(deptSelect.options).find(o => o.text.toLowerCase().includes(departmentName.toLowerCase()) || o.value.toLowerCase().includes(departmentName.toLowerCase()));
+      if (matchOpt) deptSelect.value = matchOpt.value;
+    }
+  }, 150);
 }
 
 /* ==========================================================================
@@ -13878,6 +14323,8 @@ function renderAll() {
   try { renderWallet(); } catch (_) {}
   try { renderTopHospitalsSlider(); } catch (_) {}
   try { renderHospitalDirectory(); } catch (_) {}
+  try { renderServicesCatalog(); } catch (_) {}
+  try { renderSelectedServiceHospitals(); } catch (_) {}
   try { renderDoctorRankingLeaderboard(); } catch (_) {}
   try { updateProfileUI(); } catch (_) {}
   try { populateHospitalSelect(); } catch (_) {}

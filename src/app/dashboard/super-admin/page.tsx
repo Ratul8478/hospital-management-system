@@ -83,7 +83,11 @@ function SuperAdminDashboardContent() {
     approveAdminApplication,
     rejectAdminApplication,
     addBranch,
+    updateBranch,
+    deleteBranch,
     addDoctor,
+    updateDoctor,
+    deleteDoctor,
     addMarketingRepresentative,
     setSelectedBranchId,
     setUserRole,
@@ -99,30 +103,6 @@ function SuperAdminDashboardContent() {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  if (userRole === 'patient') {
-    return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
-          <div className="h-16 w-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
-            <Lock className="h-8 w-8" />
-          </div>
-          <h2 className="text-xl font-black text-slate-900">Restricted Headquarters Command</h2>
-          <p className="text-xs text-slate-600 font-medium leading-relaxed">
-            This module is exclusively reserved for <strong>Anichul Haque (Super Admin)</strong>. Patient accounts cannot view or alter central hospital infrastructure, financial ledgers, or branch administrators.
-          </p>
-          <div className="pt-2">
-            <Link
-              href="/dashboard/patient"
-              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#046a4e] hover:bg-[#03543e] text-white rounded-2xl font-bold text-xs shadow-md transition-all"
-            >
-              Return to Patient Care Portal
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Synchronize tab from URL query params (e.g. ?tab=marketing-hq)
   useEffect(() => {
@@ -333,6 +313,38 @@ function SuperAdminDashboardContent() {
     setShowHireDoctor(false);
   };
 
+  const handleDeleteDoctorAction = (docId: number, name: string) => {
+    if (confirm(`Are you sure you want to remove Doctor ${name} from the roster?`)) {
+      deleteDoctor(docId);
+      setActionAlert({
+        type: 'error',
+        message: `Doctor ${name} has been removed from the central clinical roster.`,
+      });
+      setTimeout(() => setActionAlert(null), 4000);
+    }
+  };
+
+  const handleToggleDoctorStatus = (docId: number, currentStatus: string, name: string) => {
+    const nextStatus = currentStatus === 'available' ? 'busy' : currentStatus === 'busy' ? 'off-duty' : 'available';
+    updateDoctor(docId, { status: nextStatus as any });
+    setActionAlert({
+      type: 'success',
+      message: `Doctor ${name} status updated to "${nextStatus.toUpperCase()}".`,
+    });
+    setTimeout(() => setActionAlert(null), 3000);
+  };
+
+  const handleDeleteBranchAction = (branchId: number, branchName: string, branchCode: string) => {
+    if (confirm(`Are you sure you want to decommission / delete Hospital Branch "${branchCode} - ${branchName}"? This will remove all associated telemetry.`)) {
+      deleteBranch(branchId);
+      setActionAlert({
+        type: 'error',
+        message: `Hospital Branch ${branchCode} (${branchName}) has been decommissioned & deleted.`,
+      });
+      setTimeout(() => setActionAlert(null), 4000);
+    }
+  };
+
   const handleHireMarketingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!mktName.trim() || !mktEmail.trim()) return;
@@ -471,6 +483,41 @@ function SuperAdminDashboardContent() {
 
   const detailedBranch = branches.find(b => b.id === selectedBranchForDetails);
 
+  if (!mounted) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center bg-slate-50 rounded-3xl p-8">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#046a4e] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-bold text-slate-600">Initializing Enterprise Super Admin Command Center...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === 'patient') {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 shadow-xl text-center space-y-4">
+          <div className="h-16 w-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+            <Lock className="h-8 w-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900">Restricted Headquarters Command</h2>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            This module is exclusively reserved for <strong>Anichul Haque (Super Admin)</strong>. Patient accounts cannot view or alter central hospital infrastructure, financial ledgers, or branch administrators.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/dashboard/patient"
+              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[#046a4e] hover:bg-[#03543e] text-white rounded-2xl font-bold text-xs shadow-md transition-all"
+            >
+              Return to Patient Care Portal
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       
@@ -566,6 +613,51 @@ function SuperAdminDashboardContent() {
         </div>
       )}
 
+      {/* EXECUTIVE PRIMARY TABS BAR */}
+      <div className="bg-white p-2 rounded-2xl border border-emerald-200 shadow-sm overflow-x-auto">
+        <div className="flex items-center gap-1.5 min-w-max">
+          {[
+            { id: 'branches', label: 'Hospitals & Branches', icon: Building2, count: branches.length, color: 'text-emerald-700' },
+            { id: 'campus', label: 'Network Overview', icon: BarChart3, color: 'text-teal-700' },
+            { id: 'clinical', label: 'Clinical Suite & Doctors', icon: Stethoscope, count: doctors.length, color: 'text-sky-700' },
+            { id: 'finance', label: 'Finance & Invoices', icon: DollarSign, color: 'text-emerald-700' },
+            { id: 'admin', label: 'Branch Central Admins', icon: Crown, count: branches.filter(b => b.adminName !== 'Unassigned').length, color: 'text-amber-700' },
+            { id: 'applications', label: 'Admin Applications', icon: UserCheck, count: pendingApplications.length, isBadgeAlert: pendingApplications.length > 0, color: 'text-blue-700' },
+            { id: 'marketing-hq', label: 'Direct HQ Marketing', icon: Share2, count: directHqPending.length, isBadgeAlert: directHqPending.length > 0, color: 'text-amber-700' },
+            { id: 'marketing-branch', label: 'Branch Marketing Approvals', icon: Rocket, count: branchForwardedPending.length, isBadgeAlert: branchForwardedPending.length > 0, color: 'text-purple-700' },
+            { id: 'inspector', label: 'Branch Deep Inspector', icon: Radio, color: 'text-rose-700' },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-[#046a4e] text-white shadow-md shadow-emerald-900/20'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-emerald-50/70'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-200' : tab.color}`} />
+                <span>{tab.label}</span>
+                {tab.count !== undefined && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    isActive 
+                      ? 'bg-emerald-800 text-white' 
+                      : tab.isBadgeAlert 
+                        ? 'bg-rose-500 text-white animate-pulse' 
+                        : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* TAB 1: HOSPITAL BRANCHES DIRECTORY (3D INTERACTIVE CARDS) */}
       {activeTab === 'branches' && (
         <div className="space-y-6">
@@ -602,7 +694,7 @@ function SuperAdminDashboardContent() {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    {type === 'ALL' ? 'All (9)' : type === 'Hospital' ? '🏥 Hospitals' : type === 'Nursing Home' ? '🏣 Nursing Homes' : '🔬 Diagnostics'}
+                    {type === 'ALL' ? `All (${branches.length})` : type === 'Hospital' ? '🏥 Hospitals' : type === 'Nursing Home' ? '🏣 Nursing Homes' : '🔬 Diagnostics'}
                   </button>
                 ))}
               </div>
@@ -745,11 +837,11 @@ function SuperAdminDashboardContent() {
 
                   </div>
 
-                  {/* Actions Row: Enter ERP & Admin Details */}
-                  <div className="grid grid-cols-12 gap-2 pt-2 border-t border-slate-100">
+                  {/* Actions Row: Enter ERP & Admin Details & Delete */}
+                  <div className="grid grid-cols-12 gap-1.5 pt-2 border-t border-slate-100">
                     <button
                       onClick={() => handleEnterBranchERP(branch.id)}
-                      className="col-span-8 py-2.5 px-3 rounded-full bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs shadow-md shadow-emerald-950/15 transition-all flex items-center justify-center gap-1.5 cursor-pointer btn-premium-3d"
+                      className="col-span-7 py-2.5 px-3 rounded-full bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs shadow-md shadow-emerald-950/15 transition-all flex items-center justify-center gap-1.5 cursor-pointer btn-premium-3d"
                     >
                       <Rocket className="w-3.5 h-3.5" />
                       <span>Enter {branch.code} ERP</span>
@@ -757,10 +849,20 @@ function SuperAdminDashboardContent() {
 
                     <button
                       onClick={() => setSelectedBranchForDetails(branch.id)}
-                      className="col-span-4 py-2.5 px-2 rounded-full bg-white hover:bg-emerald-50 text-emerald-950 font-extrabold text-xs border border-emerald-200 transition-all cursor-pointer text-center"
+                      className="col-span-3 py-2.5 px-1 rounded-full bg-white hover:bg-emerald-50 text-emerald-950 font-extrabold text-[11px] border border-emerald-200 transition-all cursor-pointer text-center"
                     >
-                      Admin Details
+                      Admin
                     </button>
+
+                    {branch.id !== 1 && (
+                      <button
+                        onClick={() => handleDeleteBranchAction(branch.id, branch.name, branch.code)}
+                        title="Decommission Branch"
+                        className="col-span-2 py-2.5 px-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs border border-rose-200 transition-all cursor-pointer flex items-center justify-center"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
                 </div>
@@ -1021,12 +1123,28 @@ function SuperAdminDashboardContent() {
                             </span>
                           </td>
                           <td className="p-3 text-right">
-                            <Link
-                              href="/doctors"
-                              className="px-3 py-1 bg-white hover:bg-emerald-100 text-[#046a4e] border border-emerald-300 rounded-lg text-[11px] font-bold transition-all inline-block"
-                            >
-                              OPD Workspace
-                            </Link>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => handleToggleDoctorStatus(doc.id, doc.status, doc.name)}
+                                title="Toggle Status (Available / Busy / Off-duty)"
+                                className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-[#046a4e] border border-emerald-200 rounded-lg text-[10px] font-black transition-all cursor-pointer"
+                              >
+                                Status
+                              </button>
+                              <Link
+                                href="/doctors"
+                                className="px-2.5 py-1 bg-white hover:bg-emerald-100 text-[#046a4e] border border-emerald-300 rounded-lg text-[10px] font-bold transition-all inline-block"
+                              >
+                                OPD
+                              </Link>
+                              <button
+                                onClick={() => handleDeleteDoctorAction(doc.id, doc.name)}
+                                title="Remove Doctor"
+                                className="p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

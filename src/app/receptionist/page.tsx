@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '@/lib/store';
 import { Doctor, Patient, Appointment, Bed, Medicine, LabRequest, MarketingRepresentative, MarketingJoinRequest, HospitalReferral } from '@/lib/data';
 import { Navbar } from '@/components/Navbar';
@@ -105,6 +105,11 @@ export default function ReceptionistHubPage() {
   const [activeTab, setActiveTab] = useState<
     'doctors' | 'patients' | 'appointments' | 'beds' | 'pharmacy' | 'laboratory' | 'marketing' | 'referrals'
   >('doctors');
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -973,6 +978,17 @@ export default function ReceptionistHubPage() {
       showToast(`Referral receipt #${token} archived.`, 'error');
     }
   };
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-bold text-slate-600">Loading Medix Receptionist Command Hub...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col font-sans pb-20">

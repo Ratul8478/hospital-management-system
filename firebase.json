@@ -1,18 +1,14 @@
 {
   "hosting": {
-    "public": "Hospital_Android_Application/firebase-deploy",
-    "cleanUrls": true,
+    "source": ".",
     "ignore": [
       "firebase-debug.log",
-      ".firebase/**"
+      "**/.firebase/**",
+      "**/.next/**"
     ],
-    "headers": [
-      {
-        "source": "**",
-        "headers": [
-          { "key": "Cache-Control", "value": "no-cache" }
-        ]
-      }
-    ]
+    "cleanUrls": true
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }
