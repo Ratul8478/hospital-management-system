@@ -35,17 +35,17 @@ export default function AppointmentsPage() {
   const [appDate, setAppDate] = useState(new Date().toISOString().split('T')[0]);
   const [appTime, setAppTime] = useState('10:00 AM');
 
-  // Filter appointments
-  const filteredApps = appointments.filter(app => {
+  // Filter appointments with defensive null safety
+  const filteredApps = (appointments || []).filter(app => {
+    if (!app) return false;
     if (selectedBranchId !== 'all' && app.branchId !== selectedBranchId) return false;
     if (statusFilter !== 'all' && app.status !== statusFilter) return false;
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return (
-        app.patientName.toLowerCase().includes(q) ||
-        app.uhid.toLowerCase().includes(q) ||
-        app.doctorName.toLowerCase().includes(q)
-      );
+      const q = searchQuery.toLowerCase().trim();
+      const ptName = app.patientName?.toLowerCase() || '';
+      const ptUhid = app.uhid?.toLowerCase() || '';
+      const docName = app.doctorName?.toLowerCase() || '';
+      return ptName.includes(q) || ptUhid.includes(q) || docName.includes(q);
     }
     return true;
   });
@@ -53,7 +53,7 @@ export default function AppointmentsPage() {
   const handleBook = (e: React.FormEvent) => {
     e.preventDefault();
     if (!patientName || !uhid) return;
-    const selectedDoc = doctors.find(d => d.id === Number(doctorId));
+    const selectedDoc = (doctors || []).find(d => d.id === Number(doctorId)) || doctors[0];
     addAppointment({
       branchId: selectedDoc?.branchId || 1,
       patientName,

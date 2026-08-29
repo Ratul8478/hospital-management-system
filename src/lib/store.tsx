@@ -204,6 +204,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   function useFirestoreSync<T>(key: string, state: T, setState: React.Dispatch<React.SetStateAction<T>>, initialFallback: T) {
     const lastRemoteStateStr = React.useRef<string>('');
     const initialized = React.useRef(false);
+    const initialFallbackRef = React.useRef(initialFallback);
+    initialFallbackRef.current = initialFallback;
 
     // Read from Firestore (Real-time listener)
     React.useEffect(() => {
@@ -221,7 +223,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             });
           } else {
             // Initialize document if missing with the sanitized fallback
-            const sanitizedInitial = cleanUndefinedDeep(initialFallback);
+            const sanitizedInitial = cleanUndefinedDeep(initialFallbackRef.current);
             const initialStr = JSON.stringify(sanitizedInitial);
             lastRemoteStateStr.current = initialStr;
             setDoc(doc(db, "medix_realtime_db", key), { data: sanitizedInitial }).catch((err) => {
@@ -236,7 +238,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       );
       return () => unsub();
-    }, [key, initialFallback]);
+    }, [key]);
 
     // Write to DB on local changes
     React.useEffect(() => {
@@ -863,10 +865,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addMarketingRepresentative = (rep: Omit<MarketingRepresentative, 'id' | 'approvedDate'>) => {
     const newRep: MarketingRepresentative = {
       ...rep,
-      id: marketingRepresentatives.length + 1,
+      id: Date.now(),
       approvedDate: new Date().toISOString().split('T')[0],
     };
-    setMarketingRepresentatives(prev => [newRep, ...prev]);
+    setMarketingRepresentatives(prev => [newRep, ...(prev || [])]);
   };
 
   const updateMarketingRepStatus = (id: number, status: 'active' | 'fired' | 'inactive' | 'suspended') => {

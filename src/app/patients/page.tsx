@@ -11,15 +11,17 @@ function PatientListContent() {
   const searchQuery = searchParams?.get('search')?.toLowerCase() || '';
 
   let filtered = selectedBranchId === 'all'
-    ? patients
-    : patients.filter(p => p.branchId === selectedBranchId);
+    ? (patients || [])
+    : (patients || []).filter(p => p && p.branchId === selectedBranchId);
 
   if (searchQuery) {
-    filtered = filtered.filter(p =>
-      p.name.toLowerCase().includes(searchQuery) ||
-      p.uhid.toLowerCase().includes(searchQuery) ||
-      p.condition.toLowerCase().includes(searchQuery)
-    );
+    filtered = filtered.filter(p => {
+      if (!p) return false;
+      const name = p.name?.toLowerCase() || '';
+      const uhid = p.uhid?.toLowerCase() || '';
+      const cond = p.condition?.toLowerCase() || '';
+      return name.includes(searchQuery) || uhid.includes(searchQuery) || cond.includes(searchQuery);
+    });
   }
 
   if (filtered.length === 0) {

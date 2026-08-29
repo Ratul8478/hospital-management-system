@@ -8,8 +8,8 @@ export default function PharmacyPage() {
   const { medicines, branches, selectedBranchId } = useApp();
 
   const filteredMedicines = selectedBranchId === 'all'
-    ? medicines
-    : medicines.filter(m => m.branchId === selectedBranchId);
+    ? (medicines || [])
+    : (medicines || []).filter(m => m && m.branchId === selectedBranchId);
 
   return (
     <div className="space-y-6">

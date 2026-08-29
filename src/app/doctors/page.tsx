@@ -22,8 +22,8 @@ export default function DoctorsPage() {
   const [successMsg, setSuccessMsg] = useState('');
 
   const filteredDoctors = selectedBranchId === 'all'
-    ? doctors
-    : doctors.filter(d => d.branchId === selectedBranchId);
+    ? (doctors || [])
+    : (doctors || []).filter(d => d && d.branchId === selectedBranchId);
 
   // Handle local image file upload & convert to base64
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +44,7 @@ export default function DoctorsPage() {
     if (!docName.trim()) return;
 
     const formattedName = docName.startsWith('Dr.') ? docName : `Dr. ${docName}`;
-    const targetBranch = branches.find(b => b.id === docBranchId) || branches[0];
+    const targetBranch = (branches || []).find(b => b.id === docBranchId) || branches[0] || { name: 'Hospital Branch' };
 
     addDoctor({
       branchId: docBranchId,
@@ -55,7 +55,7 @@ export default function DoctorsPage() {
       contact: docContact || '+91 9804222142',
       image: docImage || undefined,
       qualification: docQualification || 'MD, MBBS',
-      registeredBy: `Hospital Receptionist (${targetBranch.name})`,
+      registeredBy: `Hospital Receptionist (${targetBranch?.name || 'Hospital Branch'})`,
       registrationDate: new Date().toISOString().split('T')[0],
     });
 

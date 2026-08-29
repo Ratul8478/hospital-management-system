@@ -50,13 +50,14 @@ export default function AccountingPage() {
   }
 
   // Filter invoices for calculations
-  const filteredInvoices = invoices.filter(inv => {
+  const filteredInvoices = (invoices || []).filter(inv => {
+    if (!inv) return false;
     if (selectedBranchId !== 'all' && inv.branchId !== selectedBranchId) return false;
     return true;
   });
 
-  const totalCollected = filteredInvoices.reduce((acc, inv) => acc + (inv.status === 'paid' ? inv.amount : 0), 0);
-  const totalPending = filteredInvoices.reduce((acc, inv) => acc + (inv.status === 'pending' ? inv.amount : 0), 0);
+  const totalCollected = filteredInvoices.reduce((acc, inv) => acc + (inv.status === 'paid' ? (inv.amount || 0) : 0), 0);
+  const totalPending = filteredInvoices.reduce((acc, inv) => acc + (inv.status === 'pending' ? (inv.amount || 0) : 0), 0);
   const totalExpenses = 0.00;
   const netResult = totalCollected - totalExpenses;
 
@@ -65,11 +66,11 @@ export default function AccountingPage() {
     id: inv.id,
     date: inv.date,
     type: inv.status === 'paid' ? 'Credit' : 'Pending',
-    account: `${inv.patientName} — Invoice Settlement`,
-    reference: inv.invoiceNumber,
+    account: `${inv.patientName || 'Patient'} — Invoice Settlement`,
+    reference: inv.invoiceNumber || 'INV-SETTLED',
     debit: 0,
-    credit: inv.status === 'paid' ? inv.amount : 0,
-    balance: inv.status === 'paid' ? inv.amount : 0,
+    credit: inv.status === 'paid' ? (inv.amount || 0) : 0,
+    balance: inv.status === 'paid' ? (inv.amount || 0) : 0,
   }));
 
   const paidInvoices = filteredInvoices.filter(i => i.status === 'paid');

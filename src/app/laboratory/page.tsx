@@ -8,8 +8,8 @@ export default function LaboratoryPage() {
   const { labRequests, branches, selectedBranchId } = useApp();
 
   const filteredLabRequests = selectedBranchId === 'all'
-    ? labRequests
-    : labRequests.filter(l => l.branchId === selectedBranchId);
+    ? (labRequests || [])
+    : (labRequests || []).filter(l => l && l.branchId === selectedBranchId);
 
   return (
     <div className="space-y-6">

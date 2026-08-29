@@ -8,10 +8,10 @@ export default function BedsPage() {
   const { beds, branches, selectedBranchId } = useApp();
 
   const filteredBeds = selectedBranchId === 'all'
-    ? beds
-    : beds.filter(b => b.branchId === selectedBranchId);
+    ? (beds || [])
+    : (beds || []).filter(b => b && b.branchId === selectedBranchId);
 
-  const totalOccupied = filteredBeds.filter(b => b.status === 'occupied').length;
+  const totalOccupied = filteredBeds.filter(b => b && b.status === 'occupied').length;
 
   return (
     <div className="space-y-6">

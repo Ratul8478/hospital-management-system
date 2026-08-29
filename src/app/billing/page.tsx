@@ -8,10 +8,10 @@ export default function BillingPage() {
   const { invoices, branches, selectedBranchId } = useApp();
 
   const filteredInvoices = selectedBranchId === 'all'
-    ? invoices
-    : invoices.filter(i => i.branchId === selectedBranchId);
+    ? (invoices || [])
+    : (invoices || []).filter(i => i && i.branchId === selectedBranchId);
 
-  const totalCollected = filteredInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+  const totalCollected = filteredInvoices.reduce((sum, inv) => sum + (inv?.amount || 0), 0);
 
   return (
     <div className="space-y-6">
