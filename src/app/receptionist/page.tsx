@@ -1230,10 +1230,10 @@ export default function ReceptionistHubPage() {
 
       {/* MAIN NAVIGATION TABS */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-6 w-full">
-        <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap gap-1.5">
+        <div className="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
           <button
             onClick={() => setActiveTab('doctors')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 ${
               activeTab === 'doctors' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1244,7 +1244,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('patients')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 ${
               activeTab === 'patients' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1255,7 +1255,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('appointments')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 ${
               activeTab === 'appointments' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1266,7 +1266,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('beds')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 ${
               activeTab === 'beds' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1277,7 +1277,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('pharmacy')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 ${
               activeTab === 'pharmacy' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1288,7 +1288,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('laboratory')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 ${
               activeTab === 'laboratory' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1299,7 +1299,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('marketing')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer relative ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 relative ${
               activeTab === 'marketing' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1317,7 +1317,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('referrals')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer relative ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 relative ${
               activeTab === 'referrals' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
@@ -1336,7 +1336,7 @@ export default function ReceptionistHubPage() {
 
           <button
             onClick={() => setActiveTab('services')}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer relative ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer shrink-0 relative ${
               activeTab === 'services' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >

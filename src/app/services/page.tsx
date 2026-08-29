@@ -372,15 +372,15 @@ function ServicesPageContent() {
         </div>
 
         {/* SEARCH & CATEGORY FILTER TOOLBAR */}
-        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-md">
+        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="relative w-full lg:max-w-md">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search by service name, department, or description..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-medium focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+              className="w-full pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-medium focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
             />
             {searchQuery && (
               <button
@@ -392,12 +392,12 @@ function ServicesPageContent() {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap overflow-x-auto custom-scrollbar pb-1">
-            <span className="text-xs font-black text-slate-700 mr-1 flex items-center gap-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 w-full lg:w-auto">
+            <span className="text-xs font-black text-slate-700 mr-1 flex items-center gap-1 shrink-0">
               <Filter className="w-3.5 h-3.5 text-slate-500" />
               <span>Filter:</span>
             </span>
-            {CATEGORIES_LIST.slice(0, 8).map(cat => (
+            {CATEGORIES_LIST.map(cat => (
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
@@ -415,7 +415,7 @@ function ServicesPageContent() {
 
         {/* SERVICES CARDS OR ZERO-STATE */}
         {(branchServices || []).length === 0 ? (
-          <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-12 text-center space-y-4 shadow-sm">
+          <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-8 sm:p-12 text-center space-y-4 shadow-sm">
             <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-200 text-[#046a4e] flex items-center justify-center mx-auto shadow-inner">
               <Activity className="w-8 h-8" />
             </div>
@@ -460,7 +460,7 @@ function ServicesPageContent() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredServices.map(srv => (
               <div
                 key={srv.id}

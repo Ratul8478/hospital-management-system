@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -80,17 +80,17 @@ export default function DoctorAppWebRunner() {
           />
         </div>
       ) : (
-        <div className="relative">
-          {/* Mobile Phone Mockup Frame */}
-          <div className="w-[390px] sm:w-[420px] h-[820px] sm:h-[860px] bg-slate-950 rounded-[48px] p-3 shadow-2xl border-[4px] border-slate-700 ring-1 ring-white/10 flex flex-col relative overflow-hidden">
+        <div className="relative w-full flex justify-center">
+          {/* Mobile Phone Mockup Frame - Adaptive for mobile, tablet, desktop */}
+          <div className="w-full max-w-[420px] h-[85vh] sm:h-[860px] bg-slate-950 rounded-3xl sm:rounded-[48px] p-2 sm:p-3 shadow-2xl border-2 sm:border-[4px] border-slate-700 ring-1 ring-white/10 flex flex-col relative overflow-hidden">
             {/* Dynamic Island / Speaker Notch */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-5 bg-slate-900 rounded-full z-20 flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-slate-950 border border-slate-800 mr-2"></div>
-              <div className="w-2 h-2 rounded-full bg-cyan-500/80 animate-pulse"></div>
+            <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 w-24 sm:w-28 h-4 sm:h-5 bg-slate-900 rounded-full z-20 flex items-center justify-center">
+              <div className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-slate-950 border border-slate-800 mr-2"></div>
+              <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-cyan-500/80 animate-pulse"></div>
             </div>
 
             {/* App Screen Iframe */}
-            <div className="w-full h-full rounded-[38px] overflow-hidden bg-slate-900 pt-2">
+            <div className="w-full h-full rounded-2xl sm:rounded-[38px] overflow-hidden bg-slate-900 pt-2">
               <iframe
                 key={key}
                 src="/doctor-app/index.html"
@@ -100,7 +100,7 @@ export default function DoctorAppWebRunner() {
             </div>
 
             {/* Bottom Home Indicator Bar */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-slate-600 rounded-full z-20"></div>
+            <div className="absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2 w-24 sm:w-32 h-1 bg-slate-600 rounded-full z-20"></div>
           </div>
         </div>
       )}
