@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/lib/store';
+import { INITIAL_BRANCHES, Branch } from '@/lib/data';
 import {
   LayoutDashboard,
   Users,
@@ -70,12 +71,12 @@ export default function BranchAdminDashboard() {
     setMounted(true);
   }, []);
 
-  // Determine active branch scope with safe fallback
-  const activeBranch = (branches && branches.length > 0)
+  // Determine active branch scope with safe typed fallback
+  const activeBranch: Branch = (branches && branches.length > 0)
     ? (selectedBranchId === 'all'
         ? branches[0]
         : branches.find(b => b.id === selectedBranchId) || branches[0])
-    : { id: 1, name: 'Main Hospital Branch', code: 'ARIYAN-HQ', location: 'Kolkata' };
+    : INITIAL_BRANCHES[0];
 
   const branchId = activeBranch?.id || 1;
 
