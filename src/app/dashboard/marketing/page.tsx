@@ -47,9 +47,25 @@ export default function MarketingRepresentativeDashboard() {
         } catch (e) {}
       }
     }
-    return marketingRepresentatives[0]?.id || 1;
+    return (marketingRepresentatives && marketingRepresentatives[0]?.id) || 1;
   });
-  const currentRep = marketingRepresentatives.find(r => r.id === selectedRepId) || marketingRepresentatives[0];
+
+  const currentRep = (marketingRepresentatives || []).find(r => r.id === selectedRepId) || (marketingRepresentatives && marketingRepresentatives[0]) || {
+    id: 1,
+    name: 'Marketing Partner',
+    referenceId: 'MKT-ARIYAN-DEMO',
+    branchId: 1,
+    branchName: 'ARIYAN HOSPITAL HQ',
+    branchCode: 'ARIYAN-HQ',
+    referredPatientsCount: 0,
+    totalCommissionEarned: 0,
+    pendingPayout: 0,
+    territory: 'Central Region',
+    status: 'active' as const,
+    approvedDate: '2026-08-01',
+    phone: '+91 98000 00000',
+    email: 'marketing@ariyanhospital.com',
+  };
 
   // Referral Link Generator State
   const [copiedLink, setCopiedLink] = useState(false);

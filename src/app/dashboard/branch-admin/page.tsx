@@ -70,33 +70,37 @@ export default function BranchAdminDashboard() {
     setMounted(true);
   }, []);
 
-  // Determine active branch scope
-  const activeBranch = selectedBranchId === 'all'
-    ? branches[0]
-    : branches.find(b => b.id === selectedBranchId) || branches[0];
+  // Determine active branch scope with safe fallback
+  const activeBranch = (branches && branches.length > 0)
+    ? (selectedBranchId === 'all'
+        ? branches[0]
+        : branches.find(b => b.id === selectedBranchId) || branches[0])
+    : { id: 1, name: 'Main Hospital Branch', code: 'ARIYAN-HQ', location: 'Kolkata' };
 
-  // Scoped Data strictly matching active branch ID
-  const branchDoctors = doctors.filter(d => d.branchId === activeBranch.id);
-  const branchPatients = patients.filter(p => p.branchId === activeBranch.id);
-  const branchBeds = beds.filter(b => b.branchId === activeBranch.id);
-  const branchMedicines = medicines.filter(m => m.branchId === activeBranch.id);
-  const branchInvoices = invoices.filter(i => i.branchId === activeBranch.id);
-  const branchLabRequests = labRequests.filter(l => l.branchId === activeBranch.id);
-  const branchServices = services.filter(s => s.branchId === activeBranch.id);
+  const branchId = activeBranch?.id || 1;
+
+  // Scoped Data strictly matching active branch ID with defensive array checks
+  const branchDoctors = (doctors || []).filter(d => d && d.branchId === branchId);
+  const branchPatients = (patients || []).filter(p => p && p.branchId === branchId);
+  const branchBeds = (beds || []).filter(b => b && b.branchId === branchId);
+  const branchMedicines = (medicines || []).filter(m => m && m.branchId === branchId);
+  const branchInvoices = (invoices || []).filter(i => i && i.branchId === branchId);
+  const branchLabRequests = (labRequests || []).filter(l => l && l.branchId === branchId);
+  const branchServices = (services || []).filter(s => s && s.branchId === branchId);
 
   // Marketing Data scoped to this branch
-  const branchMarketingReps = marketingRepresentatives.filter(m => m.branchId === activeBranch.id);
-  const branchMarketingRequests = marketingJoinRequests.filter(
-    r => r.targetBranchId === activeBranch.id && (r.status === 'pending_branch_review' || r.status === 'pending_super_admin_approval' || (r.status as any) === 'pending')
+  const branchMarketingReps = (marketingRepresentatives || []).filter(m => m && m.branchId === branchId);
+  const branchMarketingRequests = (marketingJoinRequests || []).filter(
+    r => r && r.targetBranchId === branchId && (r.status === 'pending_branch_review' || r.status === 'pending_super_admin_approval' || (r.status as any) === 'pending')
   );
 
-  const occupiedBeds = branchBeds.filter(b => b.status === 'occupied').length;
-  const branchRevenue = branchInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+  const occupiedBeds = branchBeds.filter(b => b && b.status === 'occupied').length;
+  const branchRevenue = branchInvoices.reduce((sum, inv) => sum + (inv?.amount || 0), 0);
 
   // Marketing aggregates
-  const totalReferredPatients = branchMarketingReps.reduce((sum, r) => sum + r.referredPatientsCount, 0);
-  const totalCommissionDisbursed = branchMarketingReps.reduce((sum, r) => sum + r.totalCommissionEarned, 0);
-  const totalPendingPayout = branchMarketingReps.reduce((sum, r) => sum + r.pendingPayout, 0);
+  const totalReferredPatients = branchMarketingReps.reduce((sum, r) => sum + (r?.referredPatientsCount || 0), 0);
+  const totalCommissionDisbursed = branchMarketingReps.reduce((sum, r) => sum + (r?.totalCommissionEarned || 0), 0);
+  const totalPendingPayout = branchMarketingReps.reduce((sum, r) => sum + (r?.pendingPayout || 0), 0);
 
   // Modals state
   const [showAddDoctor, setShowAddDoctor] = useState(false);

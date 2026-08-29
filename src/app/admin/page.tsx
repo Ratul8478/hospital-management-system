@@ -50,28 +50,28 @@ export default function SystemAdminPage() {
     );
   }
 
-  // Filtering audit logs
-  const filteredLogs = auditLogs.filter(log => {
+  // Filtering audit logs with defensive null safety
+  const filteredLogs = (auditLogs || []).filter(log => {
+    if (!log) return false;
     if (!searchAudit) return true;
-    const q = searchAudit.toLowerCase();
-    return (
-      log.userName.toLowerCase().includes(q) ||
-      log.action.toLowerCase().includes(q) ||
-      log.module.toLowerCase().includes(q) ||
-      log.ipAddress.includes(q)
-    );
+    const q = searchAudit.toLowerCase().trim();
+    const uName = log.userName?.toLowerCase() || '';
+    const act = log.action?.toLowerCase() || '';
+    const mod = log.module?.toLowerCase() || '';
+    const ip = log.ipAddress || '';
+    return uName.includes(q) || act.includes(q) || mod.includes(q) || ip.includes(q);
   });
 
-  // Filtering Branch Central Admins
-  const filteredAdmins = branchAdmins.filter(ba => {
+  // Filtering Branch Central Admins with defensive null safety
+  const filteredAdmins = (branchAdmins || []).filter(ba => {
+    if (!ba) return false;
     if (!searchAdminQuery) return true;
-    const q = searchAdminQuery.toLowerCase();
-    return (
-      ba.name.toLowerCase().includes(q) ||
-      ba.email.toLowerCase().includes(q) ||
-      ba.branchCode.toLowerCase().includes(q) ||
-      ba.branchName.toLowerCase().includes(q)
-    );
+    const q = searchAdminQuery.toLowerCase().trim();
+    const name = ba.name?.toLowerCase() || '';
+    const email = ba.email?.toLowerCase() || '';
+    const code = ba.branchCode?.toLowerCase() || '';
+    const bName = ba.branchName?.toLowerCase() || '';
+    return name.includes(q) || email.includes(q) || code.includes(q) || bName.includes(q);
   });
 
   const PERMISSIONS_MATRIX = [
