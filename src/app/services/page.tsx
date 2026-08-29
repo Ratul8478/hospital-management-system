@@ -237,8 +237,7 @@ function ServicesPageContent() {
   }, [branchServices, categoryFilter, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-20 font-sans">
-      <Navbar />
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 pb-20 font-sans -m-3.5 sm:-m-5 md:-m-6 lg:-m-8">
 
       {/* TOAST NOTIFICATION */}
       {toastMsg && (

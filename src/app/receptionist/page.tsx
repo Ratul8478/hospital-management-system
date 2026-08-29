@@ -1119,8 +1119,7 @@ export default function ReceptionistHubPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans pb-20">
-      <Navbar />
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans pb-20 -m-3.5 sm:-m-5 md:-m-6 lg:-m-8">
 
       {/* TOAST NOTIFICATION */}
       {toastMsg && (
