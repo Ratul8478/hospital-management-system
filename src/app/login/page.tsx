@@ -39,7 +39,7 @@ export default function LoginPage() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginReferenceId, setLoginReferenceId] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loginRole, setLoginRole] = useState<'super_admin' | 'marketing' | 'branch_admin' | 'doctor' | 'patient' | 'accountant' | 'pharmacist' | 'lab_technician' | 'franchise_partner'>('super_admin');
+  const [loginRole, setLoginRole] = useState<'super_admin' | 'receptionist' | 'marketing' | 'branch_admin' | 'doctor' | 'patient' | 'accountant' | 'pharmacist' | 'lab_technician' | 'franchise_partner'>('super_admin');
   const [showSuperAdminModal, setShowSuperAdminModal] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -181,6 +181,7 @@ export default function LoginPage() {
         else if (loginRole === 'patient') router.push('/dashboard/patient');
         else if (loginRole === 'branch_admin') router.push('/dashboard/branch-admin');
         else if (loginRole === 'marketing') router.push('/dashboard/marketing');
+        else if (loginRole === 'receptionist') router.push('/receptionist');
         else router.push('/dashboard/branch-admin');
       }, 900);
     }, 700);
@@ -256,6 +257,7 @@ export default function LoginPage() {
                 className="w-full px-4 py-3.5 bg-[#f0fdf4] border border-[#d1fae5] text-[#062c21] font-extrabold rounded-2xl focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none cursor-pointer"
               >
                 <option value="super_admin">👑 Super Admin (Headquarters Master Control)</option>
+                <option value="receptionist">🏢 Receptionist (Front Office & Hospital Services Manager)</option>
                 <option value="marketing">📢 Marketing Partner / Representative (Ref ID Dashboard)</option>
                 <option value="branch_admin">🏬 Hospital Central Admin (Specific Branch Scope)</option>
                 <option value="doctor">🩺 Medical Consultant / Doctor</option>

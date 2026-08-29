@@ -25,6 +25,7 @@ import {
   ClipboardList,
   Building2,
   DollarSign,
+  Plus,
   PlusCircle,
   X,
   CheckCircle2,
@@ -89,6 +90,10 @@ function SuperAdminDashboardContent() {
     updateDoctor,
     deleteDoctor,
     addMarketingRepresentative,
+    services,
+    addService,
+    updateService,
+    deleteService,
     setSelectedBranchId,
     setUserRole,
     userRole,
@@ -96,7 +101,7 @@ function SuperAdminDashboardContent() {
 
   // Active Division / Tab
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<'branches' | 'campus' | 'clinical' | 'finance' | 'admin' | 'applications' | 'marketing-hq' | 'marketing-branch' | 'marketing' | 'inspector'>('branches');
+  const [activeTab, setActiveTab] = useState<'branches' | 'campus' | 'clinical' | 'finance' | 'admin' | 'applications' | 'marketing-hq' | 'marketing-branch' | 'marketing' | 'inspector' | 'services'>('branches');
   const [inspectedBranchId, setInspectedBranchId] = useState<number>(1);
   const [mounted, setMounted] = useState(false);
 
@@ -107,7 +112,7 @@ function SuperAdminDashboardContent() {
   // Synchronize tab from URL query params (e.g. ?tab=marketing-hq)
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['branches', 'campus', 'clinical', 'finance', 'admin', 'applications', 'marketing-hq', 'marketing-branch', 'marketing', 'inspector'].includes(tabParam)) {
+    if (tabParam && ['branches', 'campus', 'clinical', 'finance', 'admin', 'applications', 'marketing-hq', 'marketing-branch', 'marketing', 'inspector', 'services'].includes(tabParam)) {
       setActiveTab(tabParam as any);
     }
   }, [searchParams]);
@@ -625,6 +630,7 @@ function SuperAdminDashboardContent() {
             { id: 'applications', label: 'Admin Applications', icon: UserCheck, count: pendingApplications.length, isBadgeAlert: pendingApplications.length > 0, color: 'text-blue-700' },
             { id: 'marketing-hq', label: 'Direct HQ Marketing', icon: Share2, count: directHqPending.length, isBadgeAlert: directHqPending.length > 0, color: 'text-amber-700' },
             { id: 'marketing-branch', label: 'Branch Marketing Approvals', icon: Rocket, count: branchForwardedPending.length, isBadgeAlert: branchForwardedPending.length > 0, color: 'text-purple-700' },
+            { id: 'services', label: 'Hospital Services Matrix', icon: Activity, count: services.length, color: 'text-rose-700' },
             { id: 'inspector', label: 'Branch Deep Inspector', icon: Radio, color: 'text-rose-700' },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -2030,7 +2036,175 @@ function SuperAdminDashboardContent() {
         </div>
       )}
 
-      {/* TAB 7: LIVE BRANCH CENTRAL DASHBOARD INSPECTOR */}
+      {/* TAB 7: HOSPITAL SERVICES & CLINICAL MATRIX */}
+      {activeTab === 'services' && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-xs space-y-6 animate-in fade-in">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-emerald-100 pb-5 gap-4">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#046a4e] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  ENTERPRISE CLINICAL CATALOG
+                </span>
+                <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                  👑 Super Admin HQ Master Control
+                </span>
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mt-1">
+                Hospital Services & Facilities Matrix
+              </h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                Audit, configure, and inspect clinical, emergency, ICU, and diagnostic services for <strong>ARIYAN HOSPITAL MULTISPECIALITY (HQ)</strong> and connected franchise campuses.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Branch Selector */}
+              <div className="flex items-center gap-2 bg-emerald-50/70 p-2 rounded-2xl border border-emerald-200">
+                <label className="text-xs font-black text-emerald-900">Hospital Scope:</label>
+                <select
+                  value={inspectedBranchId}
+                  onChange={(e) => setInspectedBranchId(Number(e.target.value))}
+                  className="px-3 py-1.5 bg-white border border-emerald-300 text-xs font-black rounded-xl outline-none text-slate-900 cursor-pointer focus:ring-2 focus:ring-[#046a4e]"
+                >
+                  {branches.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.code} — {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Link
+                href="/services"
+                className="px-5 py-3 bg-[#046a4e] hover:bg-[#03523c] text-white text-xs font-black rounded-2xl shadow-lg transition flex items-center gap-2 cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Add / Manage Services</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Scope Statistics */}
+          {(() => {
+            const currentScopeServices = services.filter(s => s.branchId === inspectedBranchId);
+            const currentBranch = branches.find(b => b.id === inspectedBranchId) || branches[0];
+
+            return (
+              <div className="space-y-6">
+                {/* Metric Summary */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+                    <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Services Configured</span>
+                    <p className="text-2xl font-black text-emerald-950">{currentScopeServices.length}</p>
+                    <span className="text-xs text-emerald-700 font-bold">{currentBranch.name}</span>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-teal-50/70 border border-teal-200 space-y-1">
+                    <span className="text-[10px] font-black text-teal-800 uppercase tracking-wider">24x7 Round-The-Clock</span>
+                    <p className="text-2xl font-black text-teal-950">
+                      {currentScopeServices.filter(s => s.is24x7 || s.status === '24x7').length}
+                    </p>
+                    <span className="text-xs text-teal-700 font-bold">Uninterrupted Care</span>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-rose-50/70 border border-rose-200 space-y-1">
+                    <span className="text-[10px] font-black text-rose-800 uppercase tracking-wider">Emergency Units</span>
+                    <p className="text-2xl font-black text-rose-950">
+                      {currentScopeServices.filter(s => s.isEmergency).length}
+                    </p>
+                    <span className="text-xs text-rose-700 font-bold">Trauma & ICU Ready</span>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-1">
+                    <span className="text-[10px] font-black text-purple-800 uppercase tracking-wider">Total Campus Network</span>
+                    <p className="text-2xl font-black text-purple-950">{services.length} Network Services</p>
+                    <span className="text-xs text-purple-700 font-bold">{branches.length} Registered Hospitals</span>
+                  </div>
+                </div>
+
+                {/* Services Roster or Zero-State */}
+                {currentScopeServices.length === 0 ? (
+                  <div className="p-12 rounded-3xl border border-dashed border-slate-300 text-center space-y-4 bg-slate-50/50">
+                    <div className="w-14 h-14 rounded-full bg-emerald-50 border-2 border-emerald-200 text-[#046a4e] flex items-center justify-center mx-auto shadow-inner">
+                      <Activity className="w-7 h-7" />
+                    </div>
+                    <div className="max-w-md mx-auto space-y-1">
+                      <h4 className="text-base font-black text-slate-900">
+                        No Services Registered for {currentBranch.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        This hospital currently has 0 registered services. When a hospital registers on Medix, no placeholder or foreign demo data is loaded. As Super Admin or the hospital receptionist, you can configure clinical services below.
+                      </p>
+                    </div>
+                    <Link
+                      href="/services"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#046a4e] hover:bg-[#03523c] text-white text-xs font-black rounded-2xl shadow-lg transition"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>+ Register Services for {currentBranch.name}</span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {currentScopeServices.map(srv => (
+                      <div
+                        key={srv.id}
+                        className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between hover:border-emerald-300 transition"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-black text-slate-900 text-sm">{srv.name}</h4>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                                srv.status === 'active' || srv.status === '24x7'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-slate-200 text-slate-600'
+                              }`}
+                            >
+                              {srv.status.toUpperCase()}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-bold">
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded-md border border-emerald-200">
+                              {srv.category}
+                            </span>
+                            {srv.department && (
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md">
+                                {srv.department}
+                              </span>
+                            )}
+                            {srv.isEmergency && (
+                              <span className="px-2 py-0.5 bg-rose-100 text-rose-800 rounded-md font-black">
+                                🚨 Emergency
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-slate-600 font-medium leading-relaxed bg-slate-50 p-2.5 rounded-xl">
+                            {srv.description || 'Clinical specialty and patient care facility.'}
+                          </p>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <span className="font-black text-slate-900">
+                            {srv.price !== undefined ? `₹ ${srv.price.toLocaleString('en-IN')} / ${srv.priceUnit || 'Unit'}` : 'Covered'}
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-mono">
+                            {srv.timing || '24x7'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* TAB 8: LIVE BRANCH CENTRAL DASHBOARD INSPECTOR */}
       {activeTab === 'inspector' && (
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-emerald-100 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-100 pb-4 gap-4">

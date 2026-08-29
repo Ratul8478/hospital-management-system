@@ -83,6 +83,7 @@ export function Sidebar() {
           division: 'PATIENT CARE PORTAL',
           items: [
             { name: 'My Care Dashboard', href: '/dashboard/patient', icon: BarChart3, iconColor: 'text-emerald-300' },
+            { name: 'Hospital Services', href: '/services', icon: Activity, iconColor: 'text-rose-300' },
             { name: 'My Appointments & Tokens', href: '/appointments', icon: CalendarDays, iconColor: 'text-teal-300' },
             { name: 'Prescriptions & Medicines', href: '/pharmacy', icon: Pill, iconColor: 'text-amber-200' },
             { name: 'Diagnostic Lab Reports', href: '/laboratory', icon: FlaskConical, iconColor: 'text-cyan-300' },
@@ -92,13 +93,32 @@ export function Sidebar() {
       ];
     }
 
-    // 2. DOCTOR ROLE - CLINICAL OPD SUITE
+    // 2. RECEPTIONIST ROLE - FRONT OFFICE & SERVICES DESK
+    if (userRole === 'receptionist') {
+      return [
+        {
+          division: 'FRONT OFFICE & RECEPTION',
+          items: [
+            { name: 'Receptionist Command Hub', href: '/receptionist', icon: Building2, iconColor: 'text-amber-300', badge: 'Active' },
+            { name: 'Hospital Services', href: '/services', icon: Activity, iconColor: 'text-rose-300', badge: 'Manage' },
+            { name: 'Patient Directory (EHR)', href: '/patients', icon: User, iconColor: 'text-teal-300' },
+            { name: 'Appointments & Tokens', href: '/appointments', icon: CalendarDays, iconColor: 'text-emerald-300' },
+            { name: 'OPD Doctor Rosters', href: '/doctors', icon: Stethoscope, iconColor: 'text-teal-200' },
+            { name: 'IPD & Bed Matrix', href: '/beds', icon: BedDouble, iconColor: 'text-rose-300' },
+            { name: 'Billing & Receipts', href: '/billing', icon: Receipt, iconColor: 'text-emerald-200' },
+          ],
+        },
+      ];
+    }
+
+    // 3. DOCTOR ROLE - CLINICAL OPD SUITE
     if (userRole === 'doctor') {
       return [
         {
           division: 'DOCTOR CLINICAL SUITE',
           items: [
             { name: 'OPD Doctor Desk', href: '/dashboard/doctor', icon: Stethoscope, iconColor: 'text-teal-300' },
+            { name: 'Hospital Services', href: '/services', icon: Activity, iconColor: 'text-rose-300' },
             { name: 'Receptionist Desk', href: '/receptionist', icon: Building2, iconColor: 'text-amber-300' },
             { name: 'Appointments Queue', href: '/appointments', icon: CalendarDays, iconColor: 'text-emerald-300' },
             { name: 'Patient Directory (EHR)', href: '/patients', icon: User, iconColor: 'text-sky-300' },
@@ -110,7 +130,7 @@ export function Sidebar() {
       ];
     }
 
-    // 3. BRANCH ADMIN ROLE - SCOPED TO SINGLE BRANCH
+    // 4. BRANCH ADMIN ROLE - SCOPED TO SINGLE BRANCH
     if (userRole === 'branch_admin') {
       return [
         {
@@ -124,6 +144,7 @@ export function Sidebar() {
           division: 'CLINICAL SERVICES',
           items: [
             { name: 'Receptionist Desk', href: '/receptionist', icon: Building2, iconColor: 'text-amber-300', badge: 'Front Desk' },
+            { name: 'Hospital Services', href: '/services', icon: Activity, iconColor: 'text-rose-300' },
             { name: 'Patients (EHR)', href: '/patients', icon: User, iconColor: 'text-teal-300' },
             { name: 'Appointments & Tokens', href: '/appointments', icon: CalendarDays, iconColor: 'text-emerald-300' },
             { name: 'OPD Doctors', href: '/doctors', icon: Stethoscope, iconColor: 'text-teal-200' },
@@ -142,12 +163,13 @@ export function Sidebar() {
       ];
     }
 
-    // 4. SUPER ADMIN (Full Master Headquarters Access)
+    // 5. SUPER ADMIN (Full Master Headquarters Access)
     return [
       {
         division: 'EXECUTIVE COMMAND',
         items: [
           { name: 'Campus Dashboard', href: '/dashboard/super-admin', icon: BarChart3, iconColor: 'text-emerald-300' },
+          { name: 'Hospital Services Matrix', href: '/services', icon: Activity, iconColor: 'text-rose-300' },
           { name: 'Central Branches Hub', href: '/dashboard/super-admin?tab=branches', icon: Crown, iconColor: 'text-amber-300', badge: `${branches.length} Nodes` },
         ],
       },

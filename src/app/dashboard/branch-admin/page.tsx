@@ -33,7 +33,9 @@ import {
   Mail,
   UserCheck,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Activity,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function BranchAdminDashboard() {
@@ -45,6 +47,7 @@ export default function BranchAdminDashboard() {
     medicines,
     labRequests,
     invoices,
+    services,
     selectedBranchId,
     addDoctor,
     userRole,
@@ -59,8 +62,8 @@ export default function BranchAdminDashboard() {
     updateMarketingRepStatus
   } = useApp();
 
-  // Active Tab: 'overview' | 'marketing' | 'doctors' | 'pharmacy'
-  const [activeTab, setActiveTab] = useState<'overview' | 'marketing' | 'doctors' | 'pharmacy'>('overview');
+  // Active Tab: 'overview' | 'marketing' | 'doctors' | 'pharmacy' | 'services'
+  const [activeTab, setActiveTab] = useState<'overview' | 'marketing' | 'doctors' | 'pharmacy' | 'services'>('overview');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -79,6 +82,7 @@ export default function BranchAdminDashboard() {
   const branchMedicines = medicines.filter(m => m.branchId === activeBranch.id);
   const branchInvoices = invoices.filter(i => i.branchId === activeBranch.id);
   const branchLabRequests = labRequests.filter(l => l.branchId === activeBranch.id);
+  const branchServices = services.filter(s => s.branchId === activeBranch.id);
 
   // Marketing Data scoped to this branch
   const branchMarketingReps = marketingRepresentatives.filter(m => m.branchId === activeBranch.id);
@@ -335,6 +339,17 @@ export default function BranchAdminDashboard() {
           }`}
         >
           <Pill className="w-4 h-4" /> Pharmacy Inventory ({branchMedicines.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('services')}
+          className={`px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+            activeTab === 'services'
+              ? 'bg-[#046a4e] text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Activity className="w-4 h-4 text-emerald-400" /> Hospital Services ({branchServices.length})
         </button>
       </div>
 
@@ -646,14 +661,14 @@ export default function BranchAdminDashboard() {
         <div className="space-y-6 animate-in fade-in">
           
           {/* BRANCH ISOLATED METRICS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-extrabold uppercase">
                 <span>Branch Revenue</span>
                 <IndianRupee className="h-4 w-4 text-emerald-600" />
               </div>
-              <p className="text-3xl font-black text-slate-900">₹{branchRevenue.toLocaleString()}</p>
-              <span className="text-xs text-emerald-600 font-bold">{branchInvoices.length} Invoices Scoped</span>
+              <p className="text-2xl font-black text-slate-900">₹{branchRevenue.toLocaleString()}</p>
+              <span className="text-xs text-emerald-600 font-bold">{branchInvoices.length} Invoices</span>
             </div>
 
             <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
@@ -661,8 +676,8 @@ export default function BranchAdminDashboard() {
                 <span>Branch Patients</span>
                 <Users className="h-4 w-4 text-sky-600" />
               </div>
-              <p className="text-3xl font-black text-slate-900">{branchPatients.length}</p>
-              <span className="text-xs text-sky-600 font-bold">Scoped UHID Records</span>
+              <p className="text-2xl font-black text-slate-900">{branchPatients.length}</p>
+              <span className="text-xs text-sky-600 font-bold">Scoped EHRs</span>
             </div>
 
             <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
@@ -670,8 +685,27 @@ export default function BranchAdminDashboard() {
                 <span>Bed Occupancy</span>
                 <BedDouble className="h-4 w-4 text-amber-600" />
               </div>
-              <p className="text-3xl font-black text-slate-900">{occupiedBeds} / {branchBeds.length}</p>
+              <p className="text-2xl font-black text-slate-900">{occupiedBeds} / {branchBeds.length}</p>
               <span className="text-xs text-amber-600 font-bold">Wards Occupied</span>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-extrabold uppercase">
+                <span>Hospital Services</span>
+                <Activity className="h-4 w-4 text-rose-600" />
+              </div>
+              <p className="text-2xl font-black text-slate-900">{branchServices.length}</p>
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-xs text-emerald-600 font-bold">
+                  {branchServices.filter(s => s.is24x7 || s.status === '24x7').length} 24x7 Ready
+                </span>
+                <button
+                  onClick={() => setActiveTab('services')}
+                  className="text-[11px] font-black text-[#046a4e] hover:underline cursor-pointer"
+                >
+                  View →
+                </button>
+              </div>
             </div>
 
             <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-2">
@@ -679,8 +713,8 @@ export default function BranchAdminDashboard() {
                 <span>Marketing Force</span>
                 <Share2 className="h-4 w-4 text-purple-600" />
               </div>
-              <p className="text-3xl font-black text-purple-700">{branchMarketingReps.length} Reps</p>
-              <span className="text-xs text-purple-600 font-bold">{totalReferredPatients} Referred Patients</span>
+              <p className="text-2xl font-black text-purple-700">{branchMarketingReps.length} Reps</p>
+              <span className="text-xs text-purple-600 font-bold">{totalReferredPatients} Referrals</span>
             </div>
           </div>
 
@@ -834,6 +868,97 @@ export default function BranchAdminDashboard() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. HOSPITAL SERVICES TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'services' && (
+        <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <Activity className="h-5 w-5 text-rose-600" />
+                <span>Hospital Clinical & Emergency Services ({branchServices.length})</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Official clinical, ICU, surgery, diagnostic, and 24x7 facilities configured for <strong>{activeBranch.name}</strong>.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/services"
+                className="px-4 py-2 bg-[#046a4e] hover:bg-[#03523c] text-white text-xs font-black rounded-xl transition flex items-center gap-1.5 shadow-md"
+              >
+                <span>Full Services Matrix</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link
+                href="/receptionist"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
+              >
+                Receptionist Desk
+              </Link>
+            </div>
+          </div>
+
+          {branchServices.length === 0 ? (
+            <div className="p-10 rounded-2xl border border-dashed border-slate-300 text-center space-y-3 bg-slate-50/50">
+              <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto">
+                <Activity className="w-6 h-6" />
+              </div>
+              <div className="max-w-md mx-auto space-y-1">
+                <h4 className="text-sm font-black text-slate-900">No Services Registered Yet</h4>
+                <p className="text-xs text-slate-500">
+                  {activeBranch.name} does not have any clinical services registered. No placeholder demo data is loaded. The hospital receptionist can add services through the Receptionist Desk or Services Portal.
+                </p>
+              </div>
+              <Link
+                href="/services"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#046a4e] hover:bg-[#03523c] text-white text-xs font-bold rounded-xl shadow-md transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Open Services Portal</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {branchServices.map(srv => (
+                <div key={srv.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 text-sm">{srv.name}</h4>
+                      <p className="text-xs text-[#046a4e] font-bold">{srv.category}</p>
+                    </div>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                        srv.status === 'active' || srv.status === '24x7'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {srv.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 font-medium line-clamp-2">
+                    {srv.description || 'Clinical specialty service.'}
+                  </p>
+
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200/60">
+                    <span className="font-black text-slate-900">
+                      {srv.price !== undefined ? `₹ ${srv.price.toLocaleString('en-IN')} / ${srv.priceUnit || 'Unit'}` : 'Hospital Covered'}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      {srv.timing || '24x7 Operational'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

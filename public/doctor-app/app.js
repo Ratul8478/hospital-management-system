@@ -2955,6 +2955,12 @@ let firebaseDbInstance = null;
 let isFirebaseInitialized = false;
 let latestFirebaseBranches = null;
 let latestFirebaseDoctors = null;
+let latestFirebaseServices = [];
+
+try {
+  const cachedServices = localStorage.getItem('medix_hospital_services');
+  if (cachedServices) latestFirebaseServices = JSON.parse(cachedServices);
+} catch (_) {}
 
 function initFirebaseRealtime() {
   if (typeof firebase === 'undefined') {
@@ -3008,6 +3014,24 @@ function initFirebaseRealtime() {
         }
       }
     }, (err) => console.warn('Firebase referrals sync notice:', err));
+
+    // 4. Listen for real-time Hospital Services registered on Central Web App
+    firebaseDbInstance.collection("medix_realtime_db").doc("services").onSnapshot((docSnap) => {
+      if (docSnap.exists) {
+        const rawServices = docSnap.data()?.data;
+        if (Array.isArray(rawServices)) {
+          latestFirebaseServices = rawServices;
+          try {
+            localStorage.setItem('medix_hospital_services', JSON.stringify(rawServices));
+          } catch (_) {}
+          console.log(`🏥 Medix Doctor App: Synced ${rawServices.length} Real-Time Hospital Services from Website`);
+          if (typeof renderServicesCatalog === 'function') renderServicesCatalog();
+          if (typeof renderServiceDeepExplorer === 'function') {
+            renderServiceDeepExplorer(selectedClinicalServiceId, serviceDeepSearchQuery);
+          }
+        }
+      }
+    }, (err) => console.warn('Firebase services sync notice:', err));
 
   } catch (err) {
     console.warn('Firebase Realtime init notice:', err);
@@ -4418,6 +4442,31 @@ function renderHospitalBoardCard(h, service, options = {}) {
   `;
 }
 
+function getHospitalRegisteredServices(hospitalId, service) {
+  if (!Array.isArray(latestFirebaseServices) || latestFirebaseServices.length === 0) {
+    return [];
+  }
+  const keywords = (service.keywords || [service.id]).map(k => (k || '').toLowerCase());
+  const serviceName = (service.name || '').toLowerCase();
+  const serviceDept = (service.departmentKey || '').toLowerCase();
+
+  return latestFirebaseServices.filter(s => {
+    if (!s || s.branchId !== hospitalId) return false;
+    if (s.status !== 'active' && s.status !== '24x7') return false;
+
+    const cat = (s.category || '').toLowerCase();
+    const name = (s.name || '').toLowerCase();
+    const dept = (s.department || '').toLowerCase();
+    const desc = (s.description || '').toLowerCase();
+
+    const matchesKeyword = keywords.some(k => cat.includes(k) || name.includes(k) || dept.includes(k) || desc.includes(k));
+    const matchesName = serviceName.includes(cat) || cat.includes(serviceName) || name.includes(serviceName) || serviceName.includes(name);
+    const matchesDept = serviceDept.includes(cat) || cat.includes(serviceDept) || dept.includes(serviceDept);
+
+    return matchesKeyword || matchesName || matchesDept;
+  });
+}
+
 function renderServiceDeepExplorer(serviceId, searchQuery = '') {
   const container = document.getElementById('service-action-dynamic-content');
   const countBadge = document.getElementById('service-action-count-badge');
@@ -4426,7 +4475,7 @@ function renderServiceDeepExplorer(serviceId, searchQuery = '') {
   const service = CLINICAL_SERVICES_CATALOG.find(s => s.id === serviceId) || CLINICAL_SERVICES_CATALOG[0];
   const q = (searchQuery || '').toLowerCase();
 
-  // 1. HOSPITAL SERVICE: Render ALL registered hospitals with live doctors
+  // 1. HOSPITAL SERVICE: Render ALL registered hospitals with live doctors & capability matrix
   if (serviceId === 'hospital') {
     let list = [...liveHospitalsCache];
     if (q) {
@@ -4442,9 +4491,10 @@ function renderServiceDeepExplorer(serviceId, searchQuery = '') {
 
     if (list.length === 0) {
       container.innerHTML = `
-        <div class="service-zero-state">
+        <div class="service-zero-state" style="padding:32px 16px; text-align:center; background:#FFFFFF; border:1px dashed #CBD5E1; border-radius:18px; color:#64748B;">
           <i class="fa-solid fa-hospital" style="font-size:28px; color:#94A3B8; margin-bottom:8px;"></i>
-          <p>No registered hospitals found matching "${q}".<br>All hospital branches registered in the Central Web App appear here automatically.</p>
+          <p style="font-size:13px; font-weight:700; color:#0F172A; margin:0 0 4px;">No registered hospitals found matching "${q}".</p>
+          <p style="font-size:11.5px; color:#64748B; margin:0;">All hospital branches registered in the Central Web App appear here automatically.</p>
         </div>
       `;
       return;
@@ -4452,16 +4502,21 @@ function renderServiceDeepExplorer(serviceId, searchQuery = '') {
 
     container.innerHTML = list.map(h => {
       const phone = h.phone || h.adminPhone || '+91 91443 76971';
+      const hServices = (latestFirebaseServices || []).filter(s => s && s.branchId === h.id && (s.status === 'active' || s.status === '24x7'));
+      const customChips = hServices.length > 0
+        ? hServices.map(s => `🏥 ${s.name}${s.is24x7 ? ' (24x7)' : ''}`)
+        : [
+            '🚑 24x7 Emergency & Trauma Center',
+            '🏨 Modular Operation Theatres',
+            '🛏️ Inpatient Wards & Critical Care',
+            '🧪 NABL Pathology & Central Pharmacy'
+          ];
+
       return renderHospitalBoardCard(h, service, {
         serviceTitle: 'MULTISPECIALITY HOSPITAL',
-        serviceBadge: '24x7 Inpatient & ICU',
+        serviceBadge: `${hServices.length > 0 ? hServices.length + ' Registered Services' : '24x7 Inpatient & ICU'}`,
         serviceIcon: 'fa-hospital',
-        chips: [
-          '🚑 24x7 Emergency & Trauma Center',
-          '🏨 Modular Operation Theatres',
-          '🛏️ Inpatient Wards & Critical Care',
-          '🧪 NABL Pathology & Central Pharmacy'
-        ],
+        chips: customChips,
         showDoctors: true,
         docs: h.doctors || [],
         actionBtnText: 'Book OPD / Refer',
@@ -4473,206 +4528,86 @@ function renderServiceDeepExplorer(serviceId, searchQuery = '') {
     return;
   }
 
-  // 2. PHARMACY SERVICE: Filter hospital facilities with active pharmacy units
-  if (serviceId === 'pharmacy') {
-    let list = [...liveHospitalsCache];
-    if (q) {
-      list = list.filter(h => h.name.toLowerCase().includes(q) || (h.location && h.location.toLowerCase().includes(q)));
-    }
-
-    if (countBadge) countBadge.textContent = `${list.length} Pharmacies Active`;
-
-    if (list.length === 0) {
-      container.innerHTML = `
-        <div class="service-zero-state">
-          <i class="fa-solid fa-prescription-bottle-medical" style="font-size:28px; color:#94A3B8; margin-bottom:8px;"></i>
-          <p>No registered Pharmacy units found in database.<br>When pharmacy departments register via the Central Hospital Web App, they will appear here live.</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = list.map(h => {
-      const phone = h.phone || h.adminPhone || '+91 91443 76971';
-      return renderHospitalBoardCard(h, service, {
-        serviceTitle: '24X7 CENTRAL PHARMACY',
-        serviceBadge: 'Medicine Store & Dispensary',
-        serviceIcon: 'fa-prescription-bottle-medical',
-        chips: [
-          '💉 Critical ICU & Emergency Injections',
-          '🫀 Cardiac & Anti-Hypertensive Drugs',
-          '🩺 Surgical Consumables & Antibiotics',
-          '⚡ 15-Min Doorstep Dispatch Active'
-        ],
-        showDoctors: false,
-        actionBtnText: 'Author Digital Rx',
-        actionBtnIcon: 'fa-prescription',
-        actionBtnOnClick: `closeModal('modal-service-action'); openNewRxModalForCurrent()`,
-        callBtnLabel: `Call Pharmacist: ${phone}`,
-      });
-    }).join('');
-    return;
-  }
-
-  // 3. PATHOLOGY SERVICE: Filter facilities with registered Pathology & Lab
-  if (serviceId === 'pathology-lab' || serviceId === 'pathology') {
-    let list = [...liveHospitalsCache];
-    if (q) {
-      list = list.filter(h => h.name.toLowerCase().includes(q) || (h.location && h.location.toLowerCase().includes(q)));
-    }
-
-    if (countBadge) countBadge.textContent = `${list.length} Diagnostic Labs Active`;
-
-    if (list.length === 0) {
-      container.innerHTML = `
-        <div class="service-zero-state">
-          <i class="fa-solid fa-flask-vial" style="font-size:28px; color:#94A3B8; margin-bottom:8px;"></i>
-          <p>No registered Pathology Labs found in database.<br>When laboratory units register via the Central Hospital Web App, they will appear here live.</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = list.map(h => {
-      const phone = h.phone || h.adminPhone || '+91 91443 76971';
-      return renderHospitalBoardCard(h, service, {
-        serviceTitle: 'PATHOLOGY & CLINICAL LAB',
-        serviceBadge: 'Automated Diagnostic Suite',
-        serviceIcon: 'fa-flask-vial',
-        chips: [
-          '🧪 Automated Biochemistry (LFT, KFT, Lipids)',
-          '🩸 Complete Blood Count (CBC 6-Part Diff)',
-          '🧬 Hormonal Assays, Thyroid & HbA1c',
-          '📜 QR Barcoded Digital Reports (2-4 Hrs)',
-          '🏠 Home Sample Pickup Available'
-        ],
-        showDoctors: false,
-        actionBtnText: 'Book Pathology Test',
-        actionBtnIcon: 'fa-flask-vial',
-        actionBtnOnClick: `closeModal('modal-service-action'); openReferWithHospitalAndService(${h.id}, 'Pathology')`,
-        callBtnLabel: `Call Lab Desk: ${phone}`,
-      });
-    }).join('');
-    return;
-  }
-
-  // 4. INPATIENT & BEDS SERVICE: Filter facilities offering Inpatient Department (IPD) / Wards / ICU Beds
-  if (serviceId === 'inpatient-beds' || serviceId === 'nursing-home') {
-    let list = [...liveHospitalsCache];
-    if (q) {
-      list = list.filter(h => h.name.toLowerCase().includes(q) || (h.location && h.location.toLowerCase().includes(q)));
-    }
-
-    if (countBadge) countBadge.textContent = `${list.length} Inpatient IPD Facilities Live`;
-
-    if (list.length === 0) {
-      container.innerHTML = `
-        <div class="service-zero-state">
-          <i class="fa-solid fa-bed" style="font-size:28px; color:#94A3B8; margin-bottom:8px;"></i>
-          <p>No registered Inpatient IPD facilities found at this moment.<br>New hospital wards and bed allocations will appear here once registered via the Central Hospital Web App.</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = list.map(h => {
-      const phone = h.phone || h.adminPhone || '+91 91443 76971';
-      return renderHospitalBoardCard(h, service, {
-        serviceTitle: 'INPATIENT WARDS & BEDS (IPD)',
-        serviceBadge: 'Deluxe Cabins & Critical ICU',
-        serviceIcon: 'fa-bed',
-        chips: [
-          '🏥 Intensive Care Unit (ICU / CCU Ventilators)',
-          '⭐ Deluxe AC Private & Semi-Private Cabins',
-          '👨‍⚕️ 24x7 RMO Doctor On-Duty & Triage',
-          '🫁 Central Medical Oxygen Pipeline System',
-          '🥗 Post-Surgical Rehab & Clinical Dietetics'
-        ],
-        showDoctors: false,
-        actionBtnText: 'Book Bed / Admission',
-        actionBtnIcon: 'fa-bed',
-        actionBtnOnClick: `closeModal('modal-service-action'); openReferWithHospitalAndService(${h.id}, 'Inpatient')`,
-        callBtnLabel: `Call Admission Desk: ${phone}`,
-      });
-    }).join('');
-    return;
-  }
-
-  // 5. EYE CARE SERVICE: Filter facilities & doctors specializing in Ophthalmology & Vision Care
-  if (serviceId === 'eye-care') {
-    let list = liveHospitalsCache.map(h => {
-      const eyeDocs = (h.doctors || []).filter(d => 
-        (d.specialty && (d.specialty.toLowerCase().includes('eye') || d.specialty.toLowerCase().includes('ophthalm') || d.specialty.toLowerCase().includes('vision') || d.specialty.toLowerCase().includes('surgery'))) ||
-        (d.department && (d.department.toLowerCase().includes('eye') || d.department.toLowerCase().includes('ophthalm')))
-      );
-      return { ...h, eyeDocs };
-    });
-
-    if (q) {
-      list = list.filter(h => h.name.toLowerCase().includes(q) || (h.location && h.location.toLowerCase().includes(q)) || h.eyeDocs.some(d => d.name.toLowerCase().includes(q)));
-    }
-
-    if (countBadge) countBadge.textContent = `${list.length} Eye Centers Live`;
-
-    container.innerHTML = list.map(h => {
-      const phone = h.phone || h.adminPhone || '+91 91443 76971';
-      return renderHospitalBoardCard(h, service, {
-        serviceTitle: 'EYE CARE & VISION CLINIC',
-        serviceBadge: 'Ophthalmology & Surgery',
-        serviceIcon: 'fa-eye',
-        chips: [
-          '🔬 Advanced Micro-Incision Cataract Surgery (MICS)',
-          '👁️ Computerized Retinal Scan & OCT Suite',
-          '👓 Precision Refraction & Glaucoma Laser',
-          '🩺 Pediatric Eye Care & Squint Correction'
-        ],
-        showDoctors: true,
-        docs: h.eyeDocs || [],
-        actionBtnText: 'Book Eye OPD',
-        actionBtnIcon: 'fa-calendar-check',
-        actionBtnOnClick: `closeModal('modal-service-action'); openReferWithHospitalAndDoctor(${h.id}, '')`,
-        callBtnLabel: `Call Eye Desk: ${phone}`,
-      });
-    }).join('');
-    return;
-  }
-
-  // 6. GENERAL MEDICAL SERVICE FALLBACK (Cardiology, Emergency, Dental, Pediatrics, Orthopedics, Radiology, Doctor OPD)
-  let matchedList = liveHospitalsCache.map(h => {
+  // 2. SPECIFIC CLINICAL SERVICES: Directly Interlinked with Central Web App Database
+  // Check which hospitals have published this specific service in real-time
+  let matchedHospitals = liveHospitalsCache.map(h => {
+    const hServices = getHospitalRegisteredServices(h.id, service);
     const matchedDocs = (h.doctors || []).filter(d => {
       const spec = (d.specialty || '').toLowerCase();
       const dept = (d.department || '').toLowerCase();
       const kw = service.keywords || [];
       return kw.some(k => spec.includes(k) || dept.includes(k));
     });
-    return { ...h, matchedDocs };
+    return { ...h, hServices, matchedDocs };
   });
 
+  // Filter ONLY hospitals that provide this service in Central Web App
+  let providingHospitals = matchedHospitals.filter(h => h.hServices.length > 0);
+
   if (q) {
-    matchedList = matchedList.filter(h => h.name.toLowerCase().includes(q) || (h.location && h.location.toLowerCase().includes(q)) || h.matchedDocs.some(d => d.name.toLowerCase().includes(q)));
+    providingHospitals = providingHospitals.filter(h => 
+      h.name.toLowerCase().includes(q) || 
+      (h.location && h.location.toLowerCase().includes(q)) || 
+      h.hServices.some(s => s.name.toLowerCase().includes(q) || (s.department && s.department.toLowerCase().includes(q))) ||
+      h.matchedDocs.some(d => d.name.toLowerCase().includes(q) || d.specialty.toLowerCase().includes(q))
+    );
   }
 
-  if (countBadge) countBadge.textContent = `${matchedList.length} Facilities Live`;
+  if (countBadge) {
+    countBadge.textContent = `${providingHospitals.length} Hospital${providingHospitals.length === 1 ? '' : 's'} Active`;
+  }
 
-  container.innerHTML = matchedList.map(h => {
+  if (providingHospitals.length === 0) {
+    container.innerHTML = `
+      <div class="service-zero-state" style="padding:36px 16px; text-align:center; background:#FFFFFF; border:1.5px dashed #CBD5E1; border-radius:18px; margin-top:8px;">
+        <div style="width:54px; height:54px; border-radius:50%; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:22px;">
+          <i class="fa-solid ${service.watermarkIcon || 'fa-hospital'}"></i>
+        </div>
+        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 6px;">No Hospital Offering "${service.name}" Yet</h4>
+        <p style="font-size:12px; color:#64748B; margin:0; line-height:1.5; max-width:330px; margin:0 auto;">
+          Currently, no hospital branch has published "${service.name}" on the Central Portal.<br>
+          When a hospital receptionist adds this service on the website, it will immediately appear here in real-time.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = providingHospitals.map(h => {
     const phone = h.phone || h.adminPhone || '+91 91443 76971';
+    const primarySrv = h.hServices[0];
     const docs = h.matchedDocs && h.matchedDocs.length > 0 ? h.matchedDocs : (h.doctors || []);
+
+    const serviceChips = [];
+    h.hServices.forEach(s => {
+      if (s.price) serviceChips.push(`💰 ₹${s.price} (${s.name})`);
+      else serviceChips.push(`⭐ ${s.name}`);
+      if (s.timing) serviceChips.push(`⏰ ${s.timing}`);
+      if (s.headDoctorName) serviceChips.push(`👨‍⚕️ Incharge: ${s.headDoctorName}`);
+      if (s.roomNumber) serviceChips.push(`🚪 Room/Unit: ${s.roomNumber}`);
+      if (s.contactNumber) serviceChips.push(`📞 Desk: ${s.contactNumber}`);
+    });
+
+    if (serviceChips.length === 0) {
+      serviceChips.push(
+        `🏥 Registered ${service.name} Unit`,
+        `👨‍⚕️ Board-Certified Specialists`,
+        `⚡ Real-Time Verified on Web Portal`
+      );
+    }
+
     return renderHospitalBoardCard(h, service, {
-      serviceTitle: service.name,
-      serviceBadge: service.departmentKey || 'Clinical Department',
+      serviceTitle: primarySrv.name.toUpperCase(),
+      serviceBadge: primarySrv.department || service.departmentKey || 'Clinical Unit',
       serviceIcon: service.watermarkIcon || 'fa-stethoscope',
-      chips: [
-        `🏥 Dedicated ${service.name} Clinical Wing`,
-        '👨‍⚕️ Board-Certified Super Specialists',
-        '⚡ Fast OPD Token Allocation',
-        '🛡️ Fully Equipped Modern Care Unit'
-      ],
+      chips: serviceChips,
+      statusBadge: primarySrv.is24x7 || primarySrv.status === '24x7' ? '24x7 Active Service' : 'Active Facility',
       showDoctors: docs.length > 0,
       docs: docs,
-      actionBtnText: 'Book Consultation',
-      actionBtnIcon: 'fa-calendar-check',
+      actionBtnText: serviceId === 'pharmacy' ? 'Author Digital Rx' : serviceId === 'pathology-lab' ? 'Book Pathology' : 'Book Consultation / Refer',
+      actionBtnIcon: serviceId === 'pharmacy' ? 'fa-prescription' : 'fa-calendar-check',
       actionBtnOnClick: `closeModal('modal-service-action'); openReferWithHospitalAndDoctor(${h.id}, '')`,
-      callBtnLabel: `Call Desk: ${phone}`,
+      callBtnLabel: `Call Desk: ${primarySrv.contactNumber || phone}`,
     });
   }).join('');
 }

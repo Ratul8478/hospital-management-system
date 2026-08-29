@@ -676,3 +676,27 @@ export const INITIAL_MARKETING_REPRESENTATIVES: MarketingRepresentative[] = [];
 export const INITIAL_MARKETING_JOIN_REQUESTS: MarketingJoinRequest[] = [];
 
 export const INITIAL_MARKETING_EMAIL_LOGS: MarketingEmailDispatchLog[] = [];
+
+export interface HospitalService {
+  id: number;
+  branchId: number;
+  name: string;
+  category: string; // e.g. "Emergency & Trauma", "ICU & Critical Care", "Diagnostics & Imaging", "Pathology & Lab", "OPD & Consultations", "Surgery", "Pharmacy", "Maternity & Child", "Dialysis", "Dental", "Eye Care", "Cardiology", "General"
+  department?: string;
+  description: string;
+  price?: number;
+  priceUnit?: string; // e.g. "Per Consultation", "Per Test", "Per Day", "Starting From", "Fixed", "Free"
+  status: 'active' | 'inactive' | '24x7' | 'available' | 'unavailable';
+  is24x7?: boolean;
+  isEmergency?: boolean;
+  timing?: string; // e.g. "24x7 All Days", "08:00 AM - 08:00 PM"
+  roomOrFloor?: string; // e.g. "Ground Floor, Emergency Wing"
+  contactNumber?: string;
+  icon?: string;
+  createdDate?: string;
+  updatedDate?: string;
+  addedBy?: string; // e.g. "Receptionist"
+}
+
+export const INITIAL_HOSPITAL_SERVICES: HospitalService[] = [];
+

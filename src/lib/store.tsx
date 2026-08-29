@@ -20,6 +20,7 @@ import type {
   AuditLog,
   SuperAdminProfile,
   HospitalReferral,
+  HospitalService,
 } from './data';
 import {
   INITIAL_BRANCHES,
@@ -38,6 +39,7 @@ import {
   INITIAL_AUDIT_LOGS,
   DEFAULT_SUPER_ADMIN_PROFILE,
   INITIAL_HOSPITAL_REFERRALS,
+  INITIAL_HOSPITAL_SERVICES,
 } from './data';
 
 export type UserRole = 
@@ -73,6 +75,10 @@ interface AppContextType {
   addHospitalReferral: (referral: HospitalReferral) => void;
   updateHospitalReferralStatus: (id: string | number, status: HospitalReferral['status'], notes?: string) => void;
   deleteHospitalReferral: (id: string | number) => void;
+  services: HospitalService[];
+  addService: (service: Omit<HospitalService, 'id' | 'createdDate'>) => void;
+  updateService: (id: number, data: Partial<HospitalService>) => void;
+  deleteService: (id: number) => void;
   selectedBranchId: number | 'all';
   setSelectedBranchId: (id: number | 'all') => void;
   userRole: UserRole;
@@ -150,6 +156,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [marketingJoinRequests, setMarketingJoinRequests] = useState<MarketingJoinRequest[]>(INITIAL_MARKETING_JOIN_REQUESTS);
   const [marketingEmailLogs, setMarketingEmailLogs] = useState<MarketingEmailDispatchLog[]>(INITIAL_MARKETING_EMAIL_LOGS);
   const [hospitalReferrals, setHospitalReferrals] = useState<HospitalReferral[]>(INITIAL_HOSPITAL_REFERRALS);
+  const [services, setServices] = useState<HospitalService[]>(INITIAL_HOSPITAL_SERVICES);
   const [doctors, setDoctors] = useState<Doctor[]>(INITIAL_DOCTORS);
   const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
   const [beds, setBeds] = useState<Bed[]>(INITIAL_BEDS);
@@ -172,6 +179,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const toggleMobileSidebar = () => setIsMobileSidebarOpen(prev => !prev);
 
 
+  // Recursively sanitize objects and arrays to remove all undefined values before passing to Firestore
+  function cleanUndefinedDeep<T>(obj: T): T {
+    if (obj === null || obj === undefined) {
+      return null as any;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(item => cleanUndefinedDeep(item)) as any;
+    }
+    if (typeof obj === 'object') {
+      const cleaned: Record<string, any> = {};
+      for (const key of Object.keys(obj as any)) {
+        const val = (obj as any)[key];
+        if (val !== undefined) {
+          cleaned[key] = cleanUndefinedDeep(val);
+        }
+      }
+      return cleaned as any;
+    }
+    return obj;
+  }
+
   // Helper to sync state with Firestore instantly
   function useFirestoreSync<T>(key: string, state: T, setState: React.Dispatch<React.SetStateAction<T>>, initialFallback: T) {
     const lastRemoteStateStr = React.useRef<string>('');
@@ -179,36 +207,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     // Read from Firestore (Real-time listener)
     React.useEffect(() => {
-      const unsub = onSnapshot(doc(db, "medix_realtime_db", key), (snap) => {
-        if (snap.exists()) {
-          const remoteData = snap.data().data;
-          const remoteStr = JSON.stringify(remoteData);
-          lastRemoteStateStr.current = remoteStr;
-          
-          setState((prev: any) => {
-            if (JSON.stringify(prev) === remoteStr) return prev;
-            return remoteData;
-          });
-        } else {
-          // Initialize document if missing with the zero-state fallback
-          const initialStr = JSON.stringify(initialFallback);
-          lastRemoteStateStr.current = initialStr;
-          setDoc(doc(db, "medix_realtime_db", key), { data: initialFallback });
-          setState(initialFallback);
+      const unsub = onSnapshot(
+        doc(db, "medix_realtime_db", key),
+        (snap) => {
+          if (snap.exists()) {
+            const remoteData = snap.data().data;
+            const remoteStr = JSON.stringify(remoteData);
+            lastRemoteStateStr.current = remoteStr;
+            
+            setState((prev: any) => {
+              if (JSON.stringify(prev) === remoteStr) return prev;
+              return remoteData;
+            });
+          } else {
+            // Initialize document if missing with the sanitized fallback
+            const sanitizedInitial = cleanUndefinedDeep(initialFallback);
+            const initialStr = JSON.stringify(sanitizedInitial);
+            lastRemoteStateStr.current = initialStr;
+            setDoc(doc(db, "medix_realtime_db", key), { data: sanitizedInitial }).catch((err) => {
+              console.warn(`[Firestore Init Sync Warning] ${key}:`, err);
+            });
+            setState(sanitizedInitial);
+          }
+          initialized.current = true;
+        },
+        (error) => {
+          console.warn(`[Firestore Realtime Read Warning] ${key}:`, error);
         }
-        initialized.current = true;
-      });
+      );
       return () => unsub();
     }, [key, initialFallback]);
 
     // Write to DB on local changes
     React.useEffect(() => {
       if (!isLoadedRef.current || !initialized.current) return;
-      const localStr = JSON.stringify(state);
+      const sanitized = cleanUndefinedDeep(state);
+      const localStr = JSON.stringify(sanitized);
       if (localStr !== lastRemoteStateStr.current) {
-        // State changed locally, push to Firestore
-        setDoc(doc(db, "medix_realtime_db", key), { data: state });
-        lastRemoteStateStr.current = localStr;
+        // State changed locally, push sanitized data to Firestore
+        setDoc(doc(db, "medix_realtime_db", key), { data: sanitized })
+          .then(() => {
+            lastRemoteStateStr.current = localStr;
+          })
+          .catch((err) => {
+            console.warn(`[Firestore Sync Warning] Failed to update ${key}:`, err);
+          });
       }
     }, [state, key]);
   }
@@ -237,6 +280,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useFirestoreSync('appointments', appointments, setAppointments, INITIAL_APPOINTMENTS);
   useFirestoreSync('auditLogs', auditLogs, setAuditLogs, INITIAL_AUDIT_LOGS);
   useFirestoreSync('hospitalReferrals', hospitalReferrals, setHospitalReferrals, INITIAL_HOSPITAL_REFERRALS);
+  useFirestoreSync('services', services, setServices, INITIAL_HOSPITAL_SERVICES);
 
   // Sync role and landing concept locally (doesn't need cloud sync)
   React.useEffect(() => {
@@ -550,6 +594,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setHospitalReferrals(prev => prev.filter(r => r.id !== id && r.referralId !== id));
   };
 
+  const addService = (newServiceData: Omit<HospitalService, 'id' | 'createdDate'>) => {
+    const newId = services.length > 0 ? Math.max(...services.map(s => Number(s.id))) + 1 : 1;
+    const createdService: HospitalService = {
+      ...newServiceData,
+      id: newId,
+      createdDate: new Date().toISOString().split('T')[0],
+      status: newServiceData.status || 'active',
+    };
+    setServices(prev => [...prev, createdService]);
+  };
+
+  const updateService = (id: number, data: Partial<HospitalService>) => {
+    setServices(prev => prev.map(s => s.id === id ? { ...s, ...data, updatedDate: new Date().toISOString().split('T')[0] } : s));
+  };
+
+  const deleteService = (id: number) => {
+    setServices(prev => prev.filter(s => s.id !== id));
+  };
+
   const updateMarketingRepresentative = (id: number, data: Partial<MarketingRepresentative>) => {
     setMarketingRepresentatives(prev => prev.map(r => r.id === id ? { ...r, ...data } : r));
   };
@@ -769,12 +832,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const reinstateMarketingRepresentative = (repId: number) => {
     setMarketingRepresentatives(prev =>
-      prev.map(r => r.id === repId ? {
-        ...r,
-        status: 'active',
-        firedDate: undefined,
-        firedReason: undefined,
-      } : r)
+      prev.map(r => {
+        if (r.id !== repId) return r;
+        const copy = { ...r, status: 'active' as const };
+        delete copy.firedDate;
+        delete copy.firedReason;
+        return copy;
+      })
     );
   };
 
@@ -905,6 +969,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addHospitalReferral,
         updateHospitalReferralStatus,
         deleteHospitalReferral,
+        services,
+        addService,
+        updateService,
+        deleteService,
         updateMarketingRepresentative,
         deleteMarketingRepresentative,
         isMobileSidebarOpen,

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '@/lib/store';
-import { Doctor, Patient, Appointment, Bed, Medicine, LabRequest, MarketingRepresentative, MarketingJoinRequest, HospitalReferral } from '@/lib/data';
+import { Doctor, Patient, Appointment, Bed, Medicine, LabRequest, MarketingRepresentative, MarketingJoinRequest, HospitalReferral, HospitalService } from '@/lib/data';
 import { Navbar } from '@/components/Navbar';
 import {
   Users,
@@ -99,11 +99,15 @@ export default function ReceptionistHubPage() {
     addHospitalReferral,
     updateHospitalReferralStatus,
     deleteHospitalReferral,
+    services,
+    addService,
+    updateService,
+    deleteService,
   } = useApp();
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<
-    'doctors' | 'patients' | 'appointments' | 'beds' | 'pharmacy' | 'laboratory' | 'marketing' | 'referrals'
+    'doctors' | 'patients' | 'appointments' | 'beds' | 'pharmacy' | 'laboratory' | 'marketing' | 'referrals' | 'services'
   >('doctors');
 
   const [mounted, setMounted] = useState(false);
@@ -179,10 +183,134 @@ export default function ReceptionistHubPage() {
     });
   }, [hospitalReferrals, selectedBranchId, activeBranch]);
 
+  const branchServices = useMemo(() => {
+    if (selectedBranchId === 'all') return services;
+    return services.filter(s => s.branchId === activeBranch.id);
+  }, [services, selectedBranchId, activeBranch]);
+
   // Referral Filter & Viewing States
   const [referralUrgencyFilter, setReferralUrgencyFilter] = useState<'all' | 'EMERGENCY' | 'URGENT' | 'ROUTINE'>('all');
   const [referralStatusFilter, setReferralStatusFilter] = useState<'all' | 'DISPATCHED' | 'ACKNOWLEDGED' | 'ADMITTED'>('all');
   const [viewingReferralSlip, setViewingReferralSlip] = useState<HospitalReferral | null>(null);
+
+  // =========================================================================
+  // 9. HOSPITAL SERVICES MODALS & FORM STATE
+  // =========================================================================
+  const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [editingService, setEditingService] = useState<HospitalService | null>(null);
+  const [deleteServiceConfirmId, setDeleteServiceConfirmId] = useState<number | null>(null);
+  const [serviceCategoryFilter, setServiceCategoryFilter] = useState<string>('all');
+  const [serviceSearchQuery, setServiceSearchQuery] = useState<string>('');
+
+  const [serviceName, setServiceName] = useState('');
+  const [serviceCategory, setServiceCategory] = useState('Emergency & Critical Care');
+  const [serviceDepartment, setServiceDepartment] = useState('Critical Care & ICU');
+  const [serviceDescription, setServiceDescription] = useState('');
+  const [servicePrice, setServicePrice] = useState('');
+  const [servicePriceUnit, setServicePriceUnit] = useState('Per Consultation');
+  const [serviceStatus, setServiceStatus] = useState<'active' | 'inactive' | '24x7' | 'available' | 'unavailable'>('active');
+  const [serviceIs24x7, setServiceIs24x7] = useState(true);
+  const [serviceIsEmergency, setServiceIsEmergency] = useState(false);
+  const [serviceTiming, setServiceTiming] = useState('24x7 All Days');
+  const [serviceRoomOrFloor, setServiceRoomOrFloor] = useState('Ground Floor, Emergency Wing');
+  const [serviceContactNumber, setServiceContactNumber] = useState('');
+
+  const handleOpenAddService = () => {
+    setEditingService(null);
+    setServiceName('');
+    setServiceCategory('Emergency & Critical Care');
+    setServiceDepartment('Critical Care & ICU');
+    setServiceDescription('');
+    setServicePrice('');
+    setServicePriceUnit('Per Consultation');
+    setServiceStatus('active');
+    setServiceIs24x7(true);
+    setServiceIsEmergency(false);
+    setServiceTiming('24x7 All Days');
+    setServiceRoomOrFloor('Ground Floor, Emergency Wing');
+    setServiceContactNumber(activeBranch.adminPhone || '+91 91443 76971');
+    setShowAddServiceModal(true);
+  };
+
+  const handleOpenEditService = (srv: HospitalService) => {
+    setEditingService(srv);
+    setServiceName(srv.name);
+    setServiceCategory(srv.category);
+    setServiceDepartment(srv.department || '');
+    setServiceDescription(srv.description || '');
+    setServicePrice(srv.price !== undefined ? srv.price.toString() : '');
+    setServicePriceUnit(srv.priceUnit || 'Per Consultation');
+    setServiceStatus(srv.status);
+    setServiceIs24x7(srv.is24x7 || srv.status === '24x7');
+    setServiceIsEmergency(srv.isEmergency || false);
+    setServiceTiming(srv.timing || '24x7 All Days');
+    setServiceRoomOrFloor(srv.roomOrFloor || 'Ground Floor');
+    setServiceContactNumber(srv.contactNumber || activeBranch.adminPhone || '+91 91443 76971');
+    setShowAddServiceModal(true);
+  };
+
+  const handleSaveService = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!serviceName.trim()) {
+      showToast('Please enter the service name.', 'error');
+      return;
+    }
+
+    const priceNum = servicePrice.trim() ? parseFloat(servicePrice) : undefined;
+    const finalStatus: HospitalService['status'] = serviceIs24x7 ? '24x7' : serviceStatus;
+
+    if (editingService) {
+      updateService(editingService.id, {
+        name: serviceName.trim(),
+        category: serviceCategory,
+        department: serviceDepartment.trim() || undefined,
+        description: serviceDescription.trim(),
+        price: priceNum,
+        priceUnit: servicePriceUnit,
+        status: finalStatus,
+        is24x7: serviceIs24x7,
+        isEmergency: serviceIsEmergency,
+        timing: serviceTiming.trim(),
+        roomOrFloor: serviceRoomOrFloor.trim(),
+        contactNumber: serviceContactNumber.trim(),
+        addedBy: `Receptionist (${activeBranch.name})`,
+      });
+      showToast(`Service "${serviceName}" updated successfully.`);
+    } else {
+      addService({
+        branchId: activeBranch.id,
+        name: serviceName.trim(),
+        category: serviceCategory,
+        department: serviceDepartment.trim() || undefined,
+        description: serviceDescription.trim(),
+        price: priceNum,
+        priceUnit: servicePriceUnit,
+        status: finalStatus,
+        is24x7: serviceIs24x7,
+        isEmergency: serviceIsEmergency,
+        timing: serviceTiming.trim(),
+        roomOrFloor: serviceRoomOrFloor.trim(),
+        contactNumber: serviceContactNumber.trim(),
+        addedBy: `Receptionist (${activeBranch.name})`,
+      });
+      showToast(`Service "${serviceName}" registered to ${activeBranch.name}.`);
+    }
+
+    setShowAddServiceModal(false);
+  };
+
+  const handleDeleteService = (id: number) => {
+    deleteService(id);
+    setDeleteServiceConfirmId(null);
+    showToast('Service deleted from hospital records.');
+  };
+
+  const handleToggleServiceStatus = (srv: HospitalService) => {
+    const nextStatus: HospitalService['status'] =
+      srv.status === 'active' || srv.status === '24x7' ? 'inactive' : 'active';
+    updateService(srv.id, { status: nextStatus });
+    showToast(`Service status changed to ${nextStatus.toUpperCase()}`);
+  };
 
   // =========================================================================
   // MODAL STATES
@@ -1203,6 +1331,19 @@ export default function ReceptionistHubPage() {
               }`}
             >
               {branchReferrals.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer relative ${
+              activeTab === 'services' ? 'bg-[#046a4e] text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Activity className="w-4 h-4 text-emerald-400" />
+            <span>9. Hospital Services</span>
+            <span className="ml-1 px-2 py-0.5 bg-black/10 rounded-full text-[10px]">
+              {branchServices.length}
             </span>
           </button>
         </div>
@@ -2483,6 +2624,240 @@ export default function ReceptionistHubPage() {
                       </div>
                     );
                   })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 9: HOSPITAL SERVICES & CLINICAL CAPABILITIES */}
+        {/* ========================================================================= */}
+        {activeTab === 'services' && (
+          <div className="space-y-5">
+            {/* Header & Quick Action Banner */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 bg-emerald-50 text-[#046a4e] rounded-2xl border border-emerald-200 shrink-0">
+                  <Activity className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-lg font-black text-slate-900">
+                      Hospital Services & Clinical Matrix
+                    </h2>
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-black rounded-full uppercase tracking-wider">
+                      {activeBranch.name}
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-black rounded-full border border-amber-300">
+                      🔒 Receptionist Authorized Only
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage real-time clinical, diagnostic, ICU, surgery, and emergency services provided by <strong>{activeBranch.name}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons & Counters */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="px-4 py-2 bg-slate-50 rounded-2xl border border-slate-200 text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Services</p>
+                  <p className="text-base font-black text-slate-900">{branchServices.length}</p>
+                </div>
+                <div className="px-4 py-2 bg-emerald-50 rounded-2xl border border-emerald-200 text-center">
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">24x7 Active</p>
+                  <p className="text-base font-black text-emerald-800">
+                    {branchServices.filter(s => s.is24x7 || s.status === '24x7').length}
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenAddService}
+                  className="px-5 py-3 bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs rounded-2xl shadow-lg transition flex items-center gap-2 cursor-pointer shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Add New Service</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filters & Search Toolbar */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={serviceSearchQuery}
+                  onChange={e => setServiceSearchQuery(e.target.value)}
+                  placeholder="Search services by name, department, or description..."
+                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-medium focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                />
+                {serviceSearchQuery && (
+                  <button
+                    onClick={() => setServiceSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-black text-slate-700 mr-1 flex items-center gap-1">
+                  <Filter className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Category:</span>
+                </span>
+                {[
+                  'all',
+                  'Emergency & Critical Care',
+                  'ICU & Inpatient Wards',
+                  'Diagnostics & Imaging',
+                  'Pathology & Labs',
+                  'OPD & Consultations',
+                  'Surgical Specialties',
+                  'Pharmacy & Dispensing',
+                ].map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setServiceCategoryFilter(cat)}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition cursor-pointer ${
+                      serviceCategoryFilter === cat
+                        ? 'bg-[#046a4e] text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {cat === 'all' ? 'All Categories' : cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SERVICES LIST / ZERO-STATE */}
+            {branchServices.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-12 text-center space-y-4 shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 border-2 border-emerald-200 text-[#046a4e] flex items-center justify-center mx-auto shadow-inner">
+                  <Activity className="w-8 h-8" />
+                </div>
+                <div className="max-w-md mx-auto space-y-2">
+                  <h3 className="text-lg font-black text-slate-900">
+                    No Services Registered for {activeBranch.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    This hospital currently has <strong>0 services registered</strong>. Newly onboarded hospitals start with a clean slate without any placeholder or demo data. As the authorized Hospital Receptionist, you can register clinical and emergency services below.
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenAddService}
+                  className="px-6 py-3.5 bg-[#046a4e] hover:bg-[#03523c] text-white font-black text-xs rounded-2xl shadow-xl transition inline-flex items-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Register First Hospital Service</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {branchServices
+                  .filter(s => {
+                    const matchCategory = serviceCategoryFilter === 'all' || s.category.toLowerCase().includes(serviceCategoryFilter.toLowerCase());
+                    const q = serviceSearchQuery.toLowerCase().trim();
+                    const matchQuery = !q || s.name.toLowerCase().includes(q) || (s.department && s.department.toLowerCase().includes(q)) || (s.description && s.description.toLowerCase().includes(q));
+                    return matchCategory && matchQuery;
+                  })
+                  .map(srv => (
+                    <div
+                      key={srv.id}
+                      className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition space-y-4"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-black text-base text-slate-900">{srv.name}</h3>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800">
+                              {srv.category}
+                            </span>
+                            {(srv.is24x7 || srv.status === '24x7') && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-600 text-white flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                                <span>24x7 AVAILABLE</span>
+                              </span>
+                            )}
+                            {srv.isEmergency && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-600 text-white">
+                                🚨 EMERGENCY PRIORITY
+                              </span>
+                            )}
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                                srv.status === 'active' || srv.status === '24x7'
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : 'bg-slate-100 text-slate-500 border border-slate-200'
+                              }`}
+                            >
+                              {srv.status.toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 font-medium mt-1">
+                            {srv.department ? `Department: ${srv.department} • ` : ''}
+                            {srv.roomOrFloor ? `Location: ${srv.roomOrFloor} • ` : ''}
+                            {srv.timing ? `Hours: ${srv.timing}` : '24x7 All Days'}
+                          </p>
+                        </div>
+
+                        {/* Action Buttons for Receptionist */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => handleToggleServiceStatus(srv)}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
+                          >
+                            {srv.status === 'active' || srv.status === '24x7' ? 'Pause Service' : 'Activate Service'}
+                          </button>
+                          <button
+                            onClick={() => handleOpenEditService(srv)}
+                            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer"
+                            title="Edit Service"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteServiceConfirmId(srv.id)}
+                            className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition cursor-pointer"
+                            title="Delete Service"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Description & Pricing Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                        <div className="md:col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Service Scope & Description</p>
+                          <p className="text-slate-700 font-medium leading-relaxed">{srv.description || '24x7 specialized clinical and patient care service.'}</p>
+                          {srv.addedBy && (
+                            <p className="text-[10px] text-slate-400 pt-2 border-t border-slate-200/60 mt-2 font-mono">
+                              👤 Registered by: {srv.addedBy} {srv.createdDate ? `• ${srv.createdDate}` : ''}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-200/70 space-y-2 flex flex-col justify-between">
+                          <div>
+                            <p className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">Pricing & Fees</p>
+                            <p className="text-lg font-black text-slate-900 mt-1">
+                              {srv.price !== undefined ? (
+                                <>₹ {srv.price.toLocaleString('en-IN')} <span className="text-xs font-bold text-slate-500">/ {srv.priceUnit || 'Unit'}</span></>
+                              ) : (
+                                <span className="text-emerald-700">Hospital Free / Subsidized</span>
+                              )}
+                            </p>
+                          </div>
+                          <div className="pt-2 border-t border-emerald-200/60 text-[11px] text-emerald-900 font-bold flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5 text-[#046a4e]" />
+                            <span>Helpline: {srv.contactNumber || activeBranch.adminPhone || '+91 91443 76971'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -4076,6 +4451,263 @@ export default function ReceptionistHubPage() {
               >
                 <Check className="w-4 h-4" />
                 <span>Approve & Issue Marketing ID</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: ADD / EDIT HOSPITAL SERVICE */}
+      {/* ========================================================================= */}
+      {showAddServiceModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-xl border border-slate-200 shadow-2xl space-y-5 relative my-8">
+            <button
+              onClick={() => setShowAddServiceModal(false)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#046a4e] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                {activeBranch.name} • Front Desk Roster
+              </span>
+              <h3 className="font-black text-xl text-slate-900 mt-1">
+                {editingService ? `Edit Service: ${editingService.name}` : `Register New Hospital Service`}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Authorized receptionist portal for defining clinical, emergency, and diagnostic facilities.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveService} className="space-y-4 text-xs font-medium max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
+              {/* Service Name */}
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                  Service / Department Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 24x7 Emergency ICU & Trauma Care, Digital X-Ray, 2D ECHO"
+                  value={serviceName}
+                  onChange={e => setServiceName(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                />
+              </div>
+
+              {/* Category & Department */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                    Service Category *
+                  </label>
+                  <select
+                    value={serviceCategory}
+                    onChange={e => setServiceCategory(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none cursor-pointer"
+                  >
+                    <option value="Emergency & Critical Care">🚨 Emergency & Critical Care</option>
+                    <option value="ICU & Inpatient Wards">🛏️ ICU & Inpatient Wards</option>
+                    <option value="Diagnostics & Imaging">🩻 Diagnostics & Imaging</option>
+                    <option value="Pathology & Labs">🧪 Pathology & Clinical Labs</option>
+                    <option value="Specialist OPD Consultations">🩺 Specialist OPD Consultations</option>
+                    <option value="Surgical Specialties">🔪 Surgical Specialties & OT</option>
+                    <option value="Maternity & Neonatal">👶 Maternity & Child Care</option>
+                    <option value="Cardiology Heart Station">❤️ Cardiology & Heart Station</option>
+                    <option value="Orthopedics & Spine">🦴 Orthopedics & Spine</option>
+                    <option value="Pharmacy & Dispensing">💊 24x7 Pharmacy & POS</option>
+                    <option value="Dialysis & Nephrology">💧 Dialysis Unit</option>
+                    <option value="Ambulance & Transport">🚑 Ambulance & Medical Transport</option>
+                    <option value="Eye & Dental Care">👁️ Eye & Dental Care</option>
+                    <option value="General Healthcare">🏥 General Healthcare</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                    Department / Unit Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Critical Care, Radiology, Cardiology"
+                    value={serviceDepartment}
+                    onChange={e => setServiceDepartment(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Pricing */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                    Price / Starting Fee (₹)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 500 (Leave empty if free/subsidized)"
+                    value={servicePrice}
+                    onChange={e => setServicePrice(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                    Pricing Unit / Basis
+                  </label>
+                  <select
+                    value={servicePriceUnit}
+                    onChange={e => setServicePriceUnit(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none cursor-pointer"
+                  >
+                    <option value="Per Consultation">Per Consultation</option>
+                    <option value="Per Test">Per Test</option>
+                    <option value="Per Day (Bed / Ward)">Per Day (Bed / Ward)</option>
+                    <option value="Per Procedure / Surgery">Per Procedure / Surgery</option>
+                    <option value="Starting From">Starting From</option>
+                    <option value="Fixed Package">Fixed Package</option>
+                    <option value="Free / Subsidized">Free / Subsidized</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Timing & Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                    Operational Hours / Timing
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 24x7 All Days, 08:00 AM - 08:00 PM"
+                    value={serviceTiming}
+                    onChange={e => setServiceTiming(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                    Room / Floor / Wing Location
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ground Floor, Block A / 2nd Floor OT"
+                    value={serviceRoomOrFloor}
+                    onChange={e => setServiceRoomOrFloor(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Contact Helpline */}
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                  Department / Reception Helpline Phone
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. +91 91443 76971 / 033-2558-XXXX"
+                  value={serviceContactNumber}
+                  onChange={e => setServiceContactNumber(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                />
+              </div>
+
+              {/* Toggles */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2.5">
+                <p className="text-[11px] font-black text-slate-800 uppercase tracking-wider">Service Flags & Availability</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2.5 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={serviceIs24x7}
+                      onChange={e => setServiceIs24x7(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#046a4e] focus:ring-[#046a4e] cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-slate-800">24x7 Round-The-Clock</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={serviceIsEmergency}
+                      onChange={e => setServiceIsEmergency(e.target.checked)}
+                      className="w-4 h-4 rounded text-rose-600 focus:ring-rose-600 cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-slate-800">🚨 Emergency Priority</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-xs font-extrabold text-slate-900 block mb-1">
+                  Service Description & Clinical Capabilities
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Describe facilities, equipment, ICU beds, testing technology, or patient guidelines..."
+                  value={serviceDescription}
+                  onChange={e => setServiceDescription(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-medium focus:ring-2 focus:ring-[#046a4e]/20 focus:border-[#046a4e] outline-none"
+                />
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddServiceModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-2 py-3 bg-[#046a4e] hover:bg-[#03523c] text-white font-black rounded-2xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{editingService ? 'Save Changes' : 'Register Service'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: DELETE SERVICE CONFIRMATION */}
+      {/* ========================================================================= */}
+      {deleteServiceConfirmId !== null && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md border border-slate-200 shadow-2xl space-y-4 text-center">
+            <div className="w-14 h-14 rounded-full bg-rose-50 border-2 border-rose-200 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+              <Trash2 className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-slate-900">Delete Hospital Service?</h3>
+              <p className="text-xs text-slate-500">
+                Are you sure you want to remove this service from <strong>{activeBranch.name}</strong>? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setDeleteServiceConfirmId(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteService(deleteServiceConfirmId)}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-md transition cursor-pointer text-xs"
+              >
+                Confirm Delete
               </button>
             </div>
           </div>
