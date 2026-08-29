@@ -53,7 +53,7 @@ export function verifySignedOtpToken(email: string, enteredOtp: string, tokenStr
     const data = `${cleanEmail}:${enteredOtp.trim()}:${expiresAt}`;
     const expectedHmac = crypto.createHmac('sha256', HMAC_SECRET).update(data).digest('hex');
     
-    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expectedHmac));
+    return timingSafeEqual(hmac, expectedHmac);
   } catch (err) {
     return false;
   }

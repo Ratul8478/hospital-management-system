@@ -68,7 +68,7 @@ export function middleware(request: NextRequest) {
 
   // 2. RATE LIMITING FOR API ROUTES
   if (pathname.startsWith('/api/')) {
-    const isAuthRoute = pathname.startsWith('/api/v1/auth/');
+    const isAuthRoute = pathname.startsWith('/api/v1/auth/') || pathname.startsWith('/api/auth/');
     const limiter = isAuthRoute ? authRateLimiter : apiRateLimiter;
     const rateLimit = limiter.check(ip);
 
