@@ -54,11 +54,11 @@ function RegisterPageContent() {
     submitMarketingJoinRequest
   } = useApp();
 
-  // Sub-role within Hospital Admin division - Marketing Man is FIRST / default
+  // Sub-role within registration portal - Hospital Admin is DEFAULT
   const [adminSubRole, setAdminSubRole] = useState<'marketing' | 'branch_admin' | 'doctor' | 'patient' | 'staff'>(
     initialRoleParam && ['branch_admin', 'marketing', 'doctor', 'patient', 'staff'].includes(initialRoleParam)
       ? (initialRoleParam as any)
-      : 'marketing'
+      : 'branch_admin'
   );
 
   // Facility & Branch State for Hospital Admin
@@ -70,8 +70,8 @@ function RegisterPageContent() {
   const [hospitalAddress, setHospitalAddress] = useState('');
   const [bedCapacity, setBedCapacity] = useState('50');
   const [govRegNumber, setGovRegNumber] = useState('');
-  const [selectedBranchId, setSelectedBranchIdState] = useState<number>(1);
-  const [adminRoleTitle, setAdminRoleTitle] = useState('Medical Superintendent / Director');
+  const [selectedBranchId, setSelectedBranchIdState] = useState<number>(2);
+  const [adminRoleTitle, setAdminRoleTitle] = useState('Hospital Admin');
 
   // General registration fields
   const [fullName, setFullName] = useState('');
@@ -657,7 +657,7 @@ function RegisterPageContent() {
                   <div className="p-4 bg-[#f0fdf4] border-2 border-[#046a4e]/40 rounded-2xl space-y-3">
                     <div className="flex items-center gap-2 text-[#046a4e] font-black text-xs uppercase tracking-wider">
                       <Building2 className="w-4 h-4 text-emerald-600" />
-                      <span>Select Target Hospital Branch ({branches.length} Available)</span>
+                      <span>Select Target Hospital Branch ({(branches || []).filter(b => b.id !== 1).length} Available)</span>
                     </div>
 
                     <div>
@@ -667,7 +667,7 @@ function RegisterPageContent() {
                         onChange={e => setSelectedBranchIdState(Number(e.target.value))}
                         className="w-full px-4 py-3 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl focus:ring-2 focus:ring-[#046a4e]/20 font-bold outline-none cursor-pointer text-xs"
                       >
-                        {branches.map(b => (
+                        {(branches || []).filter(b => b.id !== 1).map(b => (
                           <option key={b.id} value={b.id}>
                             🏥 {b.name} ({b.code}) — {b.location} [Current Admin: {b.adminName}]
                           </option>
@@ -683,13 +683,12 @@ function RegisterPageContent() {
                   <input
                     type="text"
                     required
-                    value={adminRoleTitle}
-                    onChange={e => setAdminRoleTitle(e.target.value)}
-                    placeholder="e.g. Medical Superintendent / Director"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-bold rounded-xl outline-none text-xs"
+                    readOnly
+                    value="Hospital Admin"
+                    className="w-full px-3.5 py-2.5 bg-slate-100 border border-[#d1fae5] text-[#062c21] font-bold rounded-xl outline-none text-xs cursor-not-allowed select-none"
                   />
                   <p className="text-[10px] text-emerald-700 mt-1 font-semibold">
-                    * The administrator credentials filled below will have full management control over this hospital's dashboard.
+                    * The administrator credentials filled below will have full management control over this hospital&apos;s dashboard.
                   </p>
                 </div>
 
