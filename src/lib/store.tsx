@@ -119,9 +119,7 @@ interface AppContextType {
   deleteDoctor: (id: number) => void;
   addPatient: (patient: Omit<Patient, 'id'>) => void;
   updatePatient: (id: number, data: Partial<Patient>) => void;
-  deletePatient: (id: number) => void;
-  addBranch: (newBranch: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'>) => void;
-  updateBranch: (id: number, data: Partial<Branch>) => void;
+  addBranch: (newBranch: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'> & { bedOccupancy?: string }) => Branch;
   deleteBranch: (id: number) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'tokenNumber'>) => void;
   updateAppointment: (id: number, data: Partial<Appointment>) => void;
@@ -167,7 +165,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   const [selectedBranchId, setSelectedBranchId] = useState<number | 'all'>('all');
   const [userRole, setUserRole] = useState<UserRole>('super_admin');
-  const [selectedLandingConceptId, setSelectedLandingConceptIdState] = useState<number>(7);
+  const [selectedLandingConceptId, setSelectedLandingConceptIdState] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('medix_landing_concept');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 15) return parsed;
+      }
+    }
+    return 7;
+  });
   const setSelectedLandingConceptId = (id: number) => {
     setSelectedLandingConceptIdState(id);
     if (typeof window !== 'undefined') {
@@ -240,20 +247,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return () => unsub();
     }, [key]);
 
-    // Write to DB on local changes
+    // Write to DB on local changes (Debounced to batch rapid state mutations)
     React.useEffect(() => {
       if (!isLoadedRef.current || !initialized.current) return;
       const sanitized = cleanUndefinedDeep(state);
       const localStr = JSON.stringify(sanitized);
       if (localStr !== lastRemoteStateStr.current) {
-        // State changed locally, push sanitized data to Firestore
-        setDoc(doc(db, "medix_realtime_db", key), { data: sanitized })
-          .then(() => {
-            lastRemoteStateStr.current = localStr;
-          })
-          .catch((err) => {
-            console.warn(`[Firestore Sync Warning] Failed to update ${key}:`, err);
-          });
+        const handler = setTimeout(() => {
+          setDoc(doc(db, "medix_realtime_db", key), { data: sanitized })
+            .then(() => {
+              lastRemoteStateStr.current = localStr;
+            })
+            .catch((err) => {
+              console.warn(`[Firestore Sync Warning] Failed to update ${key}:`, err);
+            });
+        }, 300);
+        return () => clearTimeout(handler);
       }
     }, [state, key]);
   }
@@ -465,7 +474,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPatients(prev => prev.filter(p => p.id !== id));
   };
 
-  const addBranch = (newBranchData: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'>) => {
+  const addBranch = (newBranchData: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'> & { bedOccupancy?: string }): Branch => {
     const newId = branches.length > 0 ? Math.max(...branches.map(b => b.id)) + 1 : 1;
     const createdBranch: Branch = {
       ...newBranchData,
@@ -473,7 +482,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: 'active',
       revenue: 0.0,
       patientCount: 0,
-      bedOccupancy: '0 / 0 Occupied',
+      bedOccupancy: newBranchData.bedOccupancy || '0 / 50 Occupied',
     };
     setBranches(prev => [...prev, createdBranch]);
 
@@ -488,13 +497,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           branchName: newBranchData.name,
           name: newBranchData.adminName,
           email: newBranchData.adminEmail,
-          phone: '+91 9804222142',
+          phone: newBranchData.adminPhone || '+91 9804222142',
           status: 'active',
           assignedDate: new Date().toISOString().split('T')[0],
-          roleTitle: 'Branch Central Admin',
+          roleTitle: newBranchData.branchHead || 'Hospital Administrator',
         },
       ]);
     }
+
+    return createdBranch;
   };
 
   const updateBranch = (id: number, data: Partial<Branch>) => {
@@ -668,8 +679,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetBranchId = Number(targetReq.targetBranchId) || 1;
     const branchObj = branches.find(b => b.id === targetBranchId) || branches[0];
     const finalSuperAdmin = superAdminName || 'Anichul Haque (Super Admin HQ)';
-    const randomSuffix = Date.now().toString().slice(-4);
-    const generatedRefId = `REF-MKT-B${targetBranchId}-${randomSuffix}`;
+    const refSuffix = String(targetReqId).padStart(4, '0');
+    const generatedRefId = `REF-MKT-B${targetBranchId}-${refSuffix}`;
     const approvalDate = new Date().toISOString().split('T')[0];
 
     const targetBranchCode = targetReq.targetBranchCode || branchObj?.code || `B-${targetBranchId}`;

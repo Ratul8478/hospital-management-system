@@ -61,9 +61,16 @@ function RegisterPageContent() {
   );
 
   // Facility & Branch State for Hospital Admin
-  const [facilityType, setFacilityType] = useState<'Hospital' | 'Nursing Home' | 'Diagnostic Center'>('Hospital');
+  const [isNewHospitalRegistration, setIsNewHospitalRegistration] = useState(true);
+  const [hospitalName, setHospitalName] = useState('');
+  const [facilityType, setFacilityType] = useState<'Hospital' | 'Nursing Home' | 'Diagnostic Center' | 'Super-Specialty Center' | 'Maternity Hospital'>('Hospital');
+  const [branchCode, setBranchCode] = useState('');
+  const [hospitalLocation, setHospitalLocation] = useState('');
+  const [hospitalAddress, setHospitalAddress] = useState('');
+  const [bedCapacity, setBedCapacity] = useState('50');
+  const [govRegNumber, setGovRegNumber] = useState('');
   const [selectedBranchId, setSelectedBranchIdState] = useState<number>(1);
-  const [adminRoleTitle, setAdminRoleTitle] = useState('Branch Central Administrator');
+  const [adminRoleTitle, setAdminRoleTitle] = useState('Medical Superintendent / Director');
 
   // General registration fields
   const [fullName, setFullName] = useState('');
@@ -251,21 +258,60 @@ function RegisterPageContent() {
       const targetBranch = branches.find(b => b.id === selectedBranchId) || branches[0];
 
       if (adminSubRole === 'branch_admin') {
-        addBranchAdmin({
-          branchId: targetBranch.id,
-          branchCode: targetBranch.code,
-          branchName: targetBranch.name,
-          name: fullName,
-          email: email,
-          phone: phone || '+91 98200 11223',
-          status: 'active',
-          roleTitle: adminRoleTitle || 'Branch Central Administrator',
-        });
-        hireAdmin(targetBranch.id, fullName, email, phone);
-        setUserRole('branch_admin');
-        setSelectedBranchId(targetBranch.id);
-        setSuccessMsg(`🏥 Hospital Admin registered for ${targetBranch.name} (${targetBranch.code})! The dedicated Marketing Suite is active on your dashboard.`);
-        setTimeout(() => router.push('/dashboard/branch-admin'), 1300);
+        if (isNewHospitalRegistration) {
+          if (!hospitalName.trim()) {
+            setError('Please enter the Hospital / Facility Legal Name.');
+            return;
+          }
+          if (!fullName.trim()) {
+            setError('Hospital Administrator Full Name is mandatory.');
+            return;
+          }
+          if (!email.trim()) {
+            setError('Hospital Administrator Official Email is mandatory.');
+            return;
+          }
+
+          const autoCode = branchCode.trim() || hospitalName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || `HOSP-${Math.floor(100 + Math.random() * 900)}`;
+          const autoGovReg = govRegNumber.trim() || `WB-REG-${Math.floor(100000 + Math.random() * 900000)}`;
+          const locString = hospitalLocation.trim() || 'Kolkata, West Bengal';
+          const addrString = hospitalAddress.trim() || `${locString} Healthcare District`;
+
+          const createdHospital = addBranch({
+            name: hospitalName.trim(),
+            code: autoCode,
+            location: locString,
+            address: addrString,
+            facilityType: facilityType,
+            govRegNumber: autoGovReg,
+            adminName: fullName.trim(),
+            adminEmail: email.trim().toLowerCase(),
+            adminPhone: phone.trim() || '+91 9804222142',
+            bedOccupancy: `0 / ${bedCapacity || 50} Occupied`,
+            branchHead: adminRoleTitle || 'Medical Superintendent / Director',
+          });
+
+          setSelectedBranchId(createdHospital.id);
+          setUserRole('branch_admin');
+          setSuccessMsg(`🏥 Hospital "${createdHospital.name}" (${createdHospital.code}) registered successfully! Administrator "${fullName.trim()}" profile activated. Redirecting to your personal Hospital Dashboard...`);
+          setTimeout(() => router.push('/dashboard/branch-admin'), 1300);
+        } else {
+          addBranchAdmin({
+            branchId: targetBranch.id,
+            branchCode: targetBranch.code,
+            branchName: targetBranch.name,
+            name: fullName,
+            email: email,
+            phone: phone || '+91 98200 11223',
+            status: 'active',
+            roleTitle: adminRoleTitle || 'Medical Superintendent / Director',
+          });
+          hireAdmin(targetBranch.id, fullName, email, phone);
+          setUserRole('branch_admin');
+          setSelectedBranchId(targetBranch.id);
+          setSuccessMsg(`🏥 Hospital Admin registered for ${targetBranch.name} (${targetBranch.code})! Administrator "${fullName}" assigned to dashboard.`);
+          setTimeout(() => router.push('/dashboard/branch-admin'), 1300);
+        }
 
       } else if (adminSubRole === 'marketing') {
         // MARKETING MAN REGISTRATION
@@ -369,12 +415,17 @@ function RegisterPageContent() {
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-[#062c21] tracking-tight leading-tight">
-          Hospital, Admin & Marketing Registration
+          Hospital & Healthcare Facility Registration
         </h1>
 
-        <p className="text-sm sm:text-base text-[#046a4e] max-w-xl mx-auto font-medium leading-relaxed">
-          Select <strong className="text-[#062c21]">Super Admin</strong> (HQ Master Hospital) or <strong className="text-[#062c21]">Hospital Admin</strong> (Facility Admin, Marketing Force, Doctor, Patient, Staff).
+        <p className="text-sm sm:text-base text-[#046a4e] max-w-2xl mx-auto font-medium leading-relaxed">
+          Register your <strong className="text-[#062c21]">Hospital, Nursing Home, or Diagnostic Center</strong> along with its <strong className="text-[#062c21]">Mandatory Hospital Administrator</strong> to activate your isolated hospital dashboard.
         </p>
+
+        <div className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white px-3 py-1.5 rounded-xl border border-[#d1fae5] mt-1 shadow-xs">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>Super Admin HQ is already pre-configured. Super Admins access directly via Super Admin 2FA Login button.</span>
+        </div>
       </section>
 
       {/* MAIN REGISTRATION CARD */}
@@ -412,8 +463,8 @@ function RegisterPageContent() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-bold">
               {[
+                { id: 'branch_admin', icon: Building2, label: '🏬 Hospital & Admin Register', badge: 'New / Existing Facility' },
                 { id: 'marketing', icon: Share2, label: '📢 Marketing Man (Field Partner)', badge: 'Direct Super Admin HQ Link' },
-                { id: 'branch_admin', icon: Building2, label: '🏬 Hospital Admin', badge: 'Branch Operations' },
                 { id: 'doctor', icon: Stethoscope, label: '🩺 Doctor / Consultant', badge: 'OPD Queue' },
                 { id: 'patient', icon: Users, label: '👤 Patient Register', badge: 'Universal UHID' },
                 { id: 'staff', icon: Briefcase, label: '💼 Dept Staff', badge: 'Pharmacy/Lab' },
@@ -467,60 +518,180 @@ function RegisterPageContent() {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs font-medium">
 
             {/* ========================================================================= */}
-            {/* 1. HOSPITAL ADMIN (BRANCH ADMIN) SPECIFIC FIELDS */}
+            {/* 1. HOSPITAL & ADMINISTRATOR REGISTRATION FORM */}
             {/* ========================================================================= */}
             {adminSubRole === 'branch_admin' && (
-              <div className="p-4 bg-[#f0fdf4] border-2 border-[#046a4e]/40 rounded-2xl space-y-3">
-                <div className="flex items-center gap-2 text-[#046a4e] font-black text-xs uppercase tracking-wider">
-                  <Building2 className="w-4 h-4 text-emerald-600" />
-                  <span>Target Individual Hospital Assignment</span>
-                </div>
-
-                <div>
-                  <label className="block font-extrabold text-[#062c21] mb-1">Select Hospital Branch ({branches.length} Available)</label>
-                  <select
-                    value={selectedBranchId}
-                    onChange={e => setSelectedBranchIdState(Number(e.target.value))}
-                    className="w-full px-4 py-3 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl focus:ring-2 focus:ring-[#046a4e]/20 font-bold outline-none cursor-pointer"
-                  >
-                    {branches.map(b => (
-                      <option key={b.id} value={b.id}>
-                        🏥 {b.name} ({b.code}) — {b.location} [Admin: {b.adminName}]
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-extrabold text-[#062c21] mb-1">Admin Role Designation</label>
-                    <input
-                      type="text"
-                      required
-                      value={adminRoleTitle}
-                      onChange={e => setAdminRoleTitle(e.target.value)}
-                      placeholder="Branch Central Administrator"
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-bold rounded-xl outline-none text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-extrabold text-[#062c21] mb-1">Facility Category</label>
-                    <select
-                      value={facilityType}
-                      onChange={e => setFacilityType(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-bold rounded-xl outline-none text-xs cursor-pointer"
+              <div className="space-y-4">
+                
+                {/* MODE TOGGLE: REGISTER NEW HOSPITAL vs ASSIGN TO EXISTING */}
+                <div className="p-3 bg-[#f0fdf4] border border-[#a7f3d0] rounded-2xl flex items-center justify-between gap-3">
+                  <span className="text-xs font-black text-[#046a4e]">Registration Type:</span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsNewHospitalRegistration(true)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isNewHospitalRegistration
+                          ? 'bg-[#046a4e] text-white shadow-xs'
+                          : 'bg-white border border-[#d1fae5] text-[#062c21] hover:bg-[#d1fae5]/50'
+                      }`}
                     >
-                      <option value="Hospital">Hospital</option>
-                      <option value="Nursing Home">Nursing Home</option>
-                      <option value="Diagnostic Center">Diagnostic Center</option>
-                    </select>
+                      🏥 Register New Hospital
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsNewHospitalRegistration(false)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        !isNewHospitalRegistration
+                          ? 'bg-[#046a4e] text-white shadow-xs'
+                          : 'bg-white border border-[#d1fae5] text-[#062c21] hover:bg-[#d1fae5]/50'
+                      }`}
+                    >
+                      🏬 Join Existing Branch
+                    </button>
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#046a4e] text-[11px] font-bold flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Includes built-in Marketing Hub to review field marketing applicants and recommend them to Super Admin.</span>
+                {isNewHospitalRegistration ? (
+                  /* REGISTER BRAND NEW HOSPITAL FACILITY */
+                  <div className="p-4 bg-[#f0fdf4] border-2 border-[#046a4e]/40 rounded-2xl space-y-3.5">
+                    <div className="flex items-center gap-2 text-[#046a4e] font-black text-xs uppercase tracking-wider">
+                      <Building2 className="w-4 h-4 text-emerald-600" />
+                      <span>New Hospital / Healthcare Facility Information</span>
+                    </div>
+
+                    <div>
+                      <label className="block font-extrabold text-[#062c21] mb-1">Hospital / Clinic Legal Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Apex Multispeciality Hospital & Research Center"
+                        value={hospitalName}
+                        onChange={e => setHospitalName(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-[#d1fae5] text-[#062c21] font-bold rounded-xl focus:ring-2 focus:ring-[#046a4e]/20 outline-none text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-extrabold text-[#062c21] mb-1">Facility Category *</label>
+                        <select
+                          value={facilityType}
+                          onChange={e => setFacilityType(e.target.value as any)}
+                          className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-bold rounded-xl outline-none text-xs cursor-pointer"
+                        >
+                          <option value="Hospital">Multispeciality Hospital</option>
+                          <option value="Nursing Home">Nursing Home & Clinic</option>
+                          <option value="Diagnostic Center">Diagnostic & Imaging Center</option>
+                          <option value="Super-Specialty Center">Super-Specialty Institute</option>
+                          <option value="Maternity Hospital">Maternity & Child Care</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-extrabold text-[#062c21] mb-1">Branch / Facility Code</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. APEX-KOL (Auto-generated if empty)"
+                          value={branchCode}
+                          onChange={e => setBranchCode(e.target.value.toUpperCase())}
+                          className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-mono font-bold rounded-xl outline-none text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-extrabold text-[#062c21] mb-1">City / District & State *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Kolkata, West Bengal"
+                          value={hospitalLocation}
+                          onChange={e => setHospitalLocation(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-bold rounded-xl outline-none text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-extrabold text-[#062c21] mb-1">Total Bed Capacity</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 100"
+                          value={bedCapacity}
+                          onChange={e => setBedCapacity(e.target.value)}
+                          className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-mono font-bold rounded-xl outline-none text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-extrabold text-[#062c21] mb-1">Full Physical Street Address *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Plot 14, Sector V, Salt Lake City, Kolkata - 700091"
+                        value={hospitalAddress}
+                        onChange={e => setHospitalAddress(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-medium rounded-xl outline-none text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-extrabold text-[#062c21] mb-1">Govt Clinical Establishment / License No.</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. WB/CE/2026/89421 (Optional, auto-generated)"
+                        value={govRegNumber}
+                        onChange={e => setGovRegNumber(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-mono rounded-xl outline-none text-xs"
+                      />
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#046a4e] text-[11px] font-bold flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>This hospital will be registered and your administrator profile will be assigned to its dashboard.</span>
+                    </div>
+                  </div>
+                ) : (
+                  /* JOIN EXISTING HOSPITAL BRANCH */
+                  <div className="p-4 bg-[#f0fdf4] border-2 border-[#046a4e]/40 rounded-2xl space-y-3">
+                    <div className="flex items-center gap-2 text-[#046a4e] font-black text-xs uppercase tracking-wider">
+                      <Building2 className="w-4 h-4 text-emerald-600" />
+                      <span>Select Target Hospital Branch ({branches.length} Available)</span>
+                    </div>
+
+                    <div>
+                      <label className="block font-extrabold text-[#062c21] mb-1">Select Hospital Branch</label>
+                      <select
+                        value={selectedBranchId}
+                        onChange={e => setSelectedBranchIdState(Number(e.target.value))}
+                        className="w-full px-4 py-3 bg-white border border-[#d1fae5] text-[#062c21] rounded-xl focus:ring-2 focus:ring-[#046a4e]/20 font-bold outline-none cursor-pointer text-xs"
+                      >
+                        {branches.map(b => (
+                          <option key={b.id} value={b.id}>
+                            🏥 {b.name} ({b.code}) — {b.location} [Current Admin: {b.adminName}]
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* MANDATORY HOSPITAL ADMINISTRATOR DESIGNATION */}
+                <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-2xl">
+                  <label className="block font-extrabold text-[#062c21] mb-1">Administrator Designation / Role Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={adminRoleTitle}
+                    onChange={e => setAdminRoleTitle(e.target.value)}
+                    placeholder="e.g. Medical Superintendent / Director"
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#d1fae5] text-[#062c21] font-bold rounded-xl outline-none text-xs"
+                  />
+                  <p className="text-[10px] text-emerald-700 mt-1 font-semibold">
+                    * The administrator credentials filled below will have full management control over this hospital's dashboard.
+                  </p>
                 </div>
+
               </div>
             )}
 
