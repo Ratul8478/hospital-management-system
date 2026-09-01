@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { detectSuspiciousPayload } from '@/lib/security';
 import ConceptHeader from '@/components/landing-concepts/ConceptHeader';
-import SuperAdminModal from '@/components/SuperAdminModal';
 
 function LoginPageContent() {
   const router = useRouter();
@@ -40,7 +39,6 @@ function LoginPageContent() {
   const [loginReferenceId, setLoginReferenceId] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginRole, setLoginRole] = useState<'branch_admin' | 'receptionist' | 'marketing' | 'doctor' | 'patient' | 'accountant' | 'pharmacist' | 'lab_technician' | 'franchise_partner'>('branch_admin');
-  const [showSuperAdminModal, setShowSuperAdminModal] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -396,31 +394,8 @@ function LoginPageContent() {
             </button>
           </form>
 
-          {/* DEDICATED SUPER ADMIN SECURE 2FA ACCESS */}
-          <div className="pt-2 border-t border-[#d1fae5]">
-            <div className="p-4 bg-gradient-to-r from-amber-50 via-amber-100/70 to-amber-50 border-2 border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-1.5 text-xs font-black text-amber-950">
-                  <Crown className="w-4 h-4 text-amber-700" />
-                  <span>Super Admin Master Access</span>
-                </div>
-                <p className="text-[11px] text-amber-900 font-medium">
-                  Headquarters master control requires 2-Factor OTP verification.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSuperAdminModal(true)}
-                className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-105 shrink-0"
-              >
-                <Crown className="w-3.5 h-3.5" />
-                <span>Super Admin Login</span>
-              </button>
-            </div>
-          </div>
-
           {/* CROSS NAVIGATION */}
-          <div className="text-center pt-2">
+          <div className="text-center pt-4 border-t border-[#d1fae5]">
             <p className="text-xs text-[#046a4e] font-medium">
               Don&apos;t have an account?{' '}
               <Link
@@ -439,14 +414,6 @@ function LoginPageContent() {
       <footer className="mt-16 text-center text-xs text-[#046a4e]">
         © 2026 Medix Hospital System. Soft Pastel Healthcare Portal.
       </footer>
-
-      {/* SUPER ADMIN 2FA OTP MODAL */}
-      <SuperAdminModal
-        isOpen={showSuperAdminModal}
-        onClose={() => setShowSuperAdminModal(false)}
-        initialEmail={loginEmail}
-        initialPassword={loginPassword}
-      />
     </div>
   );
 }
