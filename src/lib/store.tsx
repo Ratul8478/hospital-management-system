@@ -119,7 +119,9 @@ interface AppContextType {
   deleteDoctor: (id: number) => void;
   addPatient: (patient: Omit<Patient, 'id'>) => void;
   updatePatient: (id: number, data: Partial<Patient>) => void;
+  deletePatient: (id: number) => void;
   addBranch: (newBranch: Omit<Branch, 'id' | 'revenue' | 'patientCount' | 'bedOccupancy' | 'status'> & { bedOccupancy?: string }) => Branch;
+  updateBranch: (id: number, data: Partial<Branch>) => void;
   deleteBranch: (id: number) => void;
   addAppointment: (appointment: Omit<Appointment, 'id' | 'tokenNumber'>) => void;
   updateAppointment: (id: number, data: Partial<Appointment>) => void;

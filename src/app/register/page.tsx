@@ -46,6 +46,7 @@ function RegisterPageContent() {
     setUserRole,
     setSelectedBranchId,
     branches,
+    addBranch,
     hireAdmin,
     addBranchAdmin,
     addDoctor,
