@@ -49,3 +49,4 @@ local.properties
 
 # Firebase CLI deploy cache
 .firebase/
+.chrome-audit-resp/

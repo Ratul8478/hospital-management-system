@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
 import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 import { verifyApiRequest } from '@/lib/api-auth';
 
@@ -17,10 +17,20 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('query') || searchParams.get('search') || searchParams.get('q') || undefined;
+    let query = searchParams.get('query') || searchParams.get('search') || searchParams.get('q') || undefined;
     const branchIdParam = searchParams.get('branchId');
     const pageParam = searchParams.get('page');
     const limitParam = searchParams.get('limit');
+
+    // If caller is a patient, restrict query strictly to their own UHID or name
+    if (authResult.role === 'patient') {
+      const userUhid = (authResult as any).uhid || (authResult as any).details?.uhid;
+      if (userUhid) {
+        query = userUhid;
+      } else if (authResult.userName) {
+        query = authResult.userName;
+      }
+    }
 
     const branchId = branchIdParam ? parseInt(branchIdParam, 10) : undefined;
     const page = pageParam ? Math.max(parseInt(pageParam, 10), 1) : 1;
@@ -41,13 +51,17 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err: any) {
-    console.error('Error in /api/v1/patients GET:', err);
-    return apiError(err?.message || 'Failed to search patients directory', 500);
+    return apiServerError('/api/v1/patients GET', err);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'any');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Session required to register patient.', authResult.statusCode || 401);
+    }
+
     let body: any;
     try {
       body = await request.json();
@@ -75,37 +89,57 @@ export async function POST(request: NextRequest) {
       chronicConditions,
     } = sanitizedBody || {};
 
-    if (!name || typeof name !== 'string') {
-      return apiError('Missing required field: name', 422, { field: 'name' });
+    if (!name || typeof name !== 'string' || name.trim().length < 2) {
+      return apiError('Field "name" is required and must be at least 2 characters long.', 422, { field: 'name' });
+    }
+    if (name.trim().length > 100) {
+      return apiError('Field "name" must not exceed 100 characters.', 422, { field: 'name' });
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const generatedUhid = `UHID-B${branchId || 1}-${todayStr.replace(/-/g, '')}-${crypto.randomInt(1000, 10000)}`;
+    let parsedAge = 35;
+    if (age !== undefined && age !== null) {
+      parsedAge = typeof age === 'number' ? age : parseInt(String(age), 10);
+      if (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 125) {
+        return apiError('Field "age" must be a valid number between 0 and 125.', 422, { field: 'age' });
+      }
+    }
 
-    const newPatient = {
-      id: crypto.randomInt(1000, 10000),
-      branchId: branchId || 1,
-      uhid: generatedUhid,
-      name,
-      age: age || 35,
-      gender: gender || 'Unspecified',
-      bloodGroup: bloodGroup || 'O+',
-      phone: phone || '+91 9804222142',
-      email: email || `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-      condition: condition || 'General OPD Consultation',
-      status: 'opd' as const,
-      address: address || 'Healthcare Enclave',
-      allergies: Array.isArray(allergies) ? allergies : allergies ? [allergies] : ['None documented'],
-      chronicConditions: Array.isArray(chronicConditions) ? chronicConditions : chronicConditions ? [chronicConditions] : ['None'],
-      registeredDate: todayStr,
-    };
+    const validGenders = ['male', 'female', 'other', 'unspecified'];
+    const normGender = gender ? String(gender).trim().toLowerCase() : 'unspecified';
+    if (gender && !validGenders.includes(normGender)) {
+      return apiError('Field "gender" must be one of: Male, Female, Other, Unspecified.', 422, { field: 'gender' });
+    }
+    const formattedGender = normGender.charAt(0).toUpperCase() + normGender.slice(1);
 
-    return apiSuccess(newPatient, {
+    const validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
+    const formattedBloodGroup = bloodGroup ? String(bloodGroup).trim().toUpperCase() : 'Unknown';
+
+    const effectiveBranchId = branchId ? parseInt(String(branchId), 10) : 1;
+
+    // Check duplicate patient
+    const existingPatients = backendStore.getPatients();
+    const isDuplicate = existingPatients.some(
+      (p) => p.name.toLowerCase() === name.trim().toLowerCase() && p.phone === (phone ? String(phone).trim() : '') && p.branchId === effectiveBranchId
+    );
+    if (isDuplicate) {
+      return apiError(`Patient "${name.trim()}" with phone "${phone}" is already registered.`, 409);
+    }
+
+    const registered = backendStore.getOrCreatePatient({
+      name: name.trim(),
+      phone: phone ? String(phone).trim() : undefined,
+      age: parsedAge,
+      gender: formattedGender,
+      branchId: effectiveBranchId,
+      condition: condition ? String(condition).trim() : 'General OPD Consultation',
+    });
+
+    return apiSuccess(registered, {
       status: 201,
-      message: `Patient ${name} registered successfully with UHID ${generatedUhid}`,
+      message: `Patient ${registered.name} registered successfully with UHID ${registered.uhid}`,
     });
   } catch (err: any) {
-    console.error('Error in /api/v1/patients POST:', err);
-    return apiError(err?.message || 'Failed to register patient', 500);
+    return apiServerError('/api/v1/patients POST', err);
   }
 }
+

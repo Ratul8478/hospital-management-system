@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
-import { detectSuspiciousPayload } from '@/lib/security';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
+import { validateRequiredString, validatePassword } from '@/lib/validation';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -13,76 +13,71 @@ export async function POST(request: NextRequest) {
     try {
       body = await request.json();
     } catch {
-      return apiError('Invalid JSON payload in request body', 400);
+      return apiError('Invalid JSON payload in request body', 'MALFORMED_JSON', 400);
     }
 
-    const { email, identifier, username, password } = body || {};
-    const rawIdentifier = email || identifier || username;
+    const { email, identifier, username, phone, password, role } = body || {};
+    const rawIdentifier = email || identifier || username || phone;
 
-    if (!rawIdentifier || typeof rawIdentifier !== 'string') {
-      return apiError('Missing required field: email or identifier', 422, {
-        field: 'email',
-        message: 'A valid email or username is required for login',
-      });
+    const idVal = validateRequiredString(rawIdentifier, 'Email or mobile number', 1, 254);
+    if (!idVal.isValid) {
+      return apiError(idVal.error!, idVal.code, idVal.code === 'FIREWALL_SECURITY_ALERT' ? 400 : 422);
     }
 
-    // Security Check: Block injection attacks & malicious payloads
-    const threatCheck = detectSuspiciousPayload(rawIdentifier);
-    if (threatCheck.isSuspicious) {
-      return apiError('Malicious input sequence rejected by security engine', 400);
+    const passVal = validatePassword(password, 1);
+    if (!passVal.isValid) {
+      return apiError(passVal.error!, passVal.code, passVal.code === 'FIREWALL_SECURITY_ALERT' ? 400 : 422);
     }
 
-    if (password && typeof password === 'string') {
-      const passThreatCheck = detectSuspiciousPayload(password);
-      if (passThreatCheck.isSuspicious) {
-        return apiError('Malicious input sequence rejected by security engine', 400);
+    const loginIdentifier = idVal.value!.toLowerCase();
+
+    // Authenticate against Unified User Repository
+    const authResult = backendStore.authenticateUserAccount(loginIdentifier, password, role);
+
+    if (!authResult.success) {
+      if (authResult.requiresVerification) {
+        return apiError(
+          authResult.error || 'Your email address is unverified. Please verify your email before signing in.',
+          'EMAIL_UNVERIFIED',
+          403,
+          {
+            requiresVerification: true,
+            email: authResult.email,
+          }
+        );
       }
+
+      return apiError(
+        authResult.error || 'Invalid credentials. Please check your username and password.',
+        'AUTHENTICATION_FAILED',
+        authResult.statusCode || 401
+      );
     }
 
-    const loginIdentifier = rawIdentifier.trim().toLowerCase();
+    const { user, session, permissions } = authResult;
 
-    // Authenticate doctor
-    const result = backendStore.authenticateDoctor(loginIdentifier, password);
-
-    if (!result) {
-      return apiError('Invalid email/credentials. Please check your doctor login details.', 401, {
-        hint: 'Use your registered doctor email or mobile number.',
-      });
-    }
-
-    const { doctor, session } = result;
-
-    return apiSuccess(
-      {
-        token: session.token,
-        tokenType: 'Bearer',
-        expiresAt: session.expiresAt,
-        user: {
-          id: doctor.id,
-          name: doctor.name,
-          email: doctor.email,
-          phone: doctor.phone,
-          specialty: doctor.specialty,
-          department: doctor.department,
-          qualification: doctor.qualification,
-          registrationNumber: doctor.registrationNumber,
-          branchId: doctor.branchId,
-          branchCode: doctor.branchCode,
-          branchName: doctor.branchName,
-          fee: doctor.fee,
-          status: doctor.status,
-          role: doctor.role,
-          avatarUrl: doctor.avatarUrl,
-        },
-        permissions: doctor.permissions,
+    return apiSuccess({
+      token: session!.token,
+      refreshToken: session!.refreshToken,
+      tokenType: 'Bearer',
+      expiresAt: session!.expiresAt,
+      user: {
+        id: user!.id,
+        name: user!.name,
+        email: user!.email,
+        phone: user!.phone,
+        role: user!.role,
+        branchId: user!.branchId,
+        branchCode: user!.branchCode,
+        branchName: user!.branchName,
+        isEmailVerified: user!.isEmailVerified,
+        status: user!.status,
+        details: user!.details,
       },
-      {
-        status: 200,
-        message: `Welcome back, ${doctor.name}! Authentication successful.`,
-      }
-    );
-  } catch (err: any) {
-    console.error('Error in /api/v1/auth/login:', err);
-    return apiError(err?.message || 'Internal server error during authentication', 500);
+      permissions: permissions || [],
+      message: `Welcome back, ${user!.name}! Authentication successful.`,
+    });
+  } catch (err) {
+    return apiServerError(err);
   }
 }

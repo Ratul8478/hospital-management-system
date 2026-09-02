@@ -1,13 +1,17 @@
 package com.hms.doctor
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -24,6 +28,21 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private var webView: WebView? = null
+    private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
+
+    private val fileChooserLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val intent = result.data
+            val uris = WebChromeClient.FileChooserParams.parseResult(result.resultCode, intent)
+                ?: intent?.data?.let { arrayOf(it) }
+            fileChooserCallback?.onReceiveValue(uris)
+        } else {
+            fileChooserCallback?.onReceiveValue(null)
+        }
+        fileChooserCallback = null
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,22 +87,22 @@ class MainActivity : ComponentActivity() {
                             allowFileAccess = true
                             allowContentAccess = true
                             @Suppress("DEPRECATION")
-                            allowFileAccessFromFileURLs = true
+                            allowFileAccessFromFileURLs = false
                             @Suppress("DEPRECATION")
-                            allowUniversalAccessFromFileURLs = true
+                            allowUniversalAccessFromFileURLs = false
                             loadWithOverviewMode = true
                             useWideViewPort = true
                             builtInZoomControls = false
                             displayZoomControls = false
                             cacheMode = WebSettings.LOAD_DEFAULT
-                            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                         }
                         webViewClient = object : WebViewClient() {
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val url = request?.url?.toString() ?: return false
                                 if (url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:") || url.startsWith("geo:")) {
                                     try {
-                                        val intent = android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse(url))
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse(url))
                                         context.startActivity(intent)
                                         return true
                                     } catch (e: Exception) {
@@ -103,7 +122,30 @@ class MainActivity : ComponentActivity() {
                                 isLoading = false
                             }
                         }
-                        webChromeClient = WebChromeClient()
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onShowFileChooser(
+                                webView: WebView?,
+                                filePathCallback: ValueCallback<Array<Uri>>?,
+                                fileChooserParams: FileChooserParams?
+                            ): Boolean {
+                                fileChooserCallback?.onReceiveValue(null)
+                                fileChooserCallback = filePathCallback
+
+                                val intent = fileChooserParams?.createIntent() ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                                    addCategory(Intent.CATEGORY_OPENABLE)
+                                    type = "image/*"
+                                }
+
+                                return try {
+                                    fileChooserLauncher.launch(intent)
+                                    true
+                                } catch (e: Exception) {
+                                    fileChooserCallback?.onReceiveValue(null)
+                                    fileChooserCallback = null
+                                    false
+                                }
+                            }
+                        }
                         loadUrl("file:///android_asset/medix/index.html")
                         currentWebView = this
                         this@MainActivity.webView = this
@@ -129,6 +171,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        fileChooserCallback?.onReceiveValue(null)
+        fileChooserCallback = null
         webView?.destroy()
         super.onDestroy()
     }

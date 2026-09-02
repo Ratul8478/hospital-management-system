@@ -234,3 +234,117 @@ If you did not request this login code, please secure your account immediately.
     info: `OTP generated for ${to}. To deliver via Gmail inbox, configure GMAIL_APP_PASSWORD in .env.local.`,
   };
 }
+
+export interface SendVerificationEmailParams {
+  to: string;
+  name: string;
+  token: string;
+  role?: string;
+  hospitalName?: string;
+  appBaseUrl?: string;
+}
+
+/**
+ * Send Account Email Verification to newly registered users
+ */
+export async function sendAccountVerificationEmail({
+  to,
+  name,
+  token,
+  role = 'user',
+  hospitalName = 'ARIYAN HOSPITAL MULTISPECIALITY',
+  appBaseUrl = 'http://localhost:3000',
+}: SendVerificationEmailParams): Promise<{
+  success: boolean;
+  messageId?: string;
+  mode: 'real_smtp' | 'console_logged';
+  verificationUrl: string;
+}> {
+  const { transporter, hasCredentials, user } = getTransporter();
+  const fromAddress = process.env.EMAIL_FROM || `"${hospitalName} Verification" <${user}>`;
+  const verificationUrl = `${appBaseUrl}/login?verifyToken=${encodeURIComponent(token)}&email=${encodeURIComponent(to)}`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email - Medix Hospital</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0fdf4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #062c21;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f0fdf4; padding: 24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 24px rgba(4, 106, 78, 0.08); border: 2px solid #a7f3d0; margin: 20px auto;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #022c22 0%, #046a4e 100%); padding: 28px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;">${hospitalName}</h1>
+              <p style="color: #a7f3d0; margin: 6px 0 0 0; font-size: 13px;">Official Account Verification</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px 28px;">
+              <h2 style="font-size: 18px; color: #062c21; margin: 0 0 12px 0;">Welcome, ${name}!</h2>
+              <p style="font-size: 14px; line-height: 1.6; color: #374151; margin: 0 0 20px 0;">
+                Thank you for registering for the <strong>${hospitalName}</strong> portal (${role.replace('_', ' ').toUpperCase()}). Please verify your email address to activate your account and start using our healthcare services.
+              </p>
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${verificationUrl}" style="background-color: #046a4e; color: #ffffff; padding: 14px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 15px; display: inline-block;">
+                  Verify Email Address
+                </a>
+              </div>
+              <p style="font-size: 12px; color: #6b7280; margin: 20px 0 0 0; line-height: 1.5;">
+                Or copy and paste this verification token in the portal: <br/>
+                <code style="background-color: #f3f4f6; padding: 4px 8px; border-radius: 6px; font-size: 13px; color: #111827; font-family: monospace;">${token}</code>
+              </p>
+              <p style="font-size: 12px; color: #9ca3af; margin: 24px 0 0 0;">
+                This link will expire in 24 hours. If you did not create an account, please disregard this email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  if (hasCredentials && transporter) {
+    try {
+      const info = await transporter.sendMail({
+        from: fromAddress,
+        to,
+        subject: `Verify Your Email Address — ${hospitalName}`,
+        text: `Welcome to ${hospitalName}, ${name}!\n\nPlease verify your email by clicking: ${verificationUrl}\n\nToken: ${token}\nExpires in 24 hours.`,
+        html: htmlContent,
+      });
+
+      return {
+        success: true,
+        messageId: info.messageId,
+        mode: 'real_smtp',
+        verificationUrl,
+      };
+    } catch (err: any) {
+      console.error('[SMTP VERIFICATION ERROR]:', err.message);
+    }
+  }
+
+  // Fallback console log for local development
+  console.log('================================================================');
+  console.log('📧 [ACCOUNT EMAIL VERIFICATION DISPATCHED]');
+  console.log(`👤 RECIPIENT: ${name} (${to})`);
+  console.log(`🔑 VERIFICATION TOKEN: ${token}`);
+  console.log(`🔗 VERIFICATION URL: ${verificationUrl}`);
+  console.log(`⏳ VALIDITY: 24 Hours`);
+  console.log('================================================================');
+
+  return {
+    success: true,
+    mode: 'console_logged',
+    verificationUrl,
+  };
+}
+

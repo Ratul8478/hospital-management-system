@@ -11,12 +11,6 @@ const ALLOWED_SUPER_ADMIN_EMAILS = [
   'varshahealth01@gmail.com',
 ];
 
-const ALLOWED_SUPER_ADMIN_PASSWORDS = [
-  'admin@2019',
-  DEFAULT_SUPER_ADMIN_PROFILE.password,
-  'Saanvi@786',
-];
-
 export const dynamic = 'force-dynamic';
 
 export async function OPTIONS() {
@@ -61,23 +55,14 @@ export async function POST(req: Request) {
 
     // 3. Strict Super Admin Credential Check
     const isEmailValid = ALLOWED_SUPER_ADMIN_EMAILS.includes(cleanEmail);
-    const isPasswordValid = ALLOWED_SUPER_ADMIN_PASSWORDS.includes(cleanPassword);
+    const expectedPassword = DEFAULT_SUPER_ADMIN_PROFILE.password || 'admin@2019';
+    const isPasswordValid = cleanPassword === expectedPassword;
 
-    if (!isEmailValid) {
+    if (!isEmailValid || !isPasswordValid) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Authentication Failed: Unrecognized Super Admin email. Please enter "ariyanhospital9@gmail.com".',
-        },
-        { status: 401 }
-      );
-    }
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Authentication Failed: Invalid password for Super Admin. Please enter "admin@2019".',
+          error: 'Authentication Failed: Invalid email or password.',
         },
         { status: 401 }
       );
@@ -94,9 +79,9 @@ export async function POST(req: Request) {
       hospitalName: DEFAULT_SUPER_ADMIN_PROFILE.hospitalName || 'ARIYAN HOSPITAL MULTISPECIALITY',
     });
 
-    const hasRealSmtp = Boolean(
-      process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || process.env.RESEND_API_KEY
-    );
+    if (emailResult.mode !== 'real_smtp') {
+      console.log(`[SUPER ADMIN 2FA OTP] Generated OTP for ${cleanEmail}: ${otp}`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -109,14 +94,13 @@ export async function POST(req: Request) {
       otpToken,
       deliveryMode: emailResult.mode,
       deliveryInfo: emailResult.info,
-      // Always provide the OTP code since real SMTP is not set up yet
-      devOtp: otp,
     });
   } catch (error: any) {
     console.error('[SEND OTP API ERROR]:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error processing OTP request.' },
+      { success: false, error: 'Internal server error processing OTP request.' },
       { status: 500 }
     );
+
   }
 }

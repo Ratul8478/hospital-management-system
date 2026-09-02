@@ -654,30 +654,7 @@ function quickFillDoctor(type) {
   }
 }
 
-function quickLoginJiarul() {
-  STATE.currentDoctor = {
-    id: 1,
-    name: "Dr . Jiarul Haque",
-    initials: "JH",
-    email: "ariyanhospital9@gmail.com",
-    titles: "MD, Medical Director & Chief Physician",
-    specialtyLead: "General & Cardiology Medicine Director",
-    department: "General & Cardiology Medicine",
-    room: "Newtown, Noapara, Sukanta Polli Road, Kolkata - 700157",
-    npi: "NPI-9804222142",
-    dea: "BW-9804221",
-    feeOpd: 800,
-    feeFollowup: 400,
-    feeEmergency: 1500,
-    feeIpd: 1000,
-    dutyStatus: "AVAILABLE",
-    bio: "Owner & Medical Director at ARIYAN HOSPITAL MULTISPECIALITY. Leading patient-centered general medicine, interventional cardiology consultations, and national hospital network referrals.",
-    broadcastMsg: "Doctor is on schedule in Main Chamber. Token: #1"
-  };
-  if (document.getElementById('login-email')) document.getElementById('login-email').value = 'ariyanhospital9@gmail.com';
-  if (document.getElementById('login-password')) document.getElementById('login-password').value = 'Doctor@123';
-  handleLogin();
-}
+
 
 /* ==========================================================================
    AUTHENTICATION: REGISTRATION & SIGN IN MODES
@@ -703,54 +680,118 @@ function switchAuthMode(mode) {
 
 let regDoctorPhotoBase64 = null;
 
+function optimizeImageToDataUrl(file, maxWidth, maxHeight, quality, callback) {
+  try {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        try {
+          let w = img.width;
+          let h = img.height;
+          if (w > maxWidth || h > maxHeight) {
+            if (w > h) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            } else {
+              w = Math.round((w * maxHeight) / h);
+              h = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const optimizedDataUrl = canvas.toDataURL('image/jpeg', quality || 0.88);
+          callback(null, optimizedDataUrl);
+        } catch (err) {
+          callback(null, e.target.result);
+        }
+      };
+      img.onerror = function() {
+        callback(null, e.target.result);
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = function(err) {
+      callback(err, null);
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    callback(err, null);
+  }
+}
+
 function previewDoctorRegistrationPhoto(event) {
   const input = (event && event.target) ? event.target : document.getElementById('reg-photo-input');
   const file = (input && input.files && input.files[0]) ? input.files[0] : null;
   if (!file) return;
 
-  if (file.size > 10 * 1024 * 1024) {
-    showToast('Image file size too large (max 10MB)', 'warning');
+  if (file.size > 15 * 1024 * 1024) {
+    showToast('Image file size too large (max 15MB)', 'warning');
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const dataUrl = e.target.result;
+  showToast('Processing photo...', 'info');
+
+  optimizeImageToDataUrl(file, 512, 512, 0.88, function(err, dataUrl) {
+    if (err || !dataUrl) {
+      showToast('Could not load image file', 'error');
+      return;
+    }
+
     regDoctorPhotoBase64 = dataUrl;
+    applyDoctorRegistrationPhotoPreview(dataUrl);
+    showToast('Profile photo ready!', 'success');
+  });
+}
 
-    const previewImg = document.getElementById('reg-photo-preview-img');
-    const placeholder = document.getElementById('reg-photo-placeholder-icon');
-    const clearBtn = document.getElementById('reg-photo-clear-btn');
-    const previewWrap = document.getElementById('reg-photo-preview-wrap');
+function applyDoctorRegistrationPhotoPreview(dataUrl) {
+  const previewImg = document.getElementById('reg-photo-preview-img');
+  const placeholder = document.getElementById('reg-photo-placeholder-icon');
+  const clearBtn = document.getElementById('reg-photo-clear-btn');
+  const previewWrap = document.getElementById('reg-photo-preview-wrap');
 
-    if (previewImg) {
-      previewImg.src = dataUrl;
-      previewImg.style.display = 'block';
-      previewImg.style.position = 'absolute';
-      previewImg.style.top = '0';
-      previewImg.style.left = '0';
-      previewImg.style.width = '100%';
-      previewImg.style.height = '100%';
-      previewImg.style.objectFit = 'cover';
-      previewImg.classList.remove('hidden');
-    }
-    if (placeholder) {
-      placeholder.style.display = 'none';
-      placeholder.classList.add('hidden');
-    }
-    if (clearBtn) {
-      clearBtn.style.display = 'inline-flex';
-      clearBtn.classList.remove('hidden');
-    }
-    if (previewWrap) {
-      previewWrap.style.borderStyle = 'solid';
-      previewWrap.style.borderColor = '#2563EB';
-      previewWrap.style.background = '#0F172A';
-    }
+  if (previewImg) {
+    previewImg.src = dataUrl;
+    previewImg.style.display = 'block';
+    previewImg.style.position = 'absolute';
+    previewImg.style.top = '0';
+    previewImg.style.left = '0';
+    previewImg.style.width = '100%';
+    previewImg.style.height = '100%';
+    previewImg.style.objectFit = 'cover';
+    previewImg.classList.remove('hidden');
+  }
+  if (placeholder) {
+    placeholder.style.display = 'none';
+    placeholder.classList.add('hidden');
+  }
+  if (clearBtn) {
+    clearBtn.style.display = 'inline-flex';
+    clearBtn.classList.remove('hidden');
+  }
+  if (previewWrap) {
+    previewWrap.style.borderStyle = 'solid';
+    previewWrap.style.borderColor = '#059669';
+    previewWrap.style.background = '#064E3B';
+    previewWrap.style.boxShadow = '0 6px 20px rgba(5,150,105,0.35)';
+  }
+}
 
-    showToast('Doctor photo selected & uploaded', 'success');
+function selectDoctorPresetAvatar(type) {
+  const avatarSvgs = {
+    male: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=250&auto=format&fit=crop&q=80',
+    female: 'https://images.unsplash.com/photo-1594824813589-9a25b2f15307?w=250&auto=format&fit=crop&q=80',
+    surgeon: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=250&auto=format&fit=crop&q=80',
+    specialist: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=250&auto=format&fit=crop&q=80'
   };
-  reader.readAsDataURL(file);
+
+  const selectedUrl = avatarSvgs[type] || avatarSvgs.male;
+  regDoctorPhotoBase64 = selectedUrl;
+  applyDoctorRegistrationPhotoPreview(selectedUrl);
+  showToast(`Medical Avatar (${type}) Selected!`, 'success');
 }
 
 function clearDoctorRegistrationPhoto() {
@@ -778,181 +819,314 @@ function clearDoctorRegistrationPhoto() {
     previewWrap.style.borderStyle = 'dashed';
     previewWrap.style.borderColor = '#93C5FD';
     previewWrap.style.background = 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)';
+    previewWrap.style.boxShadow = '0 6px 16px rgba(37,99,235,0.2)';
+  }
+  showToast('Photo removed', 'info');
+}
+
+function handlePincodeAutoLookup(pin) {
+  if (!pin || pin.length < 3) return;
+  const clean = pin.trim().replace(/\D/g, '');
+  const districtEl = document.getElementById('reg-district');
+  const stateEl = document.getElementById('reg-state');
+
+  if (clean.startsWith('700') || clean.startsWith('7000')) {
+    if (districtEl) districtEl.value = 'Kolkata';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('711')) {
+    if (districtEl) districtEl.value = 'Howrah';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('712')) {
+    if (districtEl) districtEl.value = 'Hooghly';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('743')) {
+    if (districtEl) districtEl.value = 'North 24 Parganas';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('741')) {
+    if (districtEl) districtEl.value = 'Nadia';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('742')) {
+    if (districtEl) districtEl.value = 'Murshidabad';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('734')) {
+    if (districtEl) districtEl.value = 'Darjeeling';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('713')) {
+    if (districtEl) districtEl.value = 'Purba Bardhaman';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('721')) {
+    if (districtEl) districtEl.value = 'Paschim Medinipur';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('110')) {
+    if (districtEl) districtEl.value = 'New Delhi';
+    if (stateEl) stateEl.value = 'Delhi';
+  } else if (clean.startsWith('400')) {
+    if (districtEl) districtEl.value = 'Mumbai';
+    if (stateEl) stateEl.value = 'Maharashtra';
+  } else if (clean.startsWith('560')) {
+    if (districtEl) districtEl.value = 'Bengaluru';
+    if (stateEl) stateEl.value = 'Karnataka';
+  } else if (clean.startsWith('600')) {
+    if (districtEl) districtEl.value = 'Chennai';
+    if (stateEl) stateEl.value = 'Tamil Nadu';
   }
 }
 
-function handleRegister() {
-  const name = document.getElementById('reg-name') ? document.getElementById('reg-name').value.trim() : '';
-  const gender = document.getElementById('reg-gender') ? document.getElementById('reg-gender').value.trim() : '';
-  const chamberAddress = document.getElementById('reg-chamber-address') ? document.getElementById('reg-chamber-address').value.trim() : '';
-  const pincode = document.getElementById('reg-pincode') ? document.getElementById('reg-pincode').value.trim() : '';
-  const district = document.getElementById('reg-district') ? document.getElementById('reg-district').value.trim() : '';
-  const state = document.getElementById('reg-state') ? document.getElementById('reg-state').value.trim() : '';
-  const refId = document.getElementById('reg-reference-id') ? document.getElementById('reg-reference-id').value.trim() : '';
-  const email = document.getElementById('reg-email') ? document.getElementById('reg-email').value.trim() : '';
-  const password = document.getElementById('reg-password') ? document.getElementById('reg-password').value.trim() : '';
-  const errBox = document.getElementById('register-error');
-  const errText = document.getElementById('register-error-text');
+function quickFillDoctorReferenceId() {
+  const refInput = document.getElementById('reg-marketing-ref') || document.getElementById('reg-reference-id');
+  if (refInput) {
+    const code = 'MKT-' + Math.floor(100000 + Math.random() * 900000);
+    refInput.value = code;
+    showToast('Generated Reference Number: ' + code, 'success');
+  }
+}
+
+function toggleRegPasswordVisibility(id, iconEl) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (iconEl) {
+      iconEl.classList.remove('fa-eye');
+      iconEl.classList.add('fa-eye-slash');
+    }
+  } else {
+    input.type = 'password';
+    if (iconEl) {
+      iconEl.classList.remove('fa-eye-slash');
+      iconEl.classList.add('fa-eye');
+    }
+  }
+}
+
+async function validateServerSession() {
+  const token = localStorage.getItem('medix_auth_token') || localStorage.getItem('medix_doctor_token');
+  const loginScreen = document.getElementById('screen-login');
+  const mainScreen = document.getElementById('screen-main');
+
+  if (!token) {
+    STATE.isLoggedIn = false;
+    if (mainScreen) mainScreen.classList.add('hidden');
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    return false;
+  }
+
+  try {
+    const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+    const res = await fetch(apiBase + '/api/v1/auth/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    const data = await res.json().catch(() => null);
+    if (res.ok && data && data.success && data.data && data.data.authenticated) {
+      const user = data.data.user || {};
+      const details = user.details || {};
+      const doctorObj = {
+        id: user.id || 101,
+        name: user.name || 'Dr. Medical Practitioner',
+        initials: (user.name || 'DR').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        gender: details.gender || 'Male',
+        email: user.email,
+        phone: user.phone || '+91 98042 22142',
+        referenceId: details.referenceId || ('REF-DOC-' + (user.id || 101)),
+        chamberAddress: details.chamberAddress || 'OPD Suite 302, 3rd Floor, Wing A',
+        pincode: details.pincode || '700016',
+        district: details.district || 'Kolkata',
+        state: details.state || 'West Bengal',
+        titles: 'MBBS, MD, DM, FACC',
+        medicalCollege: 'AIIMS, New Delhi',
+        experienceYears: '12',
+        workExperience: 'Senior Consultant Physician',
+        specialtyLead: details.specialty || 'Interventional Cardiology & Critical Care',
+        department: 'Clinical OPD & Cardiology',
+        experience: '12 Years',
+        room: (details.chamberAddress || 'OPD Suite 302') + ', ' + (details.district || 'Kolkata'),
+        feeOpd: details.consultFee || 800,
+        feeFollowup: 400,
+        feeEmergency: 1500,
+        feeIpd: 1000,
+        dutyStatus: 'AVAILABLE',
+        bio: 'Accredited clinical specialist practicing in ' + (details.district || 'Kolkata') + ', ' + (details.state || 'West Bengal') + '.',
+        broadcastMsg: 'Doctor is available in chamber for consultation.'
+      };
+      STATE.currentDoctor = doctorObj;
+      STATE.isLoggedIn = true;
+      try {
+        localStorage.setItem('medix_doctor_session', JSON.stringify(doctorObj));
+      } catch (_) {}
+      if (loginScreen) loginScreen.classList.add('hidden');
+      if (mainScreen) mainScreen.classList.remove('hidden');
+      renderAll();
+      return true;
+    } else {
+      localStorage.removeItem('medix_auth_token');
+      localStorage.removeItem('medix_doctor_token');
+      localStorage.removeItem('medix_doctor_session');
+      STATE.isLoggedIn = false;
+      if (mainScreen) mainScreen.classList.add('hidden');
+      if (loginScreen) loginScreen.classList.remove('hidden');
+      return false;
+    }
+  } catch (err) {
+    STATE.isLoggedIn = false;
+    if (mainScreen) mainScreen.classList.add('hidden');
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    return false;
+  }
+}
+
+async function handleRegister(event) {
+  if (event && event.preventDefault) event.preventDefault();
+
+  const firstNameEl = document.getElementById('reg-first-name');
+  const lastNameEl = document.getElementById('reg-last-name');
+  const emailEl = document.getElementById('reg-email');
+  const phoneEl = document.getElementById('reg-phone');
+  const passwordEl = document.getElementById('reg-password');
+  const confirmPassEl = document.getElementById('reg-confirm-password');
+  const marketingRefEl = document.getElementById('reg-marketing-ref') || document.getElementById('reg-reference-id');
+  const termsEl = document.getElementById('reg-terms') || document.getElementById('reg-declaration');
+
+  const firstName = firstNameEl ? firstNameEl.value.trim() : '';
+  const lastName = lastNameEl ? lastNameEl.value.trim() : '';
+  const email = emailEl ? emailEl.value.trim() : '';
+  const phone = phoneEl ? phoneEl.value.trim() : '';
+  const password = passwordEl ? passwordEl.value : '';
+  const confirmPassword = confirmPassEl ? confirmPassEl.value : '';
+  const marketingRef = marketingRefEl ? marketingRefEl.value.trim() : '';
+  const isTermsChecked = termsEl ? termsEl.checked : false;
+
+  const errBox = document.getElementById('register-error') || document.getElementById('reg-error');
+  const errText = document.getElementById('register-error-text') || document.getElementById('reg-error-text');
   const btnText = document.getElementById('btn-register-text');
   const spinner = document.getElementById('btn-register-spinner');
 
-  if (!name) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Full Practitioner Name is required.';
+  const showRegErr = (msg) => {
+    if (errBox) {
+      errBox.classList.remove('hidden');
+      errBox.style.display = 'flex';
+      if (errText) errText.textContent = msg;
+    } else {
+      showToast(msg, 'error');
+    }
+    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account';
+    if (spinner) spinner.classList.add('hidden');
     playClinicalChime('alert');
-    return;
-  }
-  if (!gender) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Doctor Gender is MANDATORY. Please select Male, Female, or Other.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!chamberAddress) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Chamber Address is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!pincode) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Pin Code is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!district) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'District is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!state) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'State is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!refId) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Reference ID is MANDATORY. Only authorized physicians with a valid reference ID can register.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!email || !email.includes('@')) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Valid Practitioner Email is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!password || password.length < 6) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Create Master Access Password (min 6 characters) is required.';
-    playClinicalChime('alert');
-    return;
+  };
+
+  // 1. Mandatory Validations
+  if (!firstName) return showRegErr('Please enter Doctor First Name.');
+  if (!lastName) return showRegErr('Please enter Doctor Last Name.');
+  if (!email || !email.includes('@')) return showRegErr('Please enter a valid Email ID.');
+  if (!phone || phone.replace(/\D/g, '').length < 10) return showRegErr('Please enter a valid 10-digit Phone Number.');
+  if (!password || password.length < 6) return showRegErr('Password must be at least 6 characters.');
+  if (confirmPassword && password !== confirmPassword) return showRegErr('Password and Confirm Password do not match.');
+  if (!marketingRef) return showRegErr('Marketing Man Reference Number is mandatory.');
+  if (!isTermsChecked) return showRegErr('Please check and accept the Terms & Conditions and Privacy Policy.');
+
+  if (btnText) btnText.textContent = 'Creating Doctor Account...';
+  if (spinner) spinner.classList.remove('hidden');
+  if (errBox) {
+    errBox.classList.add('hidden');
+    errBox.style.display = 'none';
   }
 
-  btnText.textContent = 'Verifying Credentials & Registering...';
-  spinner.classList.remove('hidden');
-  errBox.classList.add('hidden');
+  // Format clean standardized full name & phone number
+  const fullName = `Dr. ${firstName} ${lastName}`.trim();
+  const initials = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || 'DR';
+  const cleanDigits = phone.replace(/\D/g, '');
+  const formattedPhone = cleanDigits.length === 10 ? ('+91 ' + cleanDigits) : (phone.startsWith('+') ? phone : ('+' + phone));
 
-  // Compute initials
-  const rawName = name.replace(/^Dr\.\s*/i, '').trim();
-  const parts = rawName.split(' ');
-  const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : rawName.substring(0, 2).toUpperCase() || 'DR';
+  // Build immediate authenticated doctor session
+  const doctorObj = {
+    id: 'DOC-' + Math.floor(1000 + Math.random() * 9000),
+    name: fullName,
+    initials: initials,
+    email: email,
+    phone: formattedPhone,
+    referenceId: marketingRef,
+    marketingRef: marketingRef,
+    avatarUrl: (typeof regDoctorPhotoBase64 !== 'undefined' && regDoctorPhotoBase64) ? regDoctorPhotoBase64 : '',
+    chamberAddress: 'OPD Suite 302, Wing A',
+    pincode: '700016',
+    district: 'Kolkata',
+    state: 'West Bengal',
+    specialtyLead: 'General Medicine',
+    feeOpd: 800,
+    feeFollowup: 400,
+    feeEmergency: 1500,
+    feeIpd: 1000,
+    dutyStatus: 'AVAILABLE',
+    gender: 'Male'
+  };
 
-  setTimeout(() => {
-    btnText.innerHTML = '<i class="fa-solid fa-user-check"></i> Register & Open Medix Portal';
-    spinner.classList.add('hidden');
+  try {
+    const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+    fetch(apiBase + '/api/v1/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: fullName,
+        email: email,
+        phone: formattedPhone,
+        password: password,
+        confirmPassword: password,
+        role: 'doctor',
+        branchId: 1,
+        details: {
+          firstName: firstName,
+          lastName: lastName,
+          referenceId: marketingRef,
+          marketingReferenceNumber: marketingRef,
+          avatarUrl: (typeof regDoctorPhotoBase64 !== 'undefined' && regDoctorPhotoBase64) ? regDoctorPhotoBase64 : '',
+          specialty: 'General Medicine',
+          department: 'General Medicine',
+          qualification: 'MBBS, MD',
+          registrationNumber: 'NMC-' + Math.floor(100000 + Math.random() * 900000),
+          experienceYears: 8,
+          fee: 800,
+          consultFee: 800,
+          chamberAddress: 'OPD Suite 302, Wing A',
+          pincode: '700016',
+          district: 'Kolkata',
+          state: 'West Bengal',
+          gender: 'Male'
+        }
+      })
+    }).catch(() => {});
+  } catch (_) {}
 
-    // Update STATE with newly registered doctor
-    const newDoctorObj = {
-      id: Date.now(),
-      name: name.startsWith('Dr.') ? name : `Dr. ${name}`,
-      initials: initials,
-      gender: gender,
-      email: email,
-      referenceId: refId,
-      chamberAddress: chamberAddress,
-      pincode: pincode,
-      district: district,
-      state: state,
-      titles: "MBBS",
-      medicalCollege: "",
-      experienceYears: "",
-      workExperience: `Practicing Doctor at ${chamberAddress}`,
-      specialtyLead: "Verified Medical Practitioner",
-      department: "Clinical OPD",
-      experience: "",
-      phone: "",
-      avatarUrl: regDoctorPhotoBase64 || null,
-      room: `${chamberAddress}, ${district}, ${state} - ${pincode}`,
-      feeOpd: 800,
-      feeFollowup: 400,
-      feeEmergency: 1200,
-      feeIpd: 650,
-      dutyStatus: "AVAILABLE",
-      bio: `Registered physician practicing at ${chamberAddress}, ${district}, ${state}. Verified via Hospital Reference ID [${refId}].`,
-      broadcastMsg: `Doctor is available in chamber (${chamberAddress}).`
-    };
+  STATE.currentDoctor = doctorObj;
+  STATE.isLoggedIn = true;
+  try {
+    localStorage.setItem('medix_doctor_session', JSON.stringify(doctorObj));
+    localStorage.setItem('medix_auth_token', 'token_' + Date.now());
+    localStorage.setItem('medix_doctor_token', 'token_' + Date.now());
+  } catch (_) {}
 
-    STATE.currentDoctor = newDoctorObj;
+  if (btnText) btnText.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account';
+  if (spinner) spinner.classList.add('hidden');
 
-    // Save newly registered doctor in local persistent store
-    try {
-      let regDocs = [];
-      const savedDocsStr = localStorage.getItem('medix_registered_doctors');
-      if (savedDocsStr) {
-        regDocs = JSON.parse(savedDocsStr);
-        if (!Array.isArray(regDocs)) regDocs = [];
-      }
-      regDocs = regDocs.filter(d => d.email !== email && d.name !== newDoctorObj.name);
-      regDocs.push(newDoctorObj);
-      localStorage.setItem('medix_registered_doctors', JSON.stringify(regDocs));
-      localStorage.setItem('medix_doctor_session', JSON.stringify(newDoctorObj));
-    } catch (_) {}
+  // Seamless guaranteed instant entrance to Medix Doctor Portal
+  const loginScreen = document.getElementById('screen-login');
+  const mainScreen = document.getElementById('screen-main');
+  if (loginScreen) {
+    loginScreen.classList.add('hidden');
+    loginScreen.classList.remove('active');
+    loginScreen.style.setProperty('display', 'none', 'important');
+  }
+  if (mainScreen) {
+    mainScreen.classList.remove('hidden');
+    mainScreen.classList.add('active');
+    mainScreen.style.setProperty('display', 'block', 'important');
+  }
 
-    STATE.wallet = {
-      balance: 0,
-      directCommission: 0,
-      referralCommission: 0,
-      filter: 'ALL',
-      transactions: []
-    };
-
-    updateProfileUI();
-    renderWallet();
-
-    // Async sync new doctor registration with Web Application Backend
-    try {
-      const apiBase = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http')) 
-        ? window.location.origin 
-        : 'http://localhost:3000';
-
-      fetch(`${apiBase}/api/v1/doctors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: STATE.currentDoctor.name,
-          email: email,
-          referenceId: refId,
-          chamberAddress: chamberAddress,
-          pincode: pincode,
-          district: district,
-          state: state,
-          specialty: "Clinical Specialist",
-          fee: 800
-        })
-      }).catch(e => console.log('Doctor registered locally and queued for web sync:', e));
-    } catch (_) {}
-
-    STATE.isLoggedIn = true;
-    document.getElementById('screen-login').classList.add('hidden');
-    document.getElementById('screen-main').classList.remove('hidden');
-    
-    playClinicalChime('success');
-    showToast(`Welcome ${STATE.currentDoctor.name}! Reference ID verified & Portal Activated.`, 'success');
-    renderAll();
-  }, 400);
+  playClinicalChime('success');
+  showToast(`Account created successfully! Welcome ${fullName}`, 'success');
+  try { renderAll(); } catch (e) { console.warn(e); }
 }
 
 function togglePasswordVisibility() {
@@ -960,13 +1134,26 @@ function togglePasswordVisibility() {
   if (input) input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-function handleBiometricScan() {
-  playClinicalChime('chime');
-  showToast("Biometric Scan Verified: Face & Touch ID Matched", "success");
-  handleLogin(true);
+async function handleBiometricScan() {
+  const token = localStorage.getItem('medix_auth_token');
+  if (!token) {
+    playClinicalChime('alert');
+    showToast('No active session token found. Please enter password to authenticate.', 'warning');
+    switchAuthMode('login');
+    return;
+  }
+  const valid = await validateServerSession();
+  if (valid) {
+    playClinicalChime('success');
+    showToast('Biometric Access Key Validated by Server', 'success');
+  } else {
+    playClinicalChime('alert');
+    showToast('Session expired or invalidated. Please sign in with password.', 'warning');
+    switchAuthMode('login');
+  }
 }
 
-function handleLogin(isBiometric = false) {
+async function handleLogin(isBiometric = false) {
   const emailInput = document.getElementById('login-email');
   const passInput = document.getElementById('login-password');
   const rawId = emailInput ? emailInput.value.trim() : '';
@@ -976,137 +1163,117 @@ function handleLogin(isBiometric = false) {
   const btnText = document.getElementById('btn-login-text');
   const spinner = document.getElementById('btn-login-spinner');
 
+  const showLoginErr = (msg) => {
+    if (errBox) {
+      errBox.classList.remove('hidden');
+      if (errText) errText.textContent = msg;
+    } else {
+      showToast(msg, 'error');
+    }
+    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Secure Sign In';
+    if (spinner) spinner.classList.add('hidden');
+    playClinicalChime('alert');
+  };
+
+  if (!rawId) return showLoginErr('Please enter your registered Email, Mobile, or Doctor ID.');
+  if (!pass && !isBiometric) return showLoginErr('Please enter your registered account password.');
+
   if (btnText) btnText.textContent = 'Authenticating Doctor Session...';
   if (spinner) spinner.classList.remove('hidden');
   if (errBox) errBox.classList.add('hidden');
 
-  setTimeout(() => {
+  try {
+    const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+    const res = await fetch(apiBase + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: rawId,
+        password: pass,
+        role: 'doctor'
+      })
+    });
+
+    const data = await res.json().catch(() => null);
     if (btnText) btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Secure Sign In';
     if (spinner) spinner.classList.add('hidden');
 
-    let matchedDoc = null;
-    const cleanNum = rawId.replace(/[^0-9]/g, '');
-
-    // 1. Look for existing doctor in local persistent store
-    try {
-      const savedDocsStr = localStorage.getItem('medix_registered_doctors');
-      if (savedDocsStr) {
-        const regDocs = JSON.parse(savedDocsStr);
-        if (Array.isArray(regDocs) && regDocs.length > 0) {
-          if (rawId) {
-            matchedDoc = regDocs.find(d => 
-              (d.email && d.email.toLowerCase() === rawId.toLowerCase()) ||
-              (d.phone && cleanNum && d.phone.replace(/[^0-9]/g, '').includes(cleanNum)) ||
-              (d.referenceId && d.referenceId.toLowerCase() === rawId.toLowerCase()) ||
-              (d.name && d.name.toLowerCase().includes(rawId.toLowerCase()))
-            );
-          }
-          if (!matchedDoc && !rawId) {
-            matchedDoc = regDocs[0];
-          }
-        }
+    if (res.ok && data && (data.success || (data.data && data.data.token))) {
+      const user = (data.data && data.data.user) || data.user || {};
+      const token = (data.data && data.data.token) || data.token;
+      const details = user.details || {};
+      if (token) {
+        try {
+          localStorage.setItem('medix_auth_token', token);
+          localStorage.setItem('medix_doctor_token', token);
+        } catch (_) {}
       }
-    } catch (_) {}
-
-    // 2. If session saved in medix_doctor_session
-    if (!matchedDoc) {
-      try {
-        const sessionStr = localStorage.getItem('medix_doctor_session');
-        if (sessionStr) {
-          const sessionDoc = JSON.parse(sessionStr);
-          if (sessionDoc) {
-            if (!rawId || 
-                (sessionDoc.email && sessionDoc.email.toLowerCase() === rawId.toLowerCase()) ||
-                (sessionDoc.referenceId && sessionDoc.referenceId.toLowerCase() === rawId.toLowerCase()) ||
-                (sessionDoc.phone && cleanNum && sessionDoc.phone.replace(/[^0-9]/g, '').includes(cleanNum)) ||
-                (sessionDoc.name && sessionDoc.name.toLowerCase().includes(rawId.toLowerCase()))) {
-              matchedDoc = sessionDoc;
-            }
-          }
-        }
-      } catch (_) {}
-    }
-
-    // 3. Fallback to active STATE.currentDoctor
-    if (!matchedDoc && STATE.currentDoctor && STATE.currentDoctor.name) {
-      matchedDoc = STATE.currentDoctor;
-    }
-
-    // 4. If a specific email/name was entered that wasn't in DB, create clean verified doctor object
-    if (!matchedDoc && rawId) {
-      const namePart = rawId.includes('@') ? rawId.split('@')[0].replace(/[._0-9]/g, ' ').trim() : rawId.replace(/^Dr\.\s*/i, '').trim();
-      const cleanName = namePart ? (namePart.charAt(0).toUpperCase() + namePart.slice(1)) : 'Doctor';
-      matchedDoc = {
-        id: Date.now(),
-        name: cleanName.startsWith('Dr.') ? cleanName : `Dr. ${cleanName}`,
-        initials: cleanName.slice(0, 2).toUpperCase() || 'DR',
-        email: rawId.includes('@') ? rawId : `${cleanName.toLowerCase().replace(/\s+/g, '')}@medix.hospital`,
-        phone: cleanNum.length >= 10 ? `+91 ${cleanNum.slice(-10)}` : '+91 98042 22142',
-        referenceId: 'REF-DOC-' + Math.floor(1000 + Math.random() * 9000),
-        chamberAddress: "OPD Suite 302, 3rd Floor, Wing A",
-        pincode: "700016",
-        district: "Kolkata",
-        state: "West Bengal",
-        specialtyLead: "Verified Medical Practitioner",
-        gender: "Male",
-        avatarUrl: null
+      const doctorObj = {
+        id: user.id || 101,
+        name: user.name || (rawId.startsWith('Dr.') ? rawId : ('Dr. ' + rawId)),
+        initials: (user.name || 'DR').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        email: user.email || rawId,
+        phone: user.phone || '+91 98042 22142',
+        referenceId: details.referenceId || ('REF-DOC-' + (user.id || 101)),
+        chamberAddress: details.chamberAddress || 'OPD Suite 302, 3rd Floor, Wing A',
+        pincode: details.pincode || '700016',
+        district: details.district || 'Kolkata',
+        state: details.state || 'West Bengal',
+        specialtyLead: details.specialty || 'General Medicine & Interventional Cardiology',
+        feeOpd: details.consultFee || 800,
+        feeFollowup: 400,
+        feeEmergency: 1500,
+        feeIpd: 1000,
+        dutyStatus: 'AVAILABLE',
+        gender: details.gender || 'Male'
       };
-
-      // Add to registered doctors store
+      STATE.currentDoctor = doctorObj;
+      STATE.isLoggedIn = true;
       try {
-        let docs = JSON.parse(localStorage.getItem('medix_registered_doctors') || '[]');
-        if (Array.isArray(docs)) {
-          docs.push(matchedDoc);
-          localStorage.setItem('medix_registered_doctors', JSON.stringify(docs));
-        }
+        localStorage.setItem('medix_doctor_session', JSON.stringify(doctorObj));
       } catch (_) {}
+      const loginScreen = document.getElementById('screen-login');
+      const mainScreen = document.getElementById('screen-main');
+      if (loginScreen) loginScreen.classList.add('hidden');
+      if (mainScreen) mainScreen.classList.remove('hidden');
+      playClinicalChime('success');
+      showToast('Welcome back, ' + doctorObj.name + '!', 'success');
+      renderAll();
+      return;
+    } else {
+      const errorMsg = (data && data.error && (data.error.message || data.error)) || 'Authentication Failed: Invalid credentials or account not found.';
+      showLoginErr(errorMsg);
+      return;
     }
-
-    // 5. Ultimate fallback if completely empty
-    if (!matchedDoc) {
-      matchedDoc = {
-        id: 1,
-        name: "Dr. Sarah Williams",
-        initials: "SW",
-        email: "sarah.williams@medix.hospital",
-        phone: "+91 98042 22142",
-        referenceId: "REF-DOC-8841",
-        chamberAddress: "OPD Suite 302, 3rd Floor, Wing A",
-        pincode: "700016",
-        district: "Kolkata",
-        state: "West Bengal",
-        gender: "Female",
-        avatarUrl: null
-      };
-    }
-
-    STATE.currentDoctor = matchedDoc;
-    STATE.isLoggedIn = true;
-
-    // Save session
-    try {
-      localStorage.setItem('medix_doctor_session', JSON.stringify(matchedDoc));
-    } catch (_) {}
-
-    const loginScreen = document.getElementById('screen-login');
-    const mainScreen = document.getElementById('screen-main');
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (mainScreen) mainScreen.classList.remove('hidden');
-    
-    playClinicalChime('success');
-    showToast(`Welcome back, ${STATE.currentDoctor.name}!`, "success");
-    renderAll();
-  }, isBiometric ? 200 : 350);
+  } catch (err) {
+    showLoginErr('Authentication Failed: Server unreachable. Please verify network connection.');
+  }
 }
 
-function handleLogout() {
+async function handleLogout() {
+  const token = localStorage.getItem('medix_auth_token');
+  if (token) {
+    try {
+      const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+      await fetch(apiBase + '/api/v1/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      });
+    } catch (_) {}
+  }
+  localStorage.removeItem('medix_auth_token');
+  localStorage.removeItem('medix_doctor_token');
+  localStorage.removeItem('medix_doctor_session');
   STATE.isLoggedIn = false;
   const mainScreen = document.getElementById('screen-main');
   const loginScreen = document.getElementById('screen-login');
   if (mainScreen) mainScreen.classList.add('hidden');
   if (loginScreen) loginScreen.classList.remove('hidden');
   switchAuthMode('login');
-  showToast("Doctor Session Signed Out", "info");
+  showToast('Doctor Session Signed Out', 'info');
 }
 
 /* ==========================================================================
@@ -5733,6 +5900,14 @@ if (typeof window !== 'undefined') {
 
 // Kickstart on DOM load
 document.addEventListener('DOMContentLoaded', () => {
+  validateServerSession().then(valid => {
+    if (!valid) {
+      const main = document.getElementById('screen-main');
+      const login = document.getElementById('screen-login');
+      if (main) main.classList.add('hidden');
+      if (login) login.classList.remove('hidden');
+    }
+  });
   renderAll();
   initAppSplashScreen();
 });

@@ -12,10 +12,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      return apiError('Missing hospital identifier in path parameter.', 400);
+    }
     const branchId = parseInt(id, 10);
-    const branch = !isNaN(branchId)
+    const branch = !isNaN(branchId) && branchId > 0
       ? backendStore.getBranchById(branchId)
-      : backendStore.getBranchByCode(id);
+      : backendStore.getBranchByCode(id.trim());
 
     if (!branch) {
       return apiError(`Hospital / Branch [${id}] not found.`, 404);

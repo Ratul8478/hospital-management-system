@@ -150,7 +150,7 @@ export default function Concept5() {
             <PhoneCall className="w-6 h-6 text-purple-400" />
             <div>
               <div className="text-xs text-slate-400 uppercase">AI Support Line</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-xl bg-purple-950/30 border border-purple-800/40">

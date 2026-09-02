@@ -114,7 +114,7 @@ export default function Concept11() {
             <PhoneCall className="w-6 h-6 text-pink-400" />
             <div>
               <div className="text-xs text-zinc-400 uppercase">Imaging Desk</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-5 rounded-xl bg-zinc-900 border border-zinc-800">

@@ -125,9 +125,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'super_admin');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key required to sync live database.', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Super Admin Master Key required to sync live database.', authResult.statusCode || 403);
     }
 
     const body = await request.json().catch(() => ({}));

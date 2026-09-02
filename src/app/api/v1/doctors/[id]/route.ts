@@ -13,6 +13,9 @@ export async function GET(
   try {
     const { id } = await params;
     const doctorId = parseInt(id, 10);
+    if (isNaN(doctorId) || doctorId <= 0) {
+      return apiError(`Invalid doctor ID '${id}'. Must be a valid positive integer.`, 422, { field: 'id' });
+    }
     const doctor = backendStore.getDoctorById(doctorId);
 
     if (!doctor) {

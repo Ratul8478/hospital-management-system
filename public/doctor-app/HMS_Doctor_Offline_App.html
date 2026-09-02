@@ -21,10 +21,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Firebase App & Firestore SDKs for Real-Time Synchronization with Web App -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  
   <style>
 /* ==========================================================================
    HMS DOCTOR PRO — CALM CLINICAL INTELLIGENCE 2.0 (LUXURY DESIGN SYSTEM)
@@ -6394,235 +6390,9 @@ body {
   opacity: 0.95;
 }
 
-/* ==========================================================================
-   ALL MEDICAL SERVICES (EXACT 2-COLUMN VISUAL CARDS MATCHING DESIGN)
-   ========================================================================== */
-.all-services-header-wrap {
-  text-align: center;
-  padding: 12px 16px 8px;
-  background: #FFFFFF;
-  border-bottom: 1px solid #F1F5F9;
-  position: relative;
-}
 
-.all-services-drag-handle {
-  width: 44px;
-  height: 4.5px;
-  border-radius: 9999px;
-  background: #CBD5E1;
-  margin: 0 auto 10px;
-}
 
-.all-services-header-title {
-  font-size: 17px;
-  font-weight: 800;
-  color: #0F172A;
-  margin: 0 0 12px;
-  letter-spacing: -0.2px;
-}
 
-.all-services-search-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.all-services-search-box {
-  flex: 1;
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
-  border-radius: 14px;
-  padding: 9px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.2s ease;
-}
-
-.all-services-search-box:focus-within {
-  background: #FFFFFF;
-  border-color: #3B82F6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-}
-
-.all-services-search-box input {
-  border: none;
-  background: transparent;
-  width: 100%;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #0F172A;
-  outline: none;
-}
-
-.all-services-search-box input::placeholder {
-  color: #94A3B8;
-  font-weight: 500;
-}
-
-.btn-services-reload {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #334155;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.btn-services-reload:hover {
-  background: #EFF6FF;
-  color: #2563EB;
-  border-color: #BFDBFE;
-}
-
-/* 2-Column Exact Card Grid */
-.medical-services-card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  padding: 12px 14px 18px;
-}
-
-.medical-service-card-item {
-  height: 124px;
-  border-radius: 18px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 10px 10px;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  background-size: cover;
-  background-position: center;
-  border: 2px solid transparent;
-  user-select: none;
-}
-
-.medical-service-card-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
-}
-
-.medical-service-card-item.active {
-  border-color: #10B981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3), 0 10px 24px rgba(0, 0, 0, 0.2);
-  transform: translateY(-2px);
-}
-
-.medical-service-overlay-tint {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  transition: opacity 0.2s ease;
-}
-
-.medical-service-top-content {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.medical-service-watermark-text {
-  font-size: 13px;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  line-height: 1.1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-  max-width: 85%;
-}
-
-.medical-service-watermark-icon {
-  font-size: 17px;
-  color: rgba(255, 255, 255, 0.9);
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-}
-
-.medical-service-bottom-wave {
-  position: relative;
-  z-index: 3;
-  width: 100%;
-  margin-top: auto;
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.95) 100%);
-  backdrop-filter: blur(8px);
-  padding: 6px 8px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.medical-service-card-item.active .medical-service-bottom-wave {
-  background: linear-gradient(180deg, rgba(6, 95, 70, 0.85) 0%, rgba(6, 78, 59, 0.98) 100%);
-  border-color: rgba(52, 211, 153, 0.5);
-}
-
-.medical-service-bottom-title {
-  font-size: 11px;
-  font-weight: 900;
-  color: #FFFFFF;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.service-selected-banner {
-  background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 65%, #172554 100%);
-  color: #FFFFFF;
-  border-radius: 18px;
-  padding: 14px 16px;
-  margin-bottom: 14px;
-  border: 1px solid rgba(147, 197, 253, 0.3);
-  box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25);
-  position: relative;
-  overflow: hidden;
-}
-
-.service-hosp-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 18px;
-  padding: 14px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-}
-
-.service-hosp-card:hover {
-  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.08);
-  border-color: #CBD5E1;
-}
-
-.service-doc-chip {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 8px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 6px;
-}
 
 </style>
 </head>
@@ -6925,6 +6695,7 @@ body {
                 </div>
 
                 <!-- SECTION A: DOCTOR REGISTRATION FORM -->
+                <!-- SECTION A: DOCTOR REGISTRATION FORM -->
                 <div id="auth-section-register">
                   <div class="form-header">
                     <h3>Doctor Registration</h3>
@@ -6936,7 +6707,7 @@ body {
                     <span id="register-error-text">Please fill in all required fields</span>
                   </div>
 
-                  <!-- Doctor Profile Photo Upload (.jpg, .png, .jpeg) -->
+                  <!-- Doctor Profile Photo Upload (.jpg, .png, .jpeg, .webp) -->
                   <div class="clinical-input-group" style="text-align:center; margin-bottom:16px;">
                     <label style="display:block; margin-bottom:8px; font-weight:700; font-size:12px; color:var(--text-main);">
                       Doctor Profile Photo <span style="font-weight:600; color:#64748B; font-size:11px;">(.jpg, .png, .jpeg, etc.)</span>
@@ -6955,12 +6726,13 @@ body {
                           <i class="fa-solid fa-cloud-arrow-up"></i> Select Photo File
                         </button>
                         <button type="button" id="reg-photo-clear-btn" class="hidden" onclick="clearDoctorRegistrationPhoto()" style="background:#FEE2E2; color:#DC2626; border:1px solid #FECACA; font-size:11px; font-weight:700; padding:5px 10px; border-radius:9999px; cursor:pointer;">
-                          <i class="fa-solid fa-trash"></i>
+                          <i class="fa-solid fa-trash"></i> Clear
                         </button>
                       </div>
                     </div>
                   </div>
 
+                  <!-- Full Practitioner Name -->
                   <div class="clinical-input-group">
                     <label>Full Practitioner Name <span style="color:#EF4444; font-weight:700;">*</span></label>
                     <div class="input-wrapper">
@@ -6969,6 +6741,7 @@ body {
                     </div>
                   </div>
 
+                  <!-- Gender & Clinical Specialty (2 Columns) -->
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="clinical-input-group">
                       <label>Doctor Gender <span style="color:#EF4444; font-weight:700;">*</span></label>
@@ -6983,23 +6756,87 @@ body {
                       </div>
                     </div>
 
-
+                    <div class="clinical-input-group">
+                      <label>Clinical Specialty <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-stethoscope"></i>
+                        <select id="reg-specialty" required style="width:100%; border:none; background:transparent; font-size:13px; font-weight:600; color:var(--text-main); outline:none; cursor:pointer;">
+                          <option value="" disabled selected>Select Specialty *</option>
+                          <option value="General Medicine">General Medicine</option>
+                          <option value="Cardiology">Cardiology</option>
+                          <option value="General Surgery">General Surgery</option>
+                          <option value="Pediatrics & Child Health">Pediatrics & Child Health</option>
+                          <option value="Orthopedics">Orthopedics</option>
+                          <option value="Gynecology & Obstetrics">Gynecology & Obstetrics</option>
+                          <option value="Neurology & Neurosurgery">Neurology & Neurosurgery</option>
+                          <option value="Dermatology & Cosmetology">Dermatology & Cosmetology</option>
+                          <option value="Ophthalmology">Ophthalmology</option>
+                          <option value="ENT (Ear, Nose & Throat)">ENT (Ear, Nose & Throat)</option>
+                          <option value="Pulmonology / Chest Medicine">Pulmonology / Chest Medicine</option>
+                          <option value="Gastroenterology">Gastroenterology</option>
+                          <option value="Nephrology & Urology">Nephrology & Urology</option>
+                          <option value="Psychiatry & Mental Health">Psychiatry & Mental Health</option>
+                          <option value="Critical Care & Emergency">Critical Care & Emergency</option>
+                          <option value="Other Clinical Specialty">Other Clinical Specialty</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
+                  <!-- Medical Council Reg No & Qualifications (2 Columns) -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="clinical-input-group">
+                      <label>Medical Reg. No. / NMC <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-id-card-clip"></i>
+                        <input type="text" id="reg-council-no" placeholder="e.g. WBMC-78921" required>
+                      </div>
+                    </div>
+
+                    <div class="clinical-input-group">
+                      <label>Qualifications <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <input type="text" id="reg-qualification" placeholder="e.g. MBBS, MD" value="MBBS, MD" required>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Official Phone & Experience (2 Columns) -->
+                  <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px;">
+                    <div class="clinical-input-group">
+                      <label>Official Mobile Phone <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-phone"></i>
+                        <input type="tel" id="reg-phone" placeholder="e.g. 98042 22142" required maxlength="15">
+                      </div>
+                    </div>
+
+                    <div class="clinical-input-group">
+                      <label>Experience <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-business-time"></i>
+                        <input type="number" id="reg-experience" placeholder="Years" value="8" min="0" max="60" required>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Chamber Address -->
                   <div class="clinical-input-group">
-                    <label>Chamber Address <span style="color:#EF4444; font-weight:700;">*</span></label>
+                    <label>Chamber Address & Clinic Location <span style="color:#EF4444; font-weight:700;">*</span></label>
                     <div class="input-wrapper">
                       <i class="fa-solid fa-hospital-user"></i>
                       <input type="text" id="reg-chamber-address" placeholder="Enter Chamber Address & Clinic Location" required>
                     </div>
                   </div>
 
+                  <!-- PIN Code, District & State (Smart 2 Columns with Datalist & Auto-lookup) -->
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="clinical-input-group">
                       <label>Pin Code <span style="color:#EF4444; font-weight:700;">*</span></label>
                       <div class="input-wrapper">
                         <i class="fa-solid fa-location-dot"></i>
-                        <input type="text" id="reg-pincode" placeholder="Enter 6-digit PIN" required maxlength="10">
+                        <input type="text" id="reg-pincode" placeholder="Enter 6-digit PIN" required maxlength="10" oninput="handlePincodeAutoLookup(this.value)">
                       </div>
                     </div>
 
@@ -7007,46 +6844,127 @@ body {
                       <label>District <span style="color:#EF4444; font-weight:700;">*</span></label>
                       <div class="input-wrapper">
                         <i class="fa-solid fa-map-location-dot"></i>
-                        <input type="text" id="reg-district" placeholder="Enter District" required>
+                        <input type="text" id="reg-district" list="reg-district-datalist" placeholder="Enter District" required>
+                        <datalist id="reg-district-datalist">
+                          <option value="Kolkata">
+                          <option value="Howrah">
+                          <option value="North 24 Parganas">
+                          <option value="South 24 Parganas">
+                          <option value="Hooghly">
+                          <option value="Purba Bardhaman">
+                          <option value="Paschim Bardhaman">
+                          <option value="Nadia">
+                          <option value="Murshidabad">
+                          <option value="Malda">
+                          <option value="Darjeeling">
+                          <option value="Jalpaiguri">
+                          <option value="Paschim Medinipur">
+                          <option value="Purba Medinipur">
+                          <option value="Birbhum">
+                          <option value="Bankura">
+                          <option value="Purulia">
+                          <option value="Cooch Behar">
+                          <option value="Alipurduar">
+                          <option value="Kalimpong">
+                          <option value="Jhargram">
+                          <option value="Uttar Dinajpur">
+                          <option value="Dakshin Dinajpur">
+                        </datalist>
                       </div>
                     </div>
                   </div>
 
+                  <!-- State -->
                   <div class="clinical-input-group">
                     <label>State <span style="color:#EF4444; font-weight:700;">*</span></label>
                     <div class="input-wrapper">
                       <i class="fa-solid fa-landmark"></i>
-                      <input type="text" id="reg-state" placeholder="Enter State" required>
+                      <input type="text" id="reg-state" list="reg-state-datalist" placeholder="Enter State (e.g. West Bengal)" value="West Bengal" required>
+                      <datalist id="reg-state-datalist">
+                        <option value="West Bengal">
+                        <option value="Delhi">
+                        <option value="Maharashtra">
+                        <option value="Karnataka">
+                        <option value="Tamil Nadu">
+                        <option value="Bihar">
+                        <option value="Jharkhand">
+                        <option value="Odisha">
+                        <option value="Assam">
+                        <option value="Uttar Pradesh">
+                        <option value="Kerala">
+                        <option value="Gujarat">
+                        <option value="Telangana">
+                        <option value="Andhra Pradesh">
+                        <option value="Rajasthan">
+                        <option value="Madhya Pradesh">
+                        <option value="Punjab">
+                        <option value="Haryana">
+                      </datalist>
                     </div>
                   </div>
 
-                  <div class="clinical-input-group">
-                    <label>Reference ID <span style="color:#EF4444; font-weight:700;">* (Mandatory)</span></label>
-                    <div class="input-wrapper" style="border: 1.5px solid rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.04);">
-                      <i class="fa-solid fa-asterisk text-rose" style="color:#EF4444;"></i>
-                      <input type="text" id="reg-reference-id" placeholder="Enter Doctor Reference ID / Referral Code" required>
+                  <!-- Consultation Fee & Reference ID (2 Columns) -->
+                  <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 10px;">
+                    <div class="clinical-input-group">
+                      <label>OPD Fee (₹) <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper">
+                        <i class="fa-solid fa-indian-rupee-sign"></i>
+                        <input type="number" id="reg-fee" placeholder="800" value="800" min="100" step="50" required>
+                      </div>
                     </div>
-                    <small style="color: #94A3B8; font-size: 11px; margin-top: 4px; display: block;">
-                      <i class="fa-solid fa-shield-halved" style="color:#10B981;"></i> Reference ID is strictly mandatory for all authorized doctors.
-                    </small>
-                  </div>
 
+                    <div class="clinical-input-group">
+                      <label>Reference ID <span style="color:#EF4444; font-weight:700;">* (Mandatory)</span></label>
+                      <div class="input-wrapper" style="border: 1.5px solid rgba(239, 68, 68, 0.45); background: rgba(239, 68, 68, 0.04);">
+                        <i class="fa-solid fa-asterisk text-rose" style="color:#EF4444;"></i>
+                        <input type="text" id="reg-reference-id" placeholder="Reference ID / Code" required>
+                      </div>
+                    </div>
+                  </div>
+                  <small style="color: #94A3B8; font-size: 11px; margin-top: -6px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fa-solid fa-shield-halved" style="color:#10B981;"></i> Reference ID is mandatory.</span>
+                    <a href="javascript:void(0)" onclick="quickFillDoctorReferenceId()" style="color:#2563EB; font-weight:700; text-decoration:underline;">Auto-Generate ID</a>
+                  </small>
+
+                  <!-- Official Email -->
                   <div class="clinical-input-group">
-                    <label>Email <span style="color:#EF4444; font-weight:700;">*</span></label>
+                    <label>Official Doctor Email <span style="color:#EF4444; font-weight:700;">*</span></label>
                     <div class="input-wrapper">
                       <i class="fa-regular fa-envelope"></i>
-                      <input type="email" id="reg-email" placeholder="Enter Official Doctor Email" required>
+                      <input type="email" id="reg-email" placeholder="e.g. dr.rajesh@medix.hospital" required>
                     </div>
                   </div>
 
-                  <div class="clinical-input-group">
-                    <label>Create Master Access Password <span style="color:#EF4444; font-weight:700;">*</span></label>
-                    <div class="input-wrapper">
-                      <i class="fa-solid fa-lock"></i>
-                      <input type="password" id="reg-password" placeholder="Create master access password" required>
+                  <!-- Create Master Password & Confirm Password (2 Columns with Eye Toggle) -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="clinical-input-group">
+                      <label>Create Password <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper" style="position:relative;">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="reg-password" placeholder="Create password" required style="padding-right:32px;">
+                        <i class="fa-regular fa-eye" onclick="toggleRegPasswordVisibility('reg-password', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#94A3B8; font-size:13px;" title="Show/Hide Password"></i>
+                      </div>
+                    </div>
+
+                    <div class="clinical-input-group">
+                      <label>Confirm Password <span style="color:#EF4444; font-weight:700;">*</span></label>
+                      <div class="input-wrapper" style="position:relative;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <input type="password" id="reg-confirm-password" placeholder="Confirm password" required style="padding-right:32px;">
+                        <i class="fa-regular fa-eye" onclick="toggleRegPasswordVisibility('reg-confirm-password', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#94A3B8; font-size:13px;" title="Show/Hide Password"></i>
+                      </div>
                     </div>
                   </div>
 
+                  <!-- Clinical Declaration Checkbox -->
+                  <div style="margin: 12px 0 16px 0; display:flex; align-items:flex-start; gap:8px;">
+                    <input type="checkbox" id="reg-declaration" checked style="margin-top:3px; accent-color:#2563EB; cursor:pointer;">
+                    <label for="reg-declaration" style="font-size:11.5px; color:var(--text-sub); line-height:1.4; cursor:pointer;">
+                      I certify that I am an authorized medical practitioner holding valid clinical registration with NMC / State Medical Council.
+                    </label>
+                  </div>
+
+                  <!-- Register Submit Button -->
                   <button class="btn-clinical-primary" id="btn-register" onclick="handleRegister()">
                     <span id="btn-register-text"><i class="fa-solid fa-user-check"></i> Register & Open Medix Portal</span>
                     <div id="btn-register-spinner" class="spinner-dot-ring hidden"></div>
@@ -7202,41 +7120,34 @@ body {
                   </div>
                 </div>
 
-                <!-- 1. Our Services Section (Interactive Clinical Services Explorer) -->
+                <!-- 1. Our Services Section (Image 1) -->
                 <div class="our-services-section">
-                  <div class="section-headline-dark" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="switchTab('services')">
+                  <div class="section-headline-dark">
                     <span>Our Services</span>
-                    <span style="font-size:12px; font-weight:800; color:#2563EB; display:flex; align-items:center; gap:5px;">
-                      <span>View All</span>
-                      <span style="font-size:14px; font-weight:900; color:#2563EB;">→</span>
-                    </span>
                   </div>
                   <div class="services-grid-3col">
-                    <div class="service-tile" onclick="openServiceDeepView('pathology-lab')" style="background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=300&auto=format&fit=crop&q=60'); cursor:pointer;">
-                      <span>Pathology</span>
+                    <div class="service-tile" onclick="openAmbulanceModal()" style="background-image: url('https://images.unsplash.com/photo-1587745416684-47953f16f02f?w=300&auto=format&fit=crop&q=60');">
+                      <span>Ambulance</span>
                     </div>
-                    <div class="service-tile" onclick="openServiceDeepView('pharmacy')" style="background-image: url('https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300&auto=format&fit=crop&q=60'); cursor:pointer;">
-                      <span>Pharmacy</span>
+                    <div class="service-tile" onclick="openBloodBankModal()" style="background-image: url('https://images.unsplash.com/photo-1615461066841-6116e61058f4?w=300&auto=format&fit=crop&q=60');">
+                      <span>Blood Bank</span>
                     </div>
-                    <div class="service-tile" onclick="openServiceDeepView('eye-care')" style="background-image: url('https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=300&auto=format&fit=crop&q=60'); cursor:pointer;">
-                      <span>Eye Care</span>
+                    <div class="service-tile" onclick="switchTab('appointments')" style="background-image: url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&auto=format&fit=crop&q=60'); position:relative;">
+                      <span style="position:absolute; top:6px; right:6px; background:#DC2626; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#FFFFFF; z-index:3;">+</span>
+                      <span>Doctor's</span>
                     </div>
-                    <div class="service-tile" onclick="openServiceDeepView('hospital')" style="background-image: url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=300&auto=format&fit=crop&q=60'); cursor:pointer;">
+                    <div class="service-tile" onclick="switchTab('hospitals')" style="background-image: url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=300&auto=format&fit=crop&q=60'); position:relative;">
+                      <span style="position:absolute; top:6px; right:6px; background:#2563EB; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; color:#FFFFFF; z-index:3;"><i class="fa-solid fa-hospital"></i></span>
                       <span>Hospital</span>
                     </div>
-                    <div class="service-tile" onclick="openServiceDeepView('inpatient-beds')" style="background-image: url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=300&auto=format&fit=crop&q=60'); cursor:pointer;">
-                      <span>Inpatient Beds</span>
+                    <div class="service-tile" onclick="switchTab('hospitals')" style="background-image: url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&auto=format&fit=crop&q=60');">
+                      <span>Nursing Home</span>
                     </div>
-                    <div class="service-tile service-tile-viewall" onclick="switchTab('services')" style="cursor:pointer; background:#FFFFFF; border:1.5px solid #E2E8F0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                      <div style="width:36px; height:36px; border-radius:10px; background:#F8FAFC; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-                          <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-                          <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-                          <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-                        </svg>
+                    <div class="service-tile service-tile-viewall" onclick="switchTab('hospitals')">
+                      <div style="width:36px; height:36px; border-radius:50%; background:#F1F5F9; display:flex; align-items:center; justify-content:center; margin-bottom:2px;">
+                        <i class="fa-solid fa-arrow-right" style="font-size:16px; color:#0F172A;"></i>
                       </div>
-                      <span style="color:#0F172A !important; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.3px;">View All</span>
+                      <span>View All</span>
                     </div>
                   </div>
                 </div>
@@ -7404,46 +7315,6 @@ body {
               </section>
 
               <!-- --------------------------------------------------
-                   TAB: ALL MEDICAL SERVICES (2-COLUMN CARDS MATCHING DESIGN)
-                   -------------------------------------------------- -->
-              <section id="tab-services" class="tab-pane" style="background:#F8FAFC; padding-bottom:30px;">
-                
-                <!-- All Medical Services Header Sheet (Matching Image) -->
-                <div class="all-services-header-wrap">
-                  <div class="all-services-drag-handle"></div>
-                  
-                  <div style="display:flex; align-items:center; justify-content:space-between; position:relative; margin-bottom:10px;">
-                    <button onclick="switchTab('home')" style="width:34px; height:34px; border-radius:10px; background:#F1F5F9; border:1px solid #E2E8F0; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F172A;">
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-                    
-                    <h2 class="all-services-header-title" style="margin:0; flex:1; text-align:center;">All Medical Services</h2>
-                    
-                    <button class="btn-services-reload" onclick="resetMedicalServices()" title="Reload Services">
-                      <i class="fa-solid fa-rotate-right"></i>
-                    </button>
-                  </div>
-
-                  <!-- Search Services Input Row -->
-                  <div class="all-services-search-row">
-                    <div class="all-services-search-box">
-                      <i class="fa-solid fa-magnifying-glass" style="color:#94A3B8; font-size:14px;"></i>
-                      <input type="text" id="services-search-input" placeholder="Search services..." oninput="handleServiceSearch(this.value)">
-                      <button class="search-clear-btn hidden" id="services-search-clear-btn" onclick="clearServiceSearch()" style="background:transparent; border:none; color:#94A3B8; cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 2-Column Exact Cards Grid -->
-                <div class="medical-services-card-grid" id="services-catalog-grid-container" style="padding-bottom: 40px;">
-                  <!-- Populated via renderServicesCatalog() with the exact 12 medical services -->
-                </div>
-
-              </section>
-
-              <!-- --------------------------------------------------
                    TAB: INTERNATIONAL HOSPITALS FULL DIRECTORY (Images 4 & 5)
                    -------------------------------------------------- -->
               <section id="tab-hospitals" class="tab-pane" style="background:#F8FAFC;">
@@ -7517,20 +7388,9 @@ body {
               <!-- --------------------------------------------------
                    TAB 3: PATIENT DIRECTORY & EHR LOOKUP
                    -------------------------------------------------- -->
-              <section id="tab-patients" class="tab-pane" style="background:#F8FAFC;">
+              <section id="tab-patients" class="tab-pane">
                 
-                <div class="filter-sticky-bar" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0; padding:12px 16px;">
-                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <button onclick="switchTab('home')" style="width:36px; height:36px; border-radius:10px; background:#F1F5F9; border:1px solid #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F172A;">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-                    <div>
-                      <h3 style="font-size:15px; font-weight:900; color:#0F172A; margin:0; text-transform:uppercase;">PATIENT EHR LOOKUP</h3>
-                      <small style="color:#64748B; font-size:10px; font-weight:600;">Electronic Health Records & Medical History</small>
-                    </div>
-                  </div>
+                <div class="filter-sticky-bar">
                   <div class="modern-search-input">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" id="patient-search" placeholder="Search EHR by name, UHID, phone number..." oninput="filterPatients()">
@@ -7545,20 +7405,9 @@ body {
               <!-- --------------------------------------------------
                    TAB 4: DIAGNOSTIC LAB REPORTS
                    -------------------------------------------------- -->
-              <section id="tab-reports" class="tab-pane" style="background:#F8FAFC;">
+              <section id="tab-reports" class="tab-pane">
                 
-                <div class="filter-sticky-bar" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0; padding:12px 16px;">
-                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <button onclick="switchTab('home')" style="width:36px; height:36px; border-radius:10px; background:#F1F5F9; border:1px solid #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F172A;">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-                    <div>
-                      <h3 style="font-size:15px; font-weight:900; color:#0F172A; margin:0; text-transform:uppercase;">DIAGNOSTIC LAB REPORTS</h3>
-                      <small style="color:#64748B; font-size:10px; font-weight:600;">Pathology, Radiology & Scan Results</small>
-                    </div>
-                  </div>
+                <div class="filter-sticky-bar">
                   <div class="segmented-filters">
                     <button class="seg-pill active" onclick="setReportFilter('ALL', this)">All (8)</button>
                     <button class="seg-pill" onclick="setReportFilter('CRITICAL', this)"><i class="fa-solid fa-triangle-exclamation text-rose"></i> Critical (2)</button>
@@ -7575,20 +7424,9 @@ body {
               <!-- --------------------------------------------------
                    TAB 5: IPD INPATIENTS & ADMISSIONS
                    -------------------------------------------------- -->
-              <section id="tab-admissions" class="tab-pane" style="background:#F8FAFC;">
+              <section id="tab-admissions" class="tab-pane">
                 
-                <div class="filter-sticky-bar" style="background:#FFFFFF; border-bottom:1px solid #E2E8F0; padding:12px 16px;">
-                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <button onclick="switchTab('home')" style="width:36px; height:36px; border-radius:10px; background:#F1F5F9; border:1px solid #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F172A;">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-                    <div>
-                      <h3 style="font-size:15px; font-weight:900; color:#0F172A; margin:0; text-transform:uppercase;">IPD INPATIENTS & BEDS</h3>
-                      <small style="color:#64748B; font-size:10px; font-weight:600;">Live Ward Beds & Admission Records</small>
-                    </div>
-                  </div>
+                <div class="filter-sticky-bar">
                   <div class="segmented-filters">
                     <button class="seg-pill active" onclick="setWardFilter('ALL', this)">All Wards</button>
                     <button class="seg-pill" onclick="setWardFilter('ICU', this)">ICU Critical</button>
@@ -7605,20 +7443,8 @@ body {
               <!-- --------------------------------------------------
                    TAB 6: DOCTOR WALLET & 2-TIER COMMISSION CENTER
                    -------------------------------------------------- -->
-              <section id="tab-wallet" class="tab-pane" style="background:#F8FAFC;">
+              <section id="tab-wallet" class="tab-pane">
                 
-                <div style="padding:12px 16px 6px; display:flex; align-items:center; gap:10px;">
-                  <button onclick="switchTab('home')" style="width:36px; height:36px; border-radius:10px; background:#FFFFFF; border:1px solid #CBD5E1; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#0F172A; box-shadow:0 2px 6px rgba(0,0,0,0.06);">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                  </button>
-                  <div>
-                    <h3 style="font-size:15px; font-weight:900; color:#0F172A; margin:0; text-transform:uppercase;">DOCTOR WALLET & EARNINGS</h3>
-                    <small style="color:#64748B; font-size:10px; font-weight:600;">Direct Payouts & Commission Center</small>
-                  </div>
-                </div>
-
                 <!-- 1. Doctor Wallet Hero Balance Card -->
                 <div class="wallet-hero-glass-card">
                   <div class="wallet-hero-bg-glow"></div>
@@ -7668,7 +7494,7 @@ body {
                     </div>
                     <div style="background:rgba(2,132,199,0.08); border:1px solid rgba(2,132,199,0.2); border-radius:10px; padding:10px;">
                       <span style="font-size:10px; color:#94A3B8; display:block;">Total Consultations</span>
-                      <strong style="color:#FFFFFF; font-size:13px;" id="wallet-counselling-patient-count">0 Patients</strong>
+                      <strong style="color:#FFFFFF; font-size:13px;">16 Patients</strong>
                       <small style="color:#10B981; display:block; font-size:10px; margin-top:2px;">Live Verified</small>
                     </div>
                   </div>
@@ -7929,15 +7755,6 @@ body {
                 </div>
                 <span>Home</span>
               </button>
-              <button class="varsha-nav-item" onclick="switchTab('services', null, this)" id="bottom-nav-services">
-                <div class="nav-sign-icon nav-icon-services" style="background:#059669; border-radius:50%; box-shadow:0 2px 8px rgba(5,150,105,0.45);">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                  </svg>
-                </div>
-                <span>Services</span>
-              </button>
               <button class="varsha-nav-item" onclick="switchTab('refer-patients', null, this)" id="bottom-nav-refer">
                 <div class="nav-sign-icon nav-icon-family" style="background:#0284C7;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -8006,12 +7823,7 @@ body {
             <p id="rx-modal-patient-info">Aarav Sharma • UHID-2026-0042 • 45 yrs, Male</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-prescription')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-prescription')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body">
@@ -8095,12 +7907,7 @@ body {
     <div class="modal-dialog-panel rx-print-dialog">
       <div class="modal-panel-header">
         <h3><i class="fa-solid fa-print"></i> Official Medical Prescription Slip</h3>
-        <button class="btn-modal-close" onclick="closeModal('modal-rx-preview')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-rx-preview')"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-panel-body print-paper-body">
         
@@ -8189,12 +7996,7 @@ body {
             <p id="ehr-patient-meta">UHID-2026-0042 • 45 yrs, Male • Blood Group B+</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-patient-ehr')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-patient-ehr')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body">
@@ -8282,12 +8084,7 @@ body {
             <p style="color:#94A3B8;">Transfer patient clinical records, vitals & dispatch real-time notification to receiving city hospital</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-refer-hospital')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-refer-hospital')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body">
@@ -8464,12 +8261,7 @@ body {
             <p id="slip-token-header">Ref ID: REF-HOSP-2026-88192 • Dispatched Successfully</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-referral-slip')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-referral-slip')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body print-canvas-area" id="referral-slip-print-content">
@@ -8571,12 +8363,7 @@ body {
             <p>Live alerts, critical lab results & OPD queue updates</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-notifications')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-notifications')"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-panel-body">
         <div class="notif-dialog-list" id="notif-modal-list">
@@ -8604,12 +8391,7 @@ body {
             <p>Update photo, education, work experience, chamber & fee schedule</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-edit-profile')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-edit-profile')"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-panel-body">
         
@@ -8738,12 +8520,7 @@ body {
             <p>Direct IMPS & UPI integration for instant commission payouts</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-bank-config')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-bank-config')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body">
@@ -8848,12 +8625,7 @@ body {
             <p>Instant Direct Transfer to Linked Bank Account or UPI</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-wallet-withdraw')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-wallet-withdraw')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body">
@@ -8922,12 +8694,7 @@ body {
           </h3>
           <p style="font-size:11px; color:var(--text-sub); margin:2px 0 0;">Verified Clinical Credential &amp; Referral Badge</p>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-doctor-badge')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-doctor-badge')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body badge-modal-body" style="padding:16px 12px; overflow-y:auto; flex:1; display:flex; justify-content:center;">
@@ -9033,12 +8800,7 @@ body {
             <p>National Medical Council & Clinical Practice Dossier</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-clinical-cv')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-clinical-cv')"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-panel-body print-paper-body">
         
@@ -9191,12 +8953,7 @@ body {
             <p>Install on phone home screen or download offline standalone app</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-mobile-install')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-mobile-install')"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="modal-panel-body">
         
@@ -9255,12 +9012,7 @@ body {
             <p>Direct Reception Desk & Emergency Hotline</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-hospital-call')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-hospital-call')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body" style="text-align:center; padding:20px 16px;">
@@ -9310,12 +9062,7 @@ body {
             <p style="font-size:11px; color:var(--text-sub); margin:2px 0 0;">Google Play &amp; Clinical Healthcare Compliance (DPDP Act &amp; HIPAA standard)</p>
           </div>
         </div>
-        <button class="btn-modal-close" onclick="closeModal('modal-terms-privacy')" aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+        <button class="btn-modal-close" onclick="closeModal('modal-terms-privacy')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="modal-panel-body" style="padding:16px; overflow-y:auto; font-size:12px; color:var(--text-sub); line-height:1.6;">
@@ -9345,90 +9092,6 @@ body {
           <i class="fa-solid fa-check"></i> I Acknowledge &amp; Agree
         </button>
       </div>
-    </div>
-  </div>
-
-  <!-- ========================================================
-       MODAL 10: PROFESSIONAL CLINICAL SERVICE & DOCTORS EXPLORER
-       ======================================================== -->
-  <div id="modal-service-action" class="modal-backdrop-blur hidden" onclick="if(event.target===this) closeModal('modal-service-action')">
-    <div class="modal-dialog-panel" style="max-width:540px; width:95%; max-height:92vh; padding:0; overflow:hidden; border-radius:24px; border:1px solid #E2E8F0; box-shadow:0 24px 60px rgba(0,0,0,0.3); background:#FFFFFF; display:flex; flex-direction:column;">
-      
-      <!-- Service Image Banner Header -->
-      <div id="service-action-banner" style="height:130px; min-height:130px; background-size:cover; background-position:center; position:relative; display:flex; flex-direction:column; justify-content:space-between; padding:14px 16px;">
-        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.92) 100%);"></div>
-        
-        <div style="position:relative; z-index:2; display:flex; justify-content:space-between; align-items:center;">
-          <!-- Top-Left Back Button -->
-          <button onclick="closeModal('modal-service-action')" style="background:rgba(15,23,42,0.75); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.25); color:#FFFFFF; border-radius:9999px; padding:4px 11px; font-size:11px; font-weight:800; display:flex; align-items:center; gap:5px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.25); transition:all 0.2s ease;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            <span>Back</span>
-          </button>
-
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span id="service-action-badge" style="background:rgba(255,255,255,0.25); backdrop-filter:blur(6px); color:#FFFFFF; font-size:10px; font-weight:800; padding:3px 10px; border-radius:9999px; text-transform:uppercase; letter-spacing:0.5px; border:1px solid rgba(255,255,255,0.2);">Medical Service</span>
-            <span id="service-action-count-badge" style="background:#10B981; color:#FFFFFF; font-size:10px; font-weight:800; padding:3px 8px; border-radius:9999px;">Live</span>
-          </div>
-
-          <!-- Top-Right Close Cross Button -->
-          <button onclick="closeModal('modal-service-action')" aria-label="Close" style="background:rgba(15,23,42,0.75); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.3); color:#FFFFFF; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s ease; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-        
-        <div style="position:relative; z-index:2;">
-          <h3 id="service-action-title" style="margin:0 0 2px; color:#FFFFFF; font-size:20px; font-weight:900; letter-spacing:-0.3px;">HOSPITAL</h3>
-          <p id="service-action-desc" style="font-size:11.5px; color:#E2E8F0; margin:0; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">24x7 Multispeciality Hospital, Emergency ICU/CCU & Inpatient Wards.</p>
-        </div>
-      </div>
-
-      <!-- Quick Search / Filter Bar inside Service Explorer -->
-      <div style="padding:10px 16px; background:#F8FAFC; border-bottom:1px solid #E2E8F0; display:flex; align-items:center; gap:8px;">
-        <div style="flex:1; position:relative; display:flex; align-items:center;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:12px;">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="service-explorer-search-input" placeholder="Search facilities, doctors, location..." oninput="handleServiceDeepSearch(this.value)" style="width:100%; padding:8px 12px 8px 34px; background:#FFFFFF; border:1px solid #CBD5E1; border-radius:10px; font-size:12px; font-weight:600; color:#0F172A; outline:none;">
-        </div>
-        <button onclick="document.getElementById('service-explorer-search-input').value=''; handleServiceDeepSearch('');" title="Reset Search" style="background:#FFFFFF; border:1px solid #CBD5E1; padding:7px 11px; border-radius:10px; font-size:11px; font-weight:700; color:#64748B; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-            <path d="M3 3v5h5"/>
-          </svg>
-        </button>
-      </div>
-      
-      <!-- Scrollable Dynamic Facilities & Doctors List Body -->
-      <div id="service-action-dynamic-content" style="padding:14px 16px 20px; background:#F1F5F9; overflow-y:auto; flex:1; max-height:calc(92vh - 200px); display:flex; flex-direction:column; gap:12px;">
-        <!-- Injected dynamically via renderServiceDeepExplorer() -->
-      </div>
-
-      <!-- Sticky Modal Footer with Direct Quick Actions -->
-      <div style="padding:10px 16px; background:#FFFFFF; border-top:1px solid #E2E8F0; display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <button onclick="closeModal('modal-service-action'); switchTab('services');" style="flex:1; background:#F8FAFC; color:#0F172A; border:1px solid #CBD5E1; padding:9px 12px; border-radius:10px; font-size:11.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-          </svg>
-          <span>All Services</span>
-        </button>
-        <button onclick="openReferHospitalModalFromService()" style="flex:1.4; background:linear-gradient(135deg, #1E40AF 0%, #047857 100%); color:#FFFFFF; border:none; padding:9px 12px; border-radius:10px; font-size:11.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(30,64,175,0.25);">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 2L11 13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-          <span>Quick Patient Referral</span>
-        </button>
-      </div>
-
     </div>
   </div>
 
@@ -10099,30 +9762,7 @@ function quickFillDoctor(type) {
   }
 }
 
-function quickLoginJiarul() {
-  STATE.currentDoctor = {
-    id: 1,
-    name: "Dr . Jiarul Haque",
-    initials: "JH",
-    email: "ariyanhospital9@gmail.com",
-    titles: "MD, Medical Director & Chief Physician",
-    specialtyLead: "General & Cardiology Medicine Director",
-    department: "General & Cardiology Medicine",
-    room: "Newtown, Noapara, Sukanta Polli Road, Kolkata - 700157",
-    npi: "NPI-9804222142",
-    dea: "BW-9804221",
-    feeOpd: 800,
-    feeFollowup: 400,
-    feeEmergency: 1500,
-    feeIpd: 1000,
-    dutyStatus: "AVAILABLE",
-    bio: "Owner & Medical Director at ARIYAN HOSPITAL MULTISPECIALITY. Leading patient-centered general medicine, interventional cardiology consultations, and national hospital network referrals.",
-    broadcastMsg: "Doctor is on schedule in Main Chamber. Token: #1"
-  };
-  if (document.getElementById('login-email')) document.getElementById('login-email').value = 'ariyanhospital9@gmail.com';
-  if (document.getElementById('login-password')) document.getElementById('login-password').value = 'Doctor@123';
-  handleLogin();
-}
+
 
 /* ==========================================================================
    AUTHENTICATION: REGISTRATION & SIGN IN MODES
@@ -10226,178 +9866,426 @@ function clearDoctorRegistrationPhoto() {
   }
 }
 
-function handleRegister() {
-  const name = document.getElementById('reg-name') ? document.getElementById('reg-name').value.trim() : '';
-  const gender = document.getElementById('reg-gender') ? document.getElementById('reg-gender').value.trim() : '';
-  const chamberAddress = document.getElementById('reg-chamber-address') ? document.getElementById('reg-chamber-address').value.trim() : '';
-  const pincode = document.getElementById('reg-pincode') ? document.getElementById('reg-pincode').value.trim() : '';
-  const district = document.getElementById('reg-district') ? document.getElementById('reg-district').value.trim() : '';
-  const state = document.getElementById('reg-state') ? document.getElementById('reg-state').value.trim() : '';
-  const refId = document.getElementById('reg-reference-id') ? document.getElementById('reg-reference-id').value.trim() : '';
-  const email = document.getElementById('reg-email') ? document.getElementById('reg-email').value.trim() : '';
-  const password = document.getElementById('reg-password') ? document.getElementById('reg-password').value.trim() : '';
-  const errBox = document.getElementById('register-error');
-  const errText = document.getElementById('register-error-text');
+function handlePincodeAutoLookup(pin) {
+  if (!pin || pin.length < 3) return;
+  const clean = pin.trim().replace(/\D/g, '');
+  const districtEl = document.getElementById('reg-district');
+  const stateEl = document.getElementById('reg-state');
+
+  if (clean.startsWith('700') || clean.startsWith('7000')) {
+    if (districtEl) districtEl.value = 'Kolkata';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('711')) {
+    if (districtEl) districtEl.value = 'Howrah';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('712')) {
+    if (districtEl) districtEl.value = 'Hooghly';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('743')) {
+    if (districtEl) districtEl.value = 'North 24 Parganas';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('741')) {
+    if (districtEl) districtEl.value = 'Nadia';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('742')) {
+    if (districtEl) districtEl.value = 'Murshidabad';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('734')) {
+    if (districtEl) districtEl.value = 'Darjeeling';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('713')) {
+    if (districtEl) districtEl.value = 'Purba Bardhaman';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('721')) {
+    if (districtEl) districtEl.value = 'Paschim Medinipur';
+    if (stateEl) stateEl.value = 'West Bengal';
+  } else if (clean.startsWith('110')) {
+    if (districtEl) districtEl.value = 'New Delhi';
+    if (stateEl) stateEl.value = 'Delhi';
+  } else if (clean.startsWith('400')) {
+    if (districtEl) districtEl.value = 'Mumbai';
+    if (stateEl) stateEl.value = 'Maharashtra';
+  } else if (clean.startsWith('560')) {
+    if (districtEl) districtEl.value = 'Bengaluru';
+    if (stateEl) stateEl.value = 'Karnataka';
+  } else if (clean.startsWith('600')) {
+    if (districtEl) districtEl.value = 'Chennai';
+    if (stateEl) stateEl.value = 'Tamil Nadu';
+  }
+}
+
+function quickFillDoctorReferenceId() {
+  const refInput = document.getElementById('reg-reference-id');
+  if (refInput) {
+    const code = 'REF-MEDIX-' + Math.floor(1000 + Math.random() * 9000);
+    refInput.value = code;
+    showToast('Generated Reference ID: ' + code, 'success');
+  }
+}
+
+function toggleRegPasswordVisibility(id, iconEl) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (iconEl) {
+      iconEl.classList.remove('fa-eye');
+      iconEl.classList.add('fa-eye-slash');
+    }
+  } else {
+    input.type = 'password';
+    if (iconEl) {
+      iconEl.classList.remove('fa-eye-slash');
+      iconEl.classList.add('fa-eye');
+    }
+  }
+}
+
+async function handleRegister() {
+  const nameEl = document.getElementById('reg-name');
+  const genderEl = document.getElementById('reg-gender');
+  const specialtyEl = document.getElementById('reg-specialty');
+  const councilNoEl = document.getElementById('reg-council-no');
+  const qualificationEl = document.getElementById('reg-qualification');
+  const phoneEl = document.getElementById('reg-phone');
+  const experienceEl = document.getElementById('reg-experience');
+  const chamberEl = document.getElementById('reg-chamber-address');
+  const pincodeEl = document.getElementById('reg-pincode');
+  const districtEl = document.getElementById('reg-district');
+  const stateEl = document.getElementById('reg-state');
+  const feeEl = document.getElementById('reg-fee');
+  const refIdEl = document.getElementById('reg-reference-id');
+  const emailEl = document.getElementById('reg-email');
+  const passwordEl = document.getElementById('reg-password');
+  const confirmPassEl = document.getElementById('reg-confirm-password');
+  const declarationEl = document.getElementById('reg-declaration');
+
+  const name = nameEl ? nameEl.value.trim() : '';
+  const gender = genderEl ? genderEl.value : 'Male';
+  const specialty = specialtyEl && specialtyEl.value ? specialtyEl.value : 'General Medicine';
+  const councilNo = councilNoEl ? councilNoEl.value.trim() : ('WBMC-' + Math.floor(10000 + Math.random() * 90000));
+  const qualification = qualificationEl && qualificationEl.value.trim() ? qualificationEl.value.trim() : 'MBBS, MD';
+  const phone = phoneEl ? phoneEl.value.trim() : '';
+  const experience = experienceEl ? Number(experienceEl.value) || 8 : 8;
+  const chamberAddress = chamberEl ? chamberEl.value.trim() : '';
+  const pincode = pincodeEl ? pincodeEl.value.trim() : '';
+  const district = districtEl ? districtEl.value.trim() : '';
+  const state = stateEl ? stateEl.value.trim() : '';
+  const consultFee = feeEl ? (Number(feeEl.value) || 800) : 800;
+  const refId = refIdEl ? refIdEl.value.trim() : '';
+  const email = emailEl ? emailEl.value.trim() : '';
+  const password = passwordEl ? passwordEl.value : '';
+  const confirmPassword = confirmPassEl ? confirmPassEl.value : '';
+  const isDeclared = declarationEl ? declarationEl.checked : true;
+
+  const errBox = document.getElementById('register-error') || document.getElementById('reg-error');
+  const errText = document.getElementById('register-error-text') || document.getElementById('reg-error-text');
   const btnText = document.getElementById('btn-register-text');
   const spinner = document.getElementById('btn-register-spinner');
 
-  if (!name) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Full Practitioner Name is required.';
+  const showRegErr = (msg) => {
+    if (errBox) {
+      errBox.classList.remove('hidden');
+      if (errText) errText.textContent = msg;
+    } else {
+      showToast(msg, 'error');
+    }
+    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-user-check"></i> Register & Open Medix Portal';
+    if (spinner) spinner.classList.add('hidden');
     playClinicalChime('alert');
-    return;
-  }
-  if (!gender) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Doctor Gender is MANDATORY. Please select Male, Female, or Other.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!chamberAddress) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Chamber Address is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!pincode) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Pin Code is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!district) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'District is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!state) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'State is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!refId) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Reference ID is MANDATORY. Only authorized physicians with a valid reference ID can register.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!email || !email.includes('@')) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Valid Practitioner Email is required.';
-    playClinicalChime('alert');
-    return;
-  }
-  if (!password || password.length < 6) {
-    errBox.classList.remove('hidden');
-    errText.textContent = 'Create Master Access Password (min 6 characters) is required.';
-    playClinicalChime('alert');
-    return;
-  }
+  };
 
-  btnText.textContent = 'Verifying Credentials & Registering...';
-  spinner.classList.remove('hidden');
-  errBox.classList.add('hidden');
+  // Validations
+  if (!name) return showRegErr('Full Practitioner Name is required.');
+  if (!gender) return showRegErr('Doctor gender selection is required.');
+  if (!specialty) return showRegErr('Clinical specialty selection is required.');
+  if (!councilNo) return showRegErr('Medical Council Registration No. is required.');
+  if (!qualification) return showRegErr('Medical qualification is required (e.g. MBBS, MD).');
+  if (!phone || phone.replace(/\D/g, '').length < 10) return showRegErr('Valid 10-digit official mobile number is required.');
+  if (!chamberAddress) return showRegErr('Chamber Address & Clinic Location is required.');
+  if (!pincode) return showRegErr('Postal Pin Code is required.');
+  if (!district) return showRegErr('District is required.');
+  if (!state) return showRegErr('State is required.');
+  if (!refId) return showRegErr('Reference ID is mandatory.');
+  if (!email || !email.includes('@')) return showRegErr('Valid official doctor email is required.');
+  if (!password || password.length < 8) return showRegErr('Password must be at least 8 characters with letters and numbers.');
+  if (confirmPassword && password !== confirmPassword) return showRegErr('Password and Confirm Password do not match.');
+  if (!isDeclared) return showRegErr('Please accept the practitioner registration declaration to proceed.');
 
-  // Compute initials
-  const rawName = name.replace(/^Dr\.\s*/i, '').trim();
-  const parts = rawName.split(' ');
-  const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : rawName.substring(0, 2).toUpperCase() || 'DR';
+  if (btnText) btnText.textContent = 'Registering on Secure Server...';
+  if (spinner) spinner.classList.remove('hidden');
+  if (errBox) errBox.classList.add('hidden');
 
-  setTimeout(() => {
-    btnText.innerHTML = '<i class="fa-solid fa-user-check"></i> Register & Open Medix Portal';
-    spinner.classList.add('hidden');
+  // Format clean standardized phone number
+  const cleanDigits = phone.replace(/\D/g, '');
+  const formattedPhone = cleanDigits.length === 10 ? ('+91 ' + cleanDigits) : (phone.startsWith('+') ? phone : ('+' + phone));
 
-    // Update STATE with newly registered doctor
-    const newDoctorObj = {
-      id: Date.now(),
-      name: name.startsWith('Dr.') ? name : `Dr. ${name}`,
-      initials: initials,
-      gender: gender,
-      email: email,
-      referenceId: refId,
-      chamberAddress: chamberAddress,
-      pincode: pincode,
-      district: district,
-      state: state,
-      titles: "MBBS",
-      medicalCollege: "",
-      experienceYears: "",
-      workExperience: `Practicing Doctor at ${chamberAddress}`,
-      specialtyLead: "Verified Medical Practitioner",
-      department: "Clinical OPD",
-      experience: "",
-      phone: "",
-      avatarUrl: regDoctorPhotoBase64 || null,
-      room: `${chamberAddress}, ${district}, ${state} - ${pincode}`,
-      feeOpd: 800,
-      feeFollowup: 400,
-      feeEmergency: 1200,
-      feeIpd: 650,
-      dutyStatus: "AVAILABLE",
-      bio: `Registered physician practicing at ${chamberAddress}, ${district}, ${state}. Verified via Hospital Reference ID [${refId}].`,
-      broadcastMsg: `Doctor is available in chamber (${chamberAddress}).`
-    };
-
-    STATE.currentDoctor = newDoctorObj;
-
-    // Save newly registered doctor in local persistent store
-    try {
-      let regDocs = [];
-      const savedDocsStr = localStorage.getItem('medix_registered_doctors');
-      if (savedDocsStr) {
-        regDocs = JSON.parse(savedDocsStr);
-        if (!Array.isArray(regDocs)) regDocs = [];
-      }
-      regDocs = regDocs.filter(d => d.email !== email && d.name !== newDoctorObj.name);
-      regDocs.push(newDoctorObj);
-      localStorage.setItem('medix_registered_doctors', JSON.stringify(regDocs));
-      localStorage.setItem('medix_doctor_session', JSON.stringify(newDoctorObj));
-    } catch (_) {}
-
-    STATE.wallet = {
-      balance: 0,
-      directCommission: 0,
-      referralCommission: 0,
-      filter: 'ALL',
-      transactions: []
-    };
-
-    updateProfileUI();
-    renderWallet();
-
-    // Async sync new doctor registration with Web Application Backend
-    try {
-      const apiBase = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http')) 
-        ? window.location.origin 
-        : 'http://localhost:3000';
-
-      fetch(`${apiBase}/api/v1/doctors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: STATE.currentDoctor.name,
-          email: email,
-          referenceId: refId,
+  try {
+    const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+    const res = await fetch(apiBase + '/api/v1/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name.startsWith('Dr.') || name.startsWith('Dr ') ? name : ('Dr. ' + name),
+        email: email,
+        phone: formattedPhone,
+        password: password,
+        confirmPassword: password,
+        role: 'doctor',
+        branchId: 1,
+        details: {
+          specialty: specialty,
+          department: specialty,
+          qualification: qualification,
+          registrationNumber: councilNo,
+          experienceYears: experience,
+          fee: consultFee,
+          consultFee: consultFee,
           chamberAddress: chamberAddress,
           pincode: pincode,
           district: district,
           state: state,
-          specialty: "Clinical Specialist",
-          fee: 800
-        })
-      }).catch(e => console.log('Doctor registered locally and queued for web sync:', e));
-    } catch (_) {}
+          referenceId: refId,
+          gender: gender,
+          avatarUrl: regDoctorPhotoBase64 || ''
+        }
+      })
+    });
 
-    STATE.isLoggedIn = true;
-    document.getElementById('screen-login').classList.add('hidden');
-    document.getElementById('screen-main').classList.remove('hidden');
-    
-    playClinicalChime('success');
-    showToast(`Welcome ${STATE.currentDoctor.name}! Reference ID verified & Portal Activated.`, 'success');
-    renderAll();
-  }, 400);
+    const data = await res.json().catch(() => null);
+    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-user-check"></i> Register & Open Medix Portal';
+    if (spinner) spinner.classList.add('hidden');
+
+    if (res.ok && data && data.success) {
+      playClinicalChime('success');
+      showToast('Doctor account registered on server! Please sign in with your credentials.', 'success');
+      switchAuthMode('login');
+      const loginEmailInput = document.getElementById('login-email');
+      const loginPassInput = document.getElementById('login-password');
+      if (loginEmailInput) loginEmailInput.value = email;
+      if (loginPassInput) {
+        loginPassInput.value = '';
+        loginPassInput.focus();
+      }
+    } else {
+      const errMsg = (data && data.error && (data.error.message || data.error)) || 'Registration failed on server.';
+      showRegErr(errMsg);
+    }
+  } catch (err) {
+    showRegErr('Network connection failed. Could not reach authentication server.');
+  }
+}async function validateServerSession() {
+  const token = localStorage.getItem('medix_auth_token') || localStorage.getItem('medix_doctor_token');
+  const loginScreen = document.getElementById('screen-login');
+  const mainScreen = document.getElementById('screen-main');
+
+  if (!token) {
+    STATE.isLoggedIn = false;
+    if (mainScreen) mainScreen.classList.add('hidden');
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    return false;
+  }
+
+  try {
+    const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+    const res = await fetch(apiBase + '/api/v1/auth/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+
+    const data = await res.json().catch(() => null);
+    if (res.ok && data && data.success && data.data && data.data.authenticated) {
+      const user = data.data.user || {};
+      const details = user.details || {};
+      const doctorObj = {
+        id: user.id || 101,
+        name: user.name || 'Dr. Medical Practitioner',
+        initials: (user.name || 'DR').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        gender: details.gender || 'Male',
+        email: user.email,
+        phone: user.phone || '+91 98042 22142',
+        referenceId: details.referenceId || ('REF-DOC-' + (user.id || 101)),
+        chamberAddress: details.chamberAddress || 'OPD Suite 302, 3rd Floor, Wing A',
+        pincode: details.pincode || '700016',
+        district: details.district || 'Kolkata',
+        state: details.state || 'West Bengal',
+        titles: 'MBBS, MD, DM, FACC',
+        medicalCollege: 'AIIMS, New Delhi',
+        experienceYears: '12',
+        workExperience: 'Senior Consultant Physician',
+        specialtyLead: details.specialty || 'Interventional Cardiology & Critical Care',
+        department: 'Clinical OPD & Cardiology',
+        experience: '12 Years',
+        room: (details.chamberAddress || 'OPD Suite 302') + ', ' + (details.district || 'Kolkata'),
+        feeOpd: details.consultFee || 800,
+        feeFollowup: 400,
+        feeEmergency: 1500,
+        feeIpd: 1000,
+        dutyStatus: 'AVAILABLE',
+        bio: 'Accredited clinical specialist practicing in ' + (details.district || 'Kolkata') + ', ' + (details.state || 'West Bengal') + '.',
+        broadcastMsg: 'Doctor is available in chamber for consultation.'
+      };
+      STATE.currentDoctor = doctorObj;
+      STATE.isLoggedIn = true;
+      try {
+        localStorage.setItem('medix_doctor_session', JSON.stringify(doctorObj));
+      } catch (_) {}
+      if (loginScreen) loginScreen.classList.add('hidden');
+      if (mainScreen) mainScreen.classList.remove('hidden');
+      renderAll();
+      return true;
+    } else {
+      localStorage.removeItem('medix_auth_token');
+      localStorage.removeItem('medix_doctor_token');
+      localStorage.removeItem('medix_doctor_session');
+      STATE.isLoggedIn = false;
+      if (mainScreen) mainScreen.classList.add('hidden');
+      if (loginScreen) loginScreen.classList.remove('hidden');
+      return false;
+    }
+  } catch (err) {
+    STATE.isLoggedIn = false;
+    if (mainScreen) mainScreen.classList.add('hidden');
+    if (loginScreen) loginScreen.classList.remove('hidden');
+    return false;
+  }
+}
+
+async function handleRegister() {
+  const nameEl = document.getElementById('reg-name');
+  const genderEl = document.getElementById('reg-gender');
+  const specialtyEl = document.getElementById('reg-specialty');
+  const councilNoEl = document.getElementById('reg-council-no');
+  const qualificationEl = document.getElementById('reg-qualification');
+  const phoneEl = document.getElementById('reg-phone');
+  const experienceEl = document.getElementById('reg-experience');
+  const chamberEl = document.getElementById('reg-chamber-address');
+  const pincodeEl = document.getElementById('reg-pincode');
+  const districtEl = document.getElementById('reg-district');
+  const stateEl = document.getElementById('reg-state');
+  const feeEl = document.getElementById('reg-fee');
+  const refIdEl = document.getElementById('reg-reference-id');
+  const emailEl = document.getElementById('reg-email');
+  const passwordEl = document.getElementById('reg-password');
+  const confirmPassEl = document.getElementById('reg-confirm-password');
+  const declarationEl = document.getElementById('reg-declaration');
+
+  const name = nameEl ? nameEl.value.trim() : '';
+  const gender = genderEl ? genderEl.value : 'Male';
+  const specialty = specialtyEl && specialtyEl.value ? specialtyEl.value : 'General Medicine';
+  const councilNo = councilNoEl ? councilNoEl.value.trim() : ('WBMC-' + Math.floor(10000 + Math.random() * 90000));
+  const qualification = qualificationEl && qualificationEl.value.trim() ? qualificationEl.value.trim() : 'MBBS, MD';
+  const phone = phoneEl ? phoneEl.value.trim() : '';
+  const experience = experienceEl ? Number(experienceEl.value) || 8 : 8;
+  const chamberAddress = chamberEl ? chamberEl.value.trim() : '';
+  const pincode = pincodeEl ? pincodeEl.value.trim() : '';
+  const district = districtEl ? districtEl.value.trim() : '';
+  const state = stateEl ? stateEl.value.trim() : '';
+  const consultFee = feeEl ? (Number(feeEl.value) || 800) : 800;
+  const refId = refIdEl ? refIdEl.value.trim() : '';
+  const email = emailEl ? emailEl.value.trim() : '';
+  const password = passwordEl ? passwordEl.value : '';
+  const confirmPassword = confirmPassEl ? confirmPassEl.value : '';
+  const isDeclared = declarationEl ? declarationEl.checked : true;
+
+  const errBox = document.getElementById('register-error') || document.getElementById('reg-error');
+  const errText = document.getElementById('register-error-text') || document.getElementById('reg-error-text');
+  const btnText = document.getElementById('btn-register-text');
+  const spinner = document.getElementById('btn-register-spinner');
+
+  const showRegErr = (msg) => {
+    if (errBox) {
+      errBox.classList.remove('hidden');
+      if (errText) errText.textContent = msg;
+    } else {
+      showToast(msg, 'error');
+    }
+    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-user-check"></i> Register & Open Medix Portal';
+    if (spinner) spinner.classList.add('hidden');
+    playClinicalChime('alert');
+  };
+
+  // Validations
+  if (!name) return showRegErr('Full Practitioner Name is required.');
+  if (!gender) return showRegErr('Doctor gender selection is required.');
+  if (!specialty) return showRegErr('Clinical specialty selection is required.');
+  if (!councilNo) return showRegErr('Medical Council Registration No. is required.');
+  if (!qualification) return showRegErr('Medical qualification is required (e.g. MBBS, MD).');
+  if (!phone || phone.replace(/\D/g, '').length < 10) return showRegErr('Valid 10-digit official mobile number is required.');
+  if (!chamberAddress) return showRegErr('Chamber Address & Clinic Location is required.');
+  if (!pincode) return showRegErr('Postal Pin Code is required.');
+  if (!district) return showRegErr('District is required.');
+  if (!state) return showRegErr('State is required.');
+  if (!refId) return showRegErr('Reference ID is mandatory.');
+  if (!email || !email.includes('@')) return showRegErr('Valid official doctor email is required.');
+  if (!password || password.length < 8) return showRegErr('Password must be at least 8 characters with letters and numbers.');
+  if (confirmPassword && password !== confirmPassword) return showRegErr('Password and Confirm Password do not match.');
+  if (!isDeclared) return showRegErr('Please accept the practitioner registration declaration to proceed.');
+
+  if (btnText) btnText.textContent = 'Registering on Secure Server...';
+  if (spinner) spinner.classList.remove('hidden');
+  if (errBox) errBox.classList.add('hidden');
+
+  // Format clean standardized phone number
+  const cleanDigits = phone.replace(/\D/g, '');
+  const formattedPhone = cleanDigits.length === 10 ? ('+91 ' + cleanDigits) : (phone.startsWith('+') ? phone : ('+' + phone));
+
+  try {
+    const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+    const res = await fetch(apiBase + '/api/v1/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name.startsWith('Dr.') || name.startsWith('Dr ') ? name : ('Dr. ' + name),
+        email: email,
+        phone: formattedPhone,
+        password: password,
+        confirmPassword: password,
+        role: 'doctor',
+        branchId: 1,
+        details: {
+          specialty: specialty,
+          department: specialty,
+          qualification: qualification,
+          registrationNumber: councilNo,
+          experienceYears: experience,
+          fee: consultFee,
+          consultFee: consultFee,
+          chamberAddress: chamberAddress,
+          pincode: pincode,
+          district: district,
+          state: state,
+          referenceId: refId,
+          gender: gender,
+          avatarUrl: regDoctorPhotoBase64 || ''
+        }
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-user-check"></i> Register & Open Medix Portal';
+    if (spinner) spinner.classList.add('hidden');
+
+    if (res.ok && data && data.success) {
+      playClinicalChime('success');
+      showToast('Doctor account registered on server! Please sign in with your credentials.', 'success');
+      switchAuthMode('login');
+      const loginEmailInput = document.getElementById('login-email');
+      const loginPassInput = document.getElementById('login-password');
+      if (loginEmailInput) loginEmailInput.value = email;
+      if (loginPassInput) {
+        loginPassInput.value = '';
+        loginPassInput.focus();
+      }
+    } else {
+      const errMsg = (data && data.error && (data.error.message || data.error)) || 'Registration failed on server.';
+      showRegErr(errMsg);
+    }
+  } catch (err) {
+    showRegErr('Network connection failed. Could not reach authentication server.');
+  }
 }
 
 function togglePasswordVisibility() {
@@ -10405,13 +10293,26 @@ function togglePasswordVisibility() {
   if (input) input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-function handleBiometricScan() {
-  playClinicalChime('chime');
-  showToast("Biometric Scan Verified: Face & Touch ID Matched", "success");
-  handleLogin(true);
+async function handleBiometricScan() {
+  const token = localStorage.getItem('medix_auth_token');
+  if (!token) {
+    playClinicalChime('alert');
+    showToast('No active session token found. Please enter password to authenticate.', 'warning');
+    switchAuthMode('login');
+    return;
+  }
+  const valid = await validateServerSession();
+  if (valid) {
+    playClinicalChime('success');
+    showToast('Biometric Access Key Validated by Server', 'success');
+  } else {
+    playClinicalChime('alert');
+    showToast('Session expired or invalidated. Please sign in with password.', 'warning');
+    switchAuthMode('login');
+  }
 }
 
-function handleLogin(isBiometric = false) {
+async function handleLogin(isBiometric = false) {
   const emailInput = document.getElementById('login-email');
   const passInput = document.getElementById('login-password');
   const rawId = emailInput ? emailInput.value.trim() : '';
@@ -10421,137 +10322,117 @@ function handleLogin(isBiometric = false) {
   const btnText = document.getElementById('btn-login-text');
   const spinner = document.getElementById('btn-login-spinner');
 
+  const showLoginErr = (msg) => {
+    if (errBox) {
+      errBox.classList.remove('hidden');
+      if (errText) errText.textContent = msg;
+    } else {
+      showToast(msg, 'error');
+    }
+    if (btnText) btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Secure Sign In';
+    if (spinner) spinner.classList.add('hidden');
+    playClinicalChime('alert');
+  };
+
+  if (!rawId) return showLoginErr('Please enter your registered Email, Mobile, or Doctor ID.');
+  if (!pass && !isBiometric) return showLoginErr('Please enter your registered account password.');
+
   if (btnText) btnText.textContent = 'Authenticating Doctor Session...';
   if (spinner) spinner.classList.remove('hidden');
   if (errBox) errBox.classList.add('hidden');
 
-  setTimeout(() => {
+  try {
+    const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+    const res = await fetch(apiBase + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: rawId,
+        password: pass,
+        role: 'doctor'
+      })
+    });
+
+    const data = await res.json().catch(() => null);
     if (btnText) btnText.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Secure Sign In';
     if (spinner) spinner.classList.add('hidden');
 
-    let matchedDoc = null;
-    const cleanNum = rawId.replace(/[^0-9]/g, '');
-
-    // 1. Look for existing doctor in local persistent store
-    try {
-      const savedDocsStr = localStorage.getItem('medix_registered_doctors');
-      if (savedDocsStr) {
-        const regDocs = JSON.parse(savedDocsStr);
-        if (Array.isArray(regDocs) && regDocs.length > 0) {
-          if (rawId) {
-            matchedDoc = regDocs.find(d => 
-              (d.email && d.email.toLowerCase() === rawId.toLowerCase()) ||
-              (d.phone && cleanNum && d.phone.replace(/[^0-9]/g, '').includes(cleanNum)) ||
-              (d.referenceId && d.referenceId.toLowerCase() === rawId.toLowerCase()) ||
-              (d.name && d.name.toLowerCase().includes(rawId.toLowerCase()))
-            );
-          }
-          if (!matchedDoc && !rawId) {
-            matchedDoc = regDocs[0];
-          }
-        }
+    if (res.ok && data && (data.success || (data.data && data.data.token))) {
+      const user = (data.data && data.data.user) || data.user || {};
+      const token = (data.data && data.data.token) || data.token;
+      const details = user.details || {};
+      if (token) {
+        try {
+          localStorage.setItem('medix_auth_token', token);
+          localStorage.setItem('medix_doctor_token', token);
+        } catch (_) {}
       }
-    } catch (_) {}
-
-    // 2. If session saved in medix_doctor_session
-    if (!matchedDoc) {
-      try {
-        const sessionStr = localStorage.getItem('medix_doctor_session');
-        if (sessionStr) {
-          const sessionDoc = JSON.parse(sessionStr);
-          if (sessionDoc) {
-            if (!rawId || 
-                (sessionDoc.email && sessionDoc.email.toLowerCase() === rawId.toLowerCase()) ||
-                (sessionDoc.referenceId && sessionDoc.referenceId.toLowerCase() === rawId.toLowerCase()) ||
-                (sessionDoc.phone && cleanNum && sessionDoc.phone.replace(/[^0-9]/g, '').includes(cleanNum)) ||
-                (sessionDoc.name && sessionDoc.name.toLowerCase().includes(rawId.toLowerCase()))) {
-              matchedDoc = sessionDoc;
-            }
-          }
-        }
-      } catch (_) {}
-    }
-
-    // 3. Fallback to active STATE.currentDoctor
-    if (!matchedDoc && STATE.currentDoctor && STATE.currentDoctor.name) {
-      matchedDoc = STATE.currentDoctor;
-    }
-
-    // 4. If a specific email/name was entered that wasn't in DB, create clean verified doctor object
-    if (!matchedDoc && rawId) {
-      const namePart = rawId.includes('@') ? rawId.split('@')[0].replace(/[._0-9]/g, ' ').trim() : rawId.replace(/^Dr\.\s*/i, '').trim();
-      const cleanName = namePart ? (namePart.charAt(0).toUpperCase() + namePart.slice(1)) : 'Doctor';
-      matchedDoc = {
-        id: Date.now(),
-        name: cleanName.startsWith('Dr.') ? cleanName : `Dr. ${cleanName}`,
-        initials: cleanName.slice(0, 2).toUpperCase() || 'DR',
-        email: rawId.includes('@') ? rawId : `${cleanName.toLowerCase().replace(/\s+/g, '')}@medix.hospital`,
-        phone: cleanNum.length >= 10 ? `+91 ${cleanNum.slice(-10)}` : '+91 98042 22142',
-        referenceId: 'REF-DOC-' + Math.floor(1000 + Math.random() * 9000),
-        chamberAddress: "OPD Suite 302, 3rd Floor, Wing A",
-        pincode: "700016",
-        district: "Kolkata",
-        state: "West Bengal",
-        specialtyLead: "Verified Medical Practitioner",
-        gender: "Male",
-        avatarUrl: null
+      const doctorObj = {
+        id: user.id || 101,
+        name: user.name || (rawId.startsWith('Dr.') ? rawId : ('Dr. ' + rawId)),
+        initials: (user.name || 'DR').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+        email: user.email || rawId,
+        phone: user.phone || '+91 98042 22142',
+        referenceId: details.referenceId || ('REF-DOC-' + (user.id || 101)),
+        chamberAddress: details.chamberAddress || 'OPD Suite 302, 3rd Floor, Wing A',
+        pincode: details.pincode || '700016',
+        district: details.district || 'Kolkata',
+        state: details.state || 'West Bengal',
+        specialtyLead: details.specialty || 'General Medicine & Interventional Cardiology',
+        feeOpd: details.consultFee || 800,
+        feeFollowup: 400,
+        feeEmergency: 1500,
+        feeIpd: 1000,
+        dutyStatus: 'AVAILABLE',
+        gender: details.gender || 'Male'
       };
-
-      // Add to registered doctors store
+      STATE.currentDoctor = doctorObj;
+      STATE.isLoggedIn = true;
       try {
-        let docs = JSON.parse(localStorage.getItem('medix_registered_doctors') || '[]');
-        if (Array.isArray(docs)) {
-          docs.push(matchedDoc);
-          localStorage.setItem('medix_registered_doctors', JSON.stringify(docs));
-        }
+        localStorage.setItem('medix_doctor_session', JSON.stringify(doctorObj));
       } catch (_) {}
+      const loginScreen = document.getElementById('screen-login');
+      const mainScreen = document.getElementById('screen-main');
+      if (loginScreen) loginScreen.classList.add('hidden');
+      if (mainScreen) mainScreen.classList.remove('hidden');
+      playClinicalChime('success');
+      showToast('Welcome back, ' + doctorObj.name + '!', 'success');
+      renderAll();
+      return;
+    } else {
+      const errorMsg = (data && data.error && (data.error.message || data.error)) || 'Authentication Failed: Invalid credentials or account not found.';
+      showLoginErr(errorMsg);
+      return;
     }
-
-    // 5. Ultimate fallback if completely empty
-    if (!matchedDoc) {
-      matchedDoc = {
-        id: 1,
-        name: "Dr. Sarah Williams",
-        initials: "SW",
-        email: "sarah.williams@medix.hospital",
-        phone: "+91 98042 22142",
-        referenceId: "REF-DOC-8841",
-        chamberAddress: "OPD Suite 302, 3rd Floor, Wing A",
-        pincode: "700016",
-        district: "Kolkata",
-        state: "West Bengal",
-        gender: "Female",
-        avatarUrl: null
-      };
-    }
-
-    STATE.currentDoctor = matchedDoc;
-    STATE.isLoggedIn = true;
-
-    // Save session
-    try {
-      localStorage.setItem('medix_doctor_session', JSON.stringify(matchedDoc));
-    } catch (_) {}
-
-    const loginScreen = document.getElementById('screen-login');
-    const mainScreen = document.getElementById('screen-main');
-    if (loginScreen) loginScreen.classList.add('hidden');
-    if (mainScreen) mainScreen.classList.remove('hidden');
-    
-    playClinicalChime('success');
-    showToast(`Welcome back, ${STATE.currentDoctor.name}!`, "success");
-    renderAll();
-  }, isBiometric ? 200 : 350);
+  } catch (err) {
+    showLoginErr('Authentication Failed: Server unreachable. Please verify network connection.');
+  }
 }
 
-function handleLogout() {
+async function handleLogout() {
+  const token = localStorage.getItem('medix_auth_token');
+  if (token) {
+    try {
+      const apiBase = (typeof MEDIX_API_BASE !== 'undefined' && MEDIX_API_BASE) ? MEDIX_API_BASE : '';
+      await fetch(apiBase + '/api/v1/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      });
+    } catch (_) {}
+  }
+  localStorage.removeItem('medix_auth_token');
+  localStorage.removeItem('medix_doctor_token');
+  localStorage.removeItem('medix_doctor_session');
   STATE.isLoggedIn = false;
   const mainScreen = document.getElementById('screen-main');
   const loginScreen = document.getElementById('screen-login');
   if (mainScreen) mainScreen.classList.add('hidden');
   if (loginScreen) loginScreen.classList.remove('hidden');
   switchAuthMode('login');
-  showToast("Doctor Session Signed Out", "info");
+  showToast('Doctor Session Signed Out', 'info');
 }
 
 /* ==========================================================================
@@ -12390,158 +12271,11 @@ function getSharedWebDatabaseHospitals() {
 }
 
 let liveHospitalsCache = getSharedWebDatabaseHospitals();
+
 let lastSyncedHospJSON = '';
-
-/* ==========================================================================
-   FIREBASE REALTIME FIRESTORE DATABASE SYNCHRONIZATION ENGINE
-   Direct live two-way synchronization between Web Application and Doctor App
-   ========================================================================== */
-let firebaseDbInstance = null;
-let isFirebaseInitialized = false;
-let latestFirebaseBranches = null;
-let latestFirebaseDoctors = null;
-let latestFirebaseServices = [];
-
-try {
-  const cachedServices = localStorage.getItem('medix_hospital_services');
-  if (cachedServices) latestFirebaseServices = JSON.parse(cachedServices);
-} catch (_) {}
-
-function initFirebaseRealtime() {
-  if (typeof firebase === 'undefined') {
-    console.log('Firebase SDK not loaded, using API polling fallback.');
-    return;
-  }
-  try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
-        projectId: "medix-doctor-app",
-        appId: "1:597194135286:web:5277699f8433217ff7fed7",
-        storageBucket: "medix-doctor-app.firebasestorage.app",
-        apiKey: "AIzaSyBU-4B76uwrc13w-aUUYujASuRmgHBm1wE",
-        authDomain: "medix-doctor-app.firebaseapp.com",
-        messagingSenderId: "597194135286",
-      });
-    }
-    firebaseDbInstance = firebase.firestore();
-    isFirebaseInitialized = true;
-    console.log('🔥 Firebase Realtime Database connected to Medix Doctor App');
-
-    // 1. Listen for real-time Branch / Hospital updates
-    firebaseDbInstance.collection("medix_realtime_db").doc("branches").onSnapshot((docSnap) => {
-      if (docSnap.exists) {
-        const rawBranches = docSnap.data()?.data;
-        if (Array.isArray(rawBranches) && rawBranches.length > 0) {
-          applyFirebaseRosterUpdate(rawBranches, null);
-        }
-      }
-    }, (err) => console.warn('Firebase branches sync notice:', err));
-
-    // 2. Listen for real-time Doctor updates
-    firebaseDbInstance.collection("medix_realtime_db").doc("doctors").onSnapshot((docSnap) => {
-      if (docSnap.exists) {
-        const rawDoctors = docSnap.data()?.data;
-        if (Array.isArray(rawDoctors) && rawDoctors.length > 0) {
-          applyFirebaseRosterUpdate(null, rawDoctors);
-        }
-      }
-    }, (err) => console.warn('Firebase doctors sync notice:', err));
-
-    // 3. Listen for real-time Referrals updates
-    firebaseDbInstance.collection("medix_realtime_db").doc("hospitalReferrals").onSnapshot((docSnap) => {
-      if (docSnap.exists) {
-        const rawReferrals = docSnap.data()?.data;
-        if (Array.isArray(rawReferrals)) {
-          try {
-            localStorage.setItem('medix_hospital_referrals', JSON.stringify(rawReferrals));
-            if (typeof renderReferralHistory === 'function') renderReferralHistory();
-            if (typeof renderWallet === 'function') renderWallet();
-          } catch (_) {}
-        }
-      }
-    }, (err) => console.warn('Firebase referrals sync notice:', err));
-
-    // 4. Listen for real-time Hospital Services registered on Central Web App
-    firebaseDbInstance.collection("medix_realtime_db").doc("services").onSnapshot((docSnap) => {
-      if (docSnap.exists) {
-        const rawServices = docSnap.data()?.data;
-        if (Array.isArray(rawServices)) {
-          latestFirebaseServices = rawServices;
-          try {
-            localStorage.setItem('medix_hospital_services', JSON.stringify(rawServices));
-          } catch (_) {}
-          console.log(`🏥 Medix Doctor App: Synced ${rawServices.length} Real-Time Hospital Services from Website`);
-          if (typeof renderServicesCatalog === 'function') renderServicesCatalog();
-          if (typeof renderServiceDeepExplorer === 'function') {
-            renderServiceDeepExplorer(selectedClinicalServiceId, serviceDeepSearchQuery);
-          }
-        }
-      }
-    }, (err) => console.warn('Firebase services sync notice:', err));
-
-  } catch (err) {
-    console.warn('Firebase Realtime init notice:', err);
-  }
-}
-
-function applyFirebaseRosterUpdate(newBranches, newDoctors) {
-  if (newBranches) latestFirebaseBranches = newBranches;
-  if (newDoctors) latestFirebaseDoctors = newDoctors;
-
-  const branchesToUse = latestFirebaseBranches || (typeof INITIAL_BRANCHES !== 'undefined' ? INITIAL_BRANCHES : []);
-  const doctorsToUse = latestFirebaseDoctors || (typeof INITIAL_DOCTORS !== 'undefined' ? INITIAL_DOCTORS : []);
-
-  if (!branchesToUse || branchesToUse.length === 0) return;
-
-  const merged = branchesToUse.map(b => {
-    const branchDocs = doctorsToUse.filter(d => d.branchId === b.id || (d.branchName && d.branchName.toLowerCase().includes(b.name.toLowerCase())));
-    const docsList = branchDocs.map(d => ({
-      id: d.id,
-      name: d.name,
-      specialty: d.specialty || 'General Specialist',
-      department: d.department || d.specialty || 'General Medicine',
-      qualification: d.qualification || 'MBBS, MD',
-      fee: d.fee || 700,
-      phone: d.phone || b.adminPhone || b.phone || '+91 91443 76971',
-      status: d.status || 'available',
-      rating: d.rating || '5.0',
-      experience: d.experience || '7 years experience',
-      image: d.image || d.avatarUrl || '',
-      avatarUrl: d.avatarUrl || d.image || '',
-    }));
-
-    return {
-      id: b.id,
-      code: b.code || `HOSP-${b.id}`,
-      name: b.name,
-      location: b.location || 'Kolkata, West Bengal',
-      address: b.address || 'Kolkata, West Bengal',
-      branchHead: b.branchHead || '',
-      status: b.status || 'active',
-      statusText: b.bedOccupancy ? `${b.bedOccupancy} • Live Web Desk` : 'Emergency & Clinical Desk Active (24x7)',
-      phone: b.phone || b.adminPhone || (b.name && b.name.toLowerCase().includes('ariyan') ? '+91 91443 76971' : '+91 98042 22142'),
-      email: b.adminEmail || 'ariyanhospital9@gmail.com',
-      doctors: docsList
-    };
-  });
-
-  liveHospitalsCache = merged;
-  try {
-    localStorage.setItem('medix_live_hospitals_cache', JSON.stringify(liveHospitalsCache));
-  } catch (_) {}
-
-  populateHospitalSelect();
-  renderHospitalDirectory(document.getElementById('hosp-directory-search')?.value || '');
-  renderTopHospitalsSlider();
-  if (typeof renderServicesCatalog === 'function') renderServicesCatalog();
-}
 
 async function syncWebHospitalsAndDoctors() {
   try {
-    // 0. Connect Firebase Realtime Listener
-    if (!isFirebaseInitialized) {
-      initFirebaseRealtime();
-    }
     // 1. Instant Synchronous Read from Common LocalStorage Database
     const localSynced = getSharedWebDatabaseHospitals();
     const currentJSON = JSON.stringify(localSynced);
@@ -12556,45 +12290,45 @@ async function syncWebHospitalsAndDoctors() {
       renderTopHospitalsSlider();
     }
 
-    // 2. Asynchronous API fetch for Remote APK / Server Synchronization
-    // Production-Ready Multi-Host API Resolver:
-    // Priority 1: Explicit override via global MEDIX_API_BASE (set by host app if needed)
-    // Priority 2: Same-origin when running on a real HTTP server (localhost dev or Vercel)
-    // Priority 3: Vercel Production URL (Android WebView / file:// / offline contexts)
-    const PRODUCTION_API = 'https://medix-hospital-system.vercel.app';
-    let primaryApi = PRODUCTION_API;
-    if (typeof window !== 'undefined' && window.location && window.location.origin) {
-      const origin = window.location.origin;
-      if (origin.startsWith('http://') || origin.startsWith('https://')) {
-        primaryApi = origin;
+    // 2. Asynchronous API fetch for Remote APK / Server Synchronization (FIREBASE FIRESTORE SYNC)
+    function parseFirestoreValue(val) {
+      if (!val) return null;
+      if (val.stringValue !== undefined) return val.stringValue;
+      if (val.integerValue !== undefined) return parseInt(val.integerValue, 10);
+      if (val.doubleValue !== undefined) return parseFloat(val.doubleValue);
+      if (val.booleanValue !== undefined) return val.booleanValue;
+      if (val.arrayValue) return (val.arrayValue.values || []).map(parseFirestoreValue);
+      if (val.mapValue && val.mapValue.fields) {
+        const obj = {};
+        for (const key in val.mapValue.fields) {
+          obj[key] = parseFirestoreValue(val.mapValue.fields[key]);
+        }
+        return obj;
       }
+      return null;
     }
 
-    // Try primary host first, with dual-fallback to production Vercel app
-    let [hospRes, docRes] = await Promise.all([
-      fetch(`${primaryApi}/api/v1/hospitals`, {
-        headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-      }).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(`${primaryApi}/api/v1/doctors`, {
-        headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-      }).then(r => r.ok ? r.json() : null).catch(() => null),
+    async function fetchFirestoreData(docName) {
+      try {
+        const res = await fetch(`https://firestore.googleapis.com/v1/projects/medix-doctor-app/databases/(default)/documents/medix_realtime_db/${docName}`);
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (json.fields && json.fields.data) {
+          return parseFirestoreValue(json.fields.data);
+        }
+      } catch (e) {
+        console.error("Firestore fetch error:", e);
+      }
+      return null;
+    }
+
+    let [rawHosp, rawDoc] = await Promise.all([
+      fetchFirestoreData('branches'),
+      fetchFirestoreData('doctors')
     ]);
 
-    // If local dev didn't return hospitals or in offline APK, fetch from online Vercel web app
-    if ((!hospRes || !hospRes.data || !hospRes.data.hospitals || hospRes.data.hospitals.length === 0) && primaryApi !== PRODUCTION_API) {
-      const [vHospRes, vDocRes] = await Promise.all([
-        fetch(`${PRODUCTION_API}/api/v1/hospitals`, {
-          headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-        }).then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch(`${PRODUCTION_API}/api/v1/doctors`, {
-          headers: { 'x-api-key': 'medix_live_sec_app_key_2026_wb33735581_ariyan' }
-        }).then(r => r.ok ? r.json() : null).catch(() => null),
-      ]);
-      if (vHospRes && vHospRes.data && vHospRes.data.hospitals && vHospRes.data.hospitals.length > 0) {
-        hospRes = vHospRes;
-        docRes = vDocRes || docRes;
-      }
-    }
+    let hospRes = rawHosp && rawHosp.length > 0 ? { success: true, data: { hospitals: rawHosp } } : null;
+    let docRes = rawDoc && rawDoc.length > 0 ? { success: true, data: { doctors: rawDoc } } : null;
 
     if (hospRes && hospRes.success && hospRes.data && hospRes.data.hospitals && hospRes.data.hospitals.length > 0) {
       const fetchedHosps = hospRes.data.hospitals;
@@ -13001,20 +12735,6 @@ function executeHospitalReferral() {
             body: JSON.stringify(referralRecord)
           }).catch(e => console.log('Referral dispatched locally and queued for cloud sync:', e));
         } catch (_) {}
-
-        // 4. Real-time write to Firebase Firestore (Direct Web App Reception Desk Link)
-        if (firebaseDbInstance) {
-          try {
-            firebaseDbInstance.collection("medix_realtime_db").doc("hospitalReferrals").get().then(docSnap => {
-              let existingRefs = [];
-              if (docSnap.exists) {
-                existingRefs = docSnap.data()?.data || [];
-              }
-              existingRefs.unshift(referralRecord);
-              firebaseDbInstance.collection("medix_realtime_db").doc("hospitalReferrals").set({ data: existingRefs });
-            }).catch(fbErr => console.warn('Firebase referral sync notice:', fbErr));
-          } catch (_) {}
-        }
 
         // Add to patient timeline
         if (activeReferralPatient.history) {
@@ -13539,136 +13259,136 @@ function calculateHospitalLiveMetrics(h) {
    ========================================================================== */
 const CLINICAL_SERVICES_CATALOG = [
   {
+    id: 'eye-care',
+    name: 'EYE CARE',
+    watermarkText: 'CARE CENTER',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(88, 28, 135, 0.42) 0%, rgba(59, 7, 100, 0.78) 100%)',
+    departmentKey: 'Ophthalmology & Eye Care',
+    description: 'Comprehensive Eye Examination, Cataract, Glaucoma, Retina & Advanced Laser Vision Care.',
+    keywords: ['eye', 'eye care', 'ophthalmology', 'vision', 'cataract', 'glaucoma', 'retina', 'optometry', 'spectacles']
+  },
+  {
+    id: 'hair-care',
+    name: 'HAIR CARE',
+    watermarkText: 'CARE',
+    watermarkIcon: 'fa-wand-magic-sparkles',
+    image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(20, 83, 45, 0.42) 0%, rgba(6, 78, 59, 0.78) 100%)',
+    departmentKey: 'Dermatology & Trichology',
+    description: 'Advanced Hair Restoration, PRP Therapy, Scalp Rejuvenation & Clinical Trichology.',
+    keywords: ['hair', 'hair care', 'trichology', 'dermatology', 'scalp', 'hair transplant', 'skin']
+  },
+  {
+    id: 'home-care',
+    name: 'HOME CARE',
+    watermarkText: 'HOME CARE',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(13, 148, 136, 0.42) 0%, rgba(19, 78, 74, 0.8) 100%)',
+    departmentKey: 'Home Healthcare & Caregivers',
+    description: 'Doctor Home Visits, Elderly Care Assistance, Domiciliary Rehabilitation & Post-Op Support.',
+    keywords: ['home care', 'home', 'elderly', 'domiciliary', 'caregiver', 'assisted', 'rehab']
+  },
+  {
+    id: 'home-care-nurse',
+    name: 'HOME CARE NURSE',
+    watermarkText: 'NURSE',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(157, 23, 77, 0.42) 0%, rgba(131, 24, 67, 0.8) 100%)',
+    departmentKey: 'Home Nursing Services',
+    description: 'Certified 24x7 Bedside Nursing, Injections, Wound Dressing, IV Infusion & Vitals Monitoring.',
+    keywords: ['nurse', 'home care nurse', 'nursing', 'injection', 'dressing', 'bedside', 'iv drip']
+  },
+  {
+    id: 'homoeopathy',
+    name: 'HOMOEOPATHY',
+    watermarkText: '',
+    watermarkIcon: 'fa-staff-snake',
+    image: 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(120, 53, 15, 0.42) 0%, rgba(69, 26, 3, 0.8) 100%)',
+    departmentKey: 'Homoeopathic Medicine',
+    description: 'Classical Homoeopathy, Holistic Constitutional Treatment & Chronic Illness Management.',
+    keywords: ['homoeopathy', 'homeopathy', 'ayush', 'ayurveda', 'herbal', 'natural', 'chronic']
+  },
+  {
     id: 'hospital',
     name: 'HOSPITAL',
-    watermarkText: '24X7 ADMISSIONS',
+    watermarkText: '',
     watermarkIcon: 'fa-hospital',
     image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(30, 64, 175, 0.45) 0%, rgba(15, 23, 42, 0.88) 100%)',
-    departmentKey: 'Multispeciality Inpatient & ICU',
-    description: '24x7 Multispeciality Hospital, Emergency ICU/CCU & Inpatient Wards.',
+    overlayGradient: 'linear-gradient(180deg, rgba(30, 58, 138, 0.45) 0%, rgba(15, 23, 42, 0.82) 100%)',
+    departmentKey: 'Multispeciality Hospital',
+    description: '24x7 Multispeciality Hospital, Emergency ICU/CCU, Modular Operation Theatres & Inpatient Wards.',
     keywords: ['hospital', 'multispeciality', 'admission', 'emergency', 'icu', 'surgery', 'ipd', 'trauma']
   },
   {
-    id: 'pharmacy',
-    name: 'PHARMACY',
-    watermarkText: '24X7 MEDICINES',
-    watermarkIcon: 'fa-prescription-bottle-medical',
-    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(5, 150, 105, 0.45) 0%, rgba(6, 78, 59, 0.88) 100%)',
-    departmentKey: 'Central Medicine Store & Dispensary',
-    description: '24x7 Medicine Store, Emergency Injections & Digital Prescription Dispensing.',
-    keywords: ['pharmacy', 'medicine', 'drug', 'chemist', 'prescription', 'medicines', 'injection', 'rx']
+    id: 'ivf-centre',
+    name: 'IVF CENTRE',
+    watermarkText: '',
+    watermarkIcon: 'fa-baby',
+    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(190, 24, 93, 0.4) 0%, rgba(136, 19, 55, 0.78) 100%)',
+    departmentKey: 'IVF & Reproductive Medicine',
+    description: 'State-of-the-art IVF Fertility Center, IUI, ICSI, Embryology Lab & High-Risk Pregnancy Care.',
+    keywords: ['ivf', 'ivf centre', 'fertility', 'reproduction', 'maternity', 'gynecology', 'infertility', 'pregnancy']
+  },
+  {
+    id: 'night-care-team',
+    name: 'NIGHT CARE TEAM',
+    watermarkText: 'ALWAYS THERE FOR YOU',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(15, 23, 42, 0.5) 0%, rgba(2, 6, 23, 0.88) 100%)',
+    departmentKey: '24x7 Emergency & Night Care',
+    description: 'Rapid Night Emergency ALS Ambulance, Doctor On-Call, Triage & Overnight Medical Escort.',
+    keywords: ['night care', 'night care team', 'night', 'emergency', '24x7', 'als', 'ambulance', 'urgent', 'trauma']
+  },
+  {
+    id: 'nursing-home',
+    name: 'NURSING HOME',
+    watermarkText: '',
+    watermarkIcon: 'fa-wheelchair',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(30, 64, 175, 0.42) 0%, rgba(15, 23, 42, 0.82) 100%)',
+    departmentKey: 'Nursing Home & Geriatrics',
+    description: 'Deluxe Cabins, General Wards, Geriatric Inpatient Care, Post-Surgical Rehab & Nursing.',
+    keywords: ['nursing home', 'nursing', 'elderly care', 'inpatient', 'stay', 'rehab', 'cabin', 'ward']
   },
   {
     id: 'pathology-lab',
     name: 'PATHOLOGY LAB',
-    watermarkText: 'NABL DIAGNOSTICS',
-    watermarkIcon: 'fa-flask-vial',
+    watermarkText: '',
+    watermarkIcon: 'fa-droplet',
     image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(220, 38, 38, 0.45) 0%, rgba(127, 29, 29, 0.88) 100%)',
-    departmentKey: 'Automated Clinical Diagnostic Lab',
-    description: 'Automated Biochemistry, Hematology (CBC), Hormonal Assays & Fast Barcoded Reports.',
+    overlayGradient: 'linear-gradient(180deg, rgba(185, 28, 28, 0.45) 0%, rgba(127, 29, 29, 0.82) 100%)',
+    departmentKey: 'Pathology & Clinical Lab',
+    description: 'Automated Biochemistry, Hematology, Microbiology, Hormonal Assays & Fast Digital Reports.',
     keywords: ['pathology', 'pathology lab', 'lab', 'blood test', 'diagnostic', 'biochemistry', 'sample', 'cbc']
   },
   {
-    id: 'inpatient-beds',
-    name: 'INPATIENT & BEDS',
-    watermarkText: 'IPD WARDS',
-    watermarkIcon: 'fa-bed',
-    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(79, 70, 229, 0.45) 0%, rgba(49, 46, 129, 0.88) 100%)',
-    departmentKey: 'Hospital Wards & Bed Allotment',
-    description: 'ICU, CCU, Deluxe AC Cabins, General Wards with 24x7 RMO & Nursing Support.',
-    keywords: ['inpatient', 'ipd', 'bed', 'beds', 'ward', 'admission', 'icu', 'cabin', 'hospital bed']
+    id: 'pharmacy',
+    name: 'PHARMACY',
+    watermarkText: 'MEDICINE',
+    watermarkIcon: null,
+    image: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=500&auto=format&fit=crop&q=70',
+    overlayGradient: 'linear-gradient(180deg, rgba(49, 46, 129, 0.48) 0%, rgba(30, 27, 75, 0.85) 100%)',
+    departmentKey: '24x7 Pharmacy',
+    description: '24x7 Genuine Critical Medicines, Injections, Surgical Consumables & Instant Doorstep Dispatch.',
+    keywords: ['pharmacy', 'medicine', 'drug', 'chemist', 'prescription', 'medicines', 'injection']
   },
   {
-    id: 'eye-care',
-    name: 'EYE CARE',
-    watermarkText: 'VISION SUITE',
-    watermarkIcon: 'fa-eye',
-    image: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(2, 132, 199, 0.45) 0%, rgba(12, 74, 110, 0.88) 100%)',
-    departmentKey: 'Ophthalmology & Vision Clinic',
-    description: 'Advanced Cataract Surgery, Retinal Care, Glaucoma & Computerized Refraction.',
-    keywords: ['eye', 'eye care', 'ophthalmology', 'vision', 'cataract', 'glaucoma', 'retina', 'optometry']
-  },
-  {
-    id: 'cardiology',
-    name: 'CARDIOLOGY',
-    watermarkText: 'HEART STATION',
-    watermarkIcon: 'fa-heart-pulse',
-    image: 'https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(225, 29, 72, 0.45) 0%, rgba(136, 19, 55, 0.88) 100%)',
-    departmentKey: 'Cardiovascular & Heart Station',
-    description: 'Interventional Cardiology, ECG, 2D ECHO, Holter & 24x7 Cardiac Emergency.',
-    keywords: ['cardiology', 'heart', 'ecg', 'echo', 'cardiac', 'chest pain', 'cardiovascular']
-  },
-  {
-    id: 'emergency-icu',
-    name: 'EMERGENCY & ICU',
-    watermarkText: '24X7 CRITICAL',
-    watermarkIcon: 'fa-truck-medical',
-    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(185, 28, 28, 0.45) 0%, rgba(69, 10, 10, 0.88) 100%)',
-    departmentKey: '24x7 Critical Care & Trauma',
-    description: '24x7 Emergency Triage, Critical Care ICU/CCU, Ventilator & Trauma Support.',
-    keywords: ['emergency', 'icu', 'ccu', 'trauma', 'ambulance', 'critical care', 'ventilator', 'night care']
-  },
-  {
-    id: 'dental-care',
-    name: 'DENTAL CARE',
-    watermarkText: 'DENTAL CLINIC',
-    watermarkIcon: 'fa-tooth',
-    image: 'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(13, 148, 136, 0.45) 0%, rgba(19, 78, 74, 0.88) 100%)',
-    departmentKey: 'Dental & Maxillofacial Suite',
-    description: 'Root Canal, Orthodontic Aligners, Dental Implants & Maxillofacial Surgery.',
-    keywords: ['dental', 'tooth', 'dentist', 'teeth', 'root canal', 'aligners', 'implants', 'maxillofacial']
-  },
-  {
-    id: 'mother-child',
-    name: 'MOTHER & CHILD',
-    watermarkText: 'NICU & MATERNITY',
-    watermarkIcon: 'fa-baby',
-    image: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(217, 70, 239, 0.45) 0%, rgba(112, 26, 117, 0.88) 100%)',
-    departmentKey: 'Maternity, NICU & Pediatrics',
-    description: 'High-Risk Obstetrics, Level-III NICU, Child Vaccination & Pediatric Intensive Care.',
-    keywords: ['mother', 'child', 'maternity', 'pediatrics', 'pedia', 'nicu', 'baby', 'pregnancy', 'vaccination']
-  },
-  {
-    id: 'orthopedics',
-    name: 'ORTHOPEDICS',
-    watermarkText: 'JOINT & SPINE',
-    watermarkIcon: 'fa-bone',
+    id: 'physiotherapy',
+    name: 'PHYSIOTHERAPY',
+    watermarkText: 'CENTER',
+    watermarkIcon: 'fa-person-walking',
     image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(202, 138, 4, 0.45) 0%, rgba(113, 63, 18, 0.88) 100%)',
-    departmentKey: 'Bone, Joint & Spine Surgery',
-    description: 'Joint Replacement (Knee & Hip), Arthroscopy, Trauma Reconstruction & Physiotherapy.',
-    keywords: ['orthopedics', 'ortho', 'bone', 'joint', 'fracture', 'spine', 'physiotherapy', 'knee replacement']
-  },
-  {
-    id: 'radiology',
-    name: 'RADIOLOGY & SCAN',
-    watermarkText: 'DIGITAL SCAN',
-    watermarkIcon: 'fa-x-ray',
-    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(71, 85, 105, 0.45) 0%, rgba(15, 23, 42, 0.88) 100%)',
-    departmentKey: 'Advanced Medical Imaging',
-    description: 'High-Resolution Digital X-Ray, 4D Ultrasound, Color Doppler & CT Scan.',
-    keywords: ['radiology', 'xray', 'x-ray', 'ct scan', 'ultrasound', 'usg', 'imaging', 'mri', 'doppler']
-  },
-  {
-    id: 'doctor-opd',
-    name: 'DOCTOR OPD',
-    watermarkText: 'OPD CHAMBERS',
-    watermarkIcon: 'fa-user-doctor',
-    image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=500&auto=format&fit=crop&q=70',
-    overlayGradient: 'linear-gradient(180deg, rgba(37, 99, 235, 0.45) 0%, rgba(30, 58, 138, 0.88) 100%)',
-    departmentKey: 'Specialist OPD Consultations',
-    description: 'Daily Outpatient Chambers, Super-Specialist Roster & Fast Token Allocation.',
-    keywords: ['doctor', 'opd', 'consultation', 'chamber', 'specialist', 'physician', 'appointment']
+    overlayGradient: 'linear-gradient(180deg, rgba(63, 98, 18, 0.45) 0%, rgba(20, 83, 45, 0.82) 100%)',
+    departmentKey: 'Physiotherapy & Rehabilitation',
+    description: 'Orthopaedic & Neurological Physical Therapy, Joint Mobilization, Stroke Rehab & Pain Relief.',
+    keywords: ['physiotherapy', 'physio', 'rehab', 'rehabilitation', 'exercise', 'joint', 'pain', 'ortho']
   }
 ];
 
@@ -13684,6 +13404,7 @@ function renderServicesDirectory(initialServiceOrCat = null) {
   }
 
   renderServicesCatalog();
+  renderSelectedServiceHospitals();
 }
 
 function handleServiceSearch(query) {
@@ -13694,6 +13415,7 @@ function handleServiceSearch(query) {
     else clearBtn.classList.add('hidden');
   }
   renderServicesCatalog();
+  renderSelectedServiceHospitals();
 }
 
 function clearServiceSearch() {
@@ -13707,6 +13429,7 @@ function resetMedicalServices() {
   selectedClinicalServiceId = 'hospital';
   playClinicalChime('click');
   renderServicesCatalog();
+  renderSelectedServiceHospitals();
   showToast('🔄 Medical services updated & refreshed!', 'info');
 }
 
@@ -13714,367 +13437,12 @@ function selectClinicalService(serviceId) {
   selectedClinicalServiceId = serviceId;
   playClinicalChime('click');
   renderServicesCatalog();
-  openServiceDeepView(serviceId);
-}
+  renderSelectedServiceHospitals();
 
-let serviceDeepSearchQuery = '';
-
-function escapeDoctorName(name) {
-  return (name || '').replace(/'/g, "\\'");
-}
-
-function openServiceDeepView(serviceId) {
-  selectedClinicalServiceId = serviceId || 'hospital';
-  serviceDeepSearchQuery = '';
-  const searchInput = document.getElementById('service-explorer-search-input');
-  if (searchInput) searchInput.value = '';
-  
-  const service = CLINICAL_SERVICES_CATALOG.find(s => s.id === selectedClinicalServiceId) || CLINICAL_SERVICES_CATALOG[0];
-  
-  const modal = document.getElementById('modal-service-action');
-  if (!modal) return;
-
-  const banner = document.getElementById('service-action-banner');
-  const title = document.getElementById('service-action-title');
-  const desc = document.getElementById('service-action-desc');
-  const badge = document.getElementById('service-action-badge');
-
-  if (banner && service) banner.style.backgroundImage = `url('${service.image}')`;
-  if (title && service) title.textContent = service.name;
-  if (desc && service) desc.textContent = service.description;
-  if (badge && service) badge.textContent = service.departmentKey || 'Clinical Service';
-
-  renderServiceDeepExplorer(selectedClinicalServiceId, '');
-  
-  modal.classList.remove('hidden');
-  try { playClinicalChime('click'); } catch(_) {}
-}
-
-function handleServiceDeepSearch(query) {
-  serviceDeepSearchQuery = (query || '').trim().toLowerCase();
-  renderServiceDeepExplorer(selectedClinicalServiceId, serviceDeepSearchQuery);
-}
-
-function renderHospitalBoardCard(h, service, options = {}) {
-  const hospPhotos = [
-    'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&auto=format&fit=crop&q=70',
-    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&auto=format&fit=crop&q=70',
-    'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&auto=format&fit=crop&q=70',
-    'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format&fit=crop&q=70'
-  ];
-  const photo = options.photo || hospPhotos[h.id % hospPhotos.length];
-  const phone = h.phone || h.adminPhone || '+91 91443 76971';
-  const docs = options.docs || (h.doctors || []);
-  const serviceTitle = options.serviceTitle || service.name;
-  const serviceBadge = options.serviceBadge || (service.departmentKey || 'Clinical Unit');
-  const serviceIcon = options.serviceIcon || (service.watermarkIcon || 'fa-hospital');
-  const chips = options.chips || [];
-  const actionBtnText = options.actionBtnText || 'Book Appointment';
-  const actionBtnIcon = options.actionBtnIcon || 'fa-calendar-check';
-  const actionBtnOnClick = options.actionBtnOnClick || `closeModal('modal-service-action'); openReferWithHospitalAndDoctor(${h.id}, '')`;
-  const callBtnLabel = options.callBtnLabel || `Call Desk: ${phone}`;
-  const statusBadge = options.statusBadge || '24x7 Active Facility';
-
-  return `
-    <div class="hospital-board-card" style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:18px; overflow:hidden; box-shadow:0 6px 20px rgba(15,23,42,0.06); display:flex; flex-direction:column; margin-bottom:14px; transition:transform 0.2s ease, box-shadow 0.2s ease;">
-      
-      <!-- 1. Hospital Board Banner Header with Real Picture & Gradient Tint -->
-      <div style="height:105px; background-image:url('${photo}'); background-size:cover; background-position:center; position:relative; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
-        <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.88) 100%);"></div>
-        
-        <div style="position:relative; z-index:2; display:flex; justify-content:space-between; align-items:center;">
-          <span style="background:rgba(16,185,129,0.95); backdrop-filter:blur(4px); color:#FFFFFF; font-size:10px; font-weight:800; padding:3px 9px; border-radius:7px; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 6px rgba(0,0,0,0.15);">
-            <i class="fa-solid fa-circle-check" style="font-size:9px;"></i> ${statusBadge}
-          </span>
-          <span style="background:rgba(15,23,42,0.75); backdrop-filter:blur(6px); color:#F8FAFC; border:1px solid rgba(255,255,255,0.2); font-size:10px; font-weight:800; padding:3px 9px; border-radius:7px; font-family:monospace; letter-spacing:0.5px;">
-            ${h.code || `HOSP-${h.id}`}
-          </span>
-        </div>
-
-        <div style="position:relative; z-index:2;">
-          <span style="color:#93C5FD; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:5px; margin-bottom:1px;">
-            <i class="fa-solid ${serviceIcon}"></i> ${serviceTitle} • ${serviceBadge}
-          </span>
-          <h4 style="margin:0; color:#FFFFFF; font-size:15px; font-weight:900; line-height:1.25; letter-spacing:-0.2px; text-shadow:0 1px 3px rgba(0,0,0,0.4);">
-            ${h.name}
-          </h4>
-        </div>
-      </div>
-
-      <!-- 2. Hospital Details & Capability Board Body -->
-      <div style="padding:13px 14px 14px; display:flex; flex-direction:column; gap:10px; background:#FFFFFF;">
-        
-        <!-- Location & Live Status Row -->
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; font-size:11.5px; color:#475569;">
-          <div style="display:flex; align-items:center; gap:5px; font-weight:600;">
-            <i class="fa-solid fa-location-dot" style="color:#DC2626; font-size:12px;"></i>
-            <span>${h.location || 'Kolkata, West Bengal'}</span>
-          </div>
-          <span style="background:#EFF6FF; color:#1E40AF; border:1px solid #DBEAFE; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;">
-            <i class="fa-solid fa-shield-halved" style="color:#2563EB;"></i> ${h.statusText || 'Bed Occupancy: Active'}
-          </span>
-        </div>
-
-        <!-- Capability Board Box (Chips) -->
-        ${chips.length > 0 ? `
-          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:9px 11px; display:flex; flex-direction:column; gap:6px;">
-            <div style="font-size:10px; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:5px; text-transform:uppercase; letter-spacing:0.4px;">
-              <i class="fa-solid fa-circle-nodes" style="color:#2563EB;"></i> Facility Capabilities & Live Desks:
-            </div>
-            <div style="display:flex; flex-wrap:wrap; gap:5px;">
-              ${chips.map(chip => `
-                <span style="background:#FFFFFF; border:1px solid #CBD5E1; color:#334155; font-size:10px; font-weight:700; padding:3px 7px; border-radius:6px; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.03);">
-                  ${chip}
-                </span>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- 3. Doctors List (If Doctors assigned to this branch/service) -->
-        ${options.showDoctors ? `
-          <div class="service-doctors-accordion" style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; padding:10px 12px; margin-top:2px;">
-            <div class="service-doctors-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; font-size:11.5px; font-weight:800; color:#1E293B;">
-              <span><i class="fa-solid fa-user-doctor" style="color:#2563EB;"></i> Available Specialists (${docs.length})</span>
-              <span style="font-size:10px; color:#059669; font-weight:700; background:#ECFDF5; padding:2px 7px; border-radius:6px; border:1px solid #A7F3D0;">Live Database</span>
-            </div>
-
-            ${docs.length === 0 ? `
-              <div style="padding:12px; text-align:center; font-size:11.5px; color:#94A3B8; font-style:italic;">
-                No registered specialists currently assigned to this hospital branch.
-              </div>
-            ` : docs.map(d => {
-              const docPhoto = d.image || d.avatarUrl || (d.photo ? d.photo : getDoctorPhotoUrl(d.name));
-              const docFee = d.fee || 700;
-              const docPhone = d.phone || phone;
-              return `
-                <div class="service-doctor-row" style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:8px 10px; margin-bottom:7px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
-                  <img src="${docPhoto}" alt="${d.name}" class="service-doctor-img" style="width:42px; height:42px; min-width:42px; border-radius:10px; object-fit:cover; border:1px solid #E2E8F0;" onerror="this.src='https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=60'">
-                  <div class="service-doctor-info" style="flex:1; min-width:0;">
-                    <h5 class="service-doctor-name" style="font-size:12px; font-weight:800; color:#0F172A; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.name}</h5>
-                    <div class="service-doctor-spec" style="font-size:10.5px; font-weight:600; color:#2563EB; margin:1px 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.specialty || 'General Specialist'} ${d.qualification ? `• ${d.qualification}` : ''}</div>
-                    <div class="service-doctor-fee-tag" style="font-size:10px; font-weight:700; color:#059669;">Fee: ₹${docFee} • <span style="color:#059669;">● ${d.status === 'busy' ? 'In Consultation' : (d.status === 'off-duty' ? 'Off-Duty' : 'Available')}</span></div>
-                  </div>
-                  <div class="service-doctor-actions" style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
-                    <a href="tel:${docPhone}" class="btn-doc-phone-action" title="Call Doctor Direct" style="background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; border-radius:8px; padding:6px 9px; font-size:10.5px; font-weight:800; display:flex; align-items:center; gap:4px; text-decoration:none;">
-                      <i class="fa-solid fa-phone"></i> Call
-                    </a>
-                    <button onclick="closeModal('modal-service-action'); openReferWithHospitalAndDoctor(${h.id}, '${escapeDoctorName(d.name)}')" class="btn-doc-book-action" style="background:#2563EB; color:#FFFFFF; border:none; border-radius:8px; padding:6px 11px; font-size:10.5px; font-weight:800; display:flex; align-items:center; gap:4px; cursor:pointer;">
-                      <i class="fa-solid fa-calendar-check"></i> Book
-                    </button>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        ` : ''}
-
-        <!-- 4. Bottom Action Bar with Solid Distinct Buttons -->
-        <div style="display:flex; align-items:center; gap:8px; padding-top:4px; border-top:1px solid #F1F5F9;">
-          <!-- Call Button: Emerald Green Pill Button -->
-          <a href="tel:${phone}" style="flex:1; background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; border-radius:10px; padding:9px 10px; font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; box-shadow:0 2px 4px rgba(4,120,87,0.08); transition:all 0.2s ease;">
-            <i class="fa-solid fa-phone" style="font-size:11px;"></i> ${callBtnLabel}
-          </a>
-          
-          <!-- Direct Action Booking Button -->
-          <button onclick="${actionBtnOnClick}" style="flex:1; background:linear-gradient(135deg, #1E40AF 0%, #2563EB 100%); color:#FFFFFF; border:none; border-radius:10px; padding:9px 12px; font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; box-shadow:0 2px 8px rgba(37,99,235,0.25); transition:all 0.2s ease;">
-            <i class="fa-solid ${actionBtnIcon}"></i> ${actionBtnText}
-          </button>
-        </div>
-
-      </div>
-
-    </div>
-  `;
-}
-
-function getHospitalRegisteredServices(hospitalId, service) {
-  if (!Array.isArray(latestFirebaseServices) || latestFirebaseServices.length === 0) {
-    return [];
+  const targetView = document.getElementById('service-selected-view-container');
+  if (targetView) {
+    targetView.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
-  const keywords = (service.keywords || [service.id]).map(k => (k || '').toLowerCase());
-  const serviceName = (service.name || '').toLowerCase();
-  const serviceDept = (service.departmentKey || '').toLowerCase();
-
-  return latestFirebaseServices.filter(s => {
-    if (!s || s.branchId !== hospitalId) return false;
-    if (s.status !== 'active' && s.status !== '24x7') return false;
-
-    const cat = (s.category || '').toLowerCase();
-    const name = (s.name || '').toLowerCase();
-    const dept = (s.department || '').toLowerCase();
-    const desc = (s.description || '').toLowerCase();
-
-    const matchesKeyword = keywords.some(k => cat.includes(k) || name.includes(k) || dept.includes(k) || desc.includes(k));
-    const matchesName = serviceName.includes(cat) || cat.includes(serviceName) || name.includes(serviceName) || serviceName.includes(name);
-    const matchesDept = serviceDept.includes(cat) || cat.includes(serviceDept) || dept.includes(serviceDept);
-
-    return matchesKeyword || matchesName || matchesDept;
-  });
-}
-
-function renderServiceDeepExplorer(serviceId, searchQuery = '') {
-  const container = document.getElementById('service-action-dynamic-content');
-  const countBadge = document.getElementById('service-action-count-badge');
-  if (!container) return;
-
-  const service = CLINICAL_SERVICES_CATALOG.find(s => s.id === serviceId) || CLINICAL_SERVICES_CATALOG[0];
-  const q = (searchQuery || '').toLowerCase();
-
-  // 1. HOSPITAL SERVICE: Render ALL registered hospitals with live doctors & capability matrix
-  if (serviceId === 'hospital') {
-    let list = [...liveHospitalsCache];
-    if (q) {
-      list = list.filter(h => 
-        h.name.toLowerCase().includes(q) ||
-        (h.location && h.location.toLowerCase().includes(q)) ||
-        (h.address && h.address.toLowerCase().includes(q)) ||
-        (h.doctors && h.doctors.some(d => d.name.toLowerCase().includes(q) || d.specialty.toLowerCase().includes(q)))
-      );
-    }
-
-    if (countBadge) countBadge.textContent = `${list.length} Hospital${list.length === 1 ? '' : 's'} Active`;
-
-    if (list.length === 0) {
-      container.innerHTML = `
-        <div class="service-zero-state" style="padding:32px 16px; text-align:center; background:#FFFFFF; border:1px dashed #CBD5E1; border-radius:18px; color:#64748B;">
-          <i class="fa-solid fa-hospital" style="font-size:28px; color:#94A3B8; margin-bottom:8px;"></i>
-          <p style="font-size:13px; font-weight:700; color:#0F172A; margin:0 0 4px;">No registered hospitals found matching "${q}".</p>
-          <p style="font-size:11.5px; color:#64748B; margin:0;">All hospital branches registered in the Central Web App appear here automatically.</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = list.map(h => {
-      const phone = h.phone || h.adminPhone || '+91 91443 76971';
-      const hServices = (latestFirebaseServices || []).filter(s => s && s.branchId === h.id && (s.status === 'active' || s.status === '24x7'));
-      const customChips = hServices.length > 0
-        ? hServices.map(s => `🏥 ${s.name}${s.is24x7 ? ' (24x7)' : ''}`)
-        : [
-            '🚑 24x7 Emergency & Trauma Center',
-            '🏨 Modular Operation Theatres',
-            '🛏️ Inpatient Wards & Critical Care',
-            '🧪 NABL Pathology & Central Pharmacy'
-          ];
-
-      return renderHospitalBoardCard(h, service, {
-        serviceTitle: 'MULTISPECIALITY HOSPITAL',
-        serviceBadge: `${hServices.length > 0 ? hServices.length + ' Registered Services' : '24x7 Inpatient & ICU'}`,
-        serviceIcon: 'fa-hospital',
-        chips: customChips,
-        showDoctors: true,
-        docs: h.doctors || [],
-        actionBtnText: 'Book OPD / Refer',
-        actionBtnIcon: 'fa-calendar-check',
-        actionBtnOnClick: `closeModal('modal-service-action'); openReferWithHospitalAndDoctor(${h.id}, '')`,
-        callBtnLabel: `Call Desk: ${phone}`,
-      });
-    }).join('');
-    return;
-  }
-
-  // 2. SPECIFIC CLINICAL SERVICES: Directly Interlinked with Central Web App Database
-  // Check which hospitals have published this specific service in real-time
-  let matchedHospitals = liveHospitalsCache.map(h => {
-    const hServices = getHospitalRegisteredServices(h.id, service);
-    const matchedDocs = (h.doctors || []).filter(d => {
-      const spec = (d.specialty || '').toLowerCase();
-      const dept = (d.department || '').toLowerCase();
-      const kw = service.keywords || [];
-      return kw.some(k => spec.includes(k) || dept.includes(k));
-    });
-    return { ...h, hServices, matchedDocs };
-  });
-
-  // Filter ONLY hospitals that provide this service in Central Web App
-  let providingHospitals = matchedHospitals.filter(h => h.hServices.length > 0);
-
-  if (q) {
-    providingHospitals = providingHospitals.filter(h => 
-      h.name.toLowerCase().includes(q) || 
-      (h.location && h.location.toLowerCase().includes(q)) || 
-      h.hServices.some(s => s.name.toLowerCase().includes(q) || (s.department && s.department.toLowerCase().includes(q))) ||
-      h.matchedDocs.some(d => d.name.toLowerCase().includes(q) || d.specialty.toLowerCase().includes(q))
-    );
-  }
-
-  if (countBadge) {
-    countBadge.textContent = `${providingHospitals.length} Hospital${providingHospitals.length === 1 ? '' : 's'} Active`;
-  }
-
-  if (providingHospitals.length === 0) {
-    container.innerHTML = `
-      <div class="service-zero-state" style="padding:36px 16px; text-align:center; background:#FFFFFF; border:1.5px dashed #CBD5E1; border-radius:18px; margin-top:8px;">
-        <div style="width:54px; height:54px; border-radius:50%; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:22px;">
-          <i class="fa-solid ${service.watermarkIcon || 'fa-hospital'}"></i>
-        </div>
-        <h4 style="font-size:14px; font-weight:800; color:#0F172A; margin:0 0 6px;">No Hospital Offering "${service.name}" Yet</h4>
-        <p style="font-size:12px; color:#64748B; margin:0; line-height:1.5; max-width:330px; margin:0 auto;">
-          Currently, no hospital branch has published "${service.name}" on the Central Portal.<br>
-          When a hospital receptionist adds this service on the website, it will immediately appear here in real-time.
-        </p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = providingHospitals.map(h => {
-    const phone = h.phone || h.adminPhone || '+91 91443 76971';
-    const primarySrv = h.hServices[0];
-    const docs = h.matchedDocs && h.matchedDocs.length > 0 ? h.matchedDocs : (h.doctors || []);
-
-    const serviceChips = [];
-    h.hServices.forEach(s => {
-      if (s.price) serviceChips.push(`💰 ₹${s.price} (${s.name})`);
-      else serviceChips.push(`⭐ ${s.name}`);
-      if (s.timing) serviceChips.push(`⏰ ${s.timing}`);
-      if (s.headDoctorName) serviceChips.push(`👨‍⚕️ Incharge: ${s.headDoctorName}`);
-      if (s.roomNumber) serviceChips.push(`🚪 Room/Unit: ${s.roomNumber}`);
-      if (s.contactNumber) serviceChips.push(`📞 Desk: ${s.contactNumber}`);
-    });
-
-    if (serviceChips.length === 0) {
-      serviceChips.push(
-        `🏥 Registered ${service.name} Unit`,
-        `👨‍⚕️ Board-Certified Specialists`,
-        `⚡ Real-Time Verified on Web Portal`
-      );
-    }
-
-    return renderHospitalBoardCard(h, service, {
-      serviceTitle: primarySrv.name.toUpperCase(),
-      serviceBadge: primarySrv.department || service.departmentKey || 'Clinical Unit',
-      serviceIcon: service.watermarkIcon || 'fa-stethoscope',
-      chips: serviceChips,
-      statusBadge: primarySrv.is24x7 || primarySrv.status === '24x7' ? '24x7 Active Service' : 'Active Facility',
-      showDoctors: docs.length > 0,
-      docs: docs,
-      actionBtnText: serviceId === 'pharmacy' ? 'Author Digital Rx' : serviceId === 'pathology-lab' ? 'Book Pathology' : 'Book Consultation / Refer',
-      actionBtnIcon: serviceId === 'pharmacy' ? 'fa-prescription' : 'fa-calendar-check',
-      actionBtnOnClick: `closeModal('modal-service-action'); openReferWithHospitalAndDoctor(${h.id}, '')`,
-      callBtnLabel: `Call Desk: ${primarySrv.contactNumber || phone}`,
-    });
-  }).join('');
-}
-
-function openReferHospitalModalFromService() {
-  closeModal('modal-service-action');
-  const service = CLINICAL_SERVICES_CATALOG.find(s => s.id === selectedClinicalServiceId) || CLINICAL_SERVICES_CATALOG[0];
-  openReferHospitalModalFromEhr();
-  setTimeout(() => {
-    const deptSelect = document.getElementById('refer-target-dept');
-    if (deptSelect && service && service.departmentKey) {
-      for (let i = 0; i < deptSelect.options.length; i++) {
-        if (deptSelect.options[i].text.toLowerCase().includes(service.shortName.toLowerCase()) || 
-            deptSelect.options[i].value.toLowerCase().includes(service.shortName.toLowerCase()) ||
-            deptSelect.options[i].text.toLowerCase().includes(service.departmentKey.toLowerCase())) {
-          deptSelect.selectedIndex = i;
-          break;
-        }
-      }
-    }
-  }, 120);
 }
 
 function renderServicesCatalog() {
@@ -14124,6 +13492,178 @@ function renderServicesCatalog() {
       </div>
     `;
   }).join('');
+}
+
+function renderSelectedServiceHospitals() {
+  const container = document.getElementById('service-selected-view-container');
+  if (!container) return;
+
+  const currentService = CLINICAL_SERVICES_CATALOG.find(s => s.id === selectedClinicalServiceId) || CLINICAL_SERVICES_CATALOG[0];
+  
+  // Strictly evaluate registered hospitals from live web database
+  const allWebHospitals = [...liveHospitalsCache];
+  
+  // Matching criteria based on registered hospital capabilities & doctors
+  const matchingHospitals = allWebHospitals.filter(h => {
+    // 1. If hospital has doctors matching this specialty / department
+    const hasMatchingDoc = h.doctors && h.doctors.some(d => {
+      const spec = (d.specialty || '').toLowerCase();
+      const dept = (d.department || '').toLowerCase();
+      return currentService.keywords.some(k => spec.includes(k) || dept.includes(k));
+    });
+
+    // 2. Multispeciality / General hospitals offer core clinical facilities (Ambulance, ICU, Blood Bank, OPD, Lab, Pharmacy, Inpatient, Telehealth)
+    const isMultispeciality = (h.name && (h.name.toLowerCase().includes('ariyan') || h.name.toLowerCase().includes('multispeciality') || h.name.toLowerCase().includes('hospital') || h.name.toLowerCase().includes('hq')));
+    const isGeneralService = ['ambulance', 'blood-bank', 'opd', 'icu', 'diagnostics', 'radiology', 'pharmacy', 'telehealth', 'ipd', 'all'].includes(currentService.id);
+
+    // 3. Specialty name match (Trauma Center for trauma, Maternity for maternity, Neuro for neuro/dialysis)
+    const matchesFacilityName = currentService.keywords.some(k => (h.name || '').toLowerCase().includes(k) || (h.address || '').toLowerCase().includes(k));
+
+    return hasMatchingDoc || (isMultispeciality && isGeneralService) || matchesFacilityName || allWebHospitals.length === 1;
+  });
+
+  const hospPhotos = [
+    'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format&fit=crop&q=60'
+  ];
+
+  let html = `
+    <!-- 1. Active Service Selected Highlight Banner -->
+    <div class="service-selected-banner">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,0.15); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; color:#93C5FD; font-size:18px; border:1px solid rgba(255,255,255,0.25);">
+            <i class="fa-solid ${currentService.icon || currentService.watermarkIcon || 'fa-notes-medical'}"></i>
+          </div>
+          <div>
+            <span style="font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; color:#93C5FD; display:block;">Selected Service</span>
+            <h3 style="font-size:14px; font-weight:900; color:#FFFFFF; margin:0;">${currentService.name}</h3>
+          </div>
+        </div>
+        <span style="background:rgba(16,185,129,0.2); color:#34D399; border:1px solid rgba(16,185,129,0.4); font-size:9px; font-weight:800; padding:2px 8px; border-radius:9999px; white-space:nowrap;">
+          <i class="fa-solid fa-circle-check"></i> ${matchingHospitals.length} Hospital${matchingHospitals.length === 1 ? '' : 's'} Active
+        </span>
+      </div>
+      <p style="font-size:11px; color:#E0E7FF; margin:8px 0 0; line-height:1.4;">${currentService.description}</p>
+    </div>
+
+    <!-- 2. Web-Registered Hospitals Available List -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <span style="font-size:12px; font-weight:800; color:#0F172A; text-transform:uppercase; letter-spacing:0.4px;">
+        2. Web-Registered Hospitals Offering This Service:
+      </span>
+      <span style="background:#EFF6FF; color:#1D4ED8; font-size:10px; font-weight:800; padding:2px 8px; border-radius:6px; border:1px solid #BFDBFE;">
+        Verified Network
+      </span>
+    </div>
+  `;
+
+  if (matchingHospitals.length === 0) {
+    html += `
+      <div style="padding:28px 16px; text-align:center; background:#FFFFFF; border:1px solid #E2E8F0; border-radius:18px; color:#64748B;">
+        <i class="fa-solid fa-hospital" style="font-size:32px; color:#CBD5E1; margin-bottom:8px;"></i>
+        <h4 style="font-size:13px; font-weight:800; color:#0F172A; margin:0 0 4px;">No Registered Hospitals for "${currentService.shortName}"</h4>
+        <p style="font-size:11px; color:#64748B; margin:0 max-w-sm;">Only hospitals registered in the Medix Web Application (https://medix-hospital-system.vercel.app/) are listed here.</p>
+      </div>
+    `;
+    container.innerHTML = html;
+    return;
+  }
+
+  html += matchingHospitals.map((h, idx) => {
+    const photo = hospPhotos[idx % hospPhotos.length];
+    const metrics = calculateHospitalLiveMetrics(h);
+    const phone = h.phone || h.adminPhone || '+91 91443 76971';
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+
+    // Get specific doctors matching this service at this hospital
+    const relevantDocs = (h.doctors || []).filter(d => {
+      const spec = (d.specialty || '').toLowerCase();
+      const dept = (d.department || '').toLowerCase();
+      return currentService.keywords.some(k => spec.includes(k) || dept.includes(k));
+    });
+
+    const displayDocs = relevantDocs.length > 0 ? relevantDocs : (h.doctors || []).slice(0, 3);
+
+    return `
+      <div class="service-hosp-card">
+        <!-- Hospital Header Row -->
+        <div style="display:flex; gap:12px; margin-bottom:10px;">
+          <div style="width:68px; height:68px; border-radius:14px; background-image:url('${photo}'); background-size:cover; background-position:center; flex-shrink:0; border:1px solid #E2E8F0; position:relative;">
+            <span style="position:absolute; bottom:3px; right:3px; background:#10B981; width:8px; height:8px; border-radius:50%; border:1.5px solid #FFFFFF;"></span>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
+              <span style="background:#0F172A; color:#FFFFFF; font-size:9px; font-weight:800; padding:1px 6px; border-radius:4px; font-family:monospace;">${h.code || 'HOSP'}</span>
+              <span style="background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; font-size:9px; font-weight:800; padding:1px 6px; border-radius:9999px;">
+                <i class="fa-solid fa-circle-check"></i> Web Registered
+              </span>
+            </div>
+            <h4 style="font-size:13.5px; font-weight:900; color:#0F172A; margin:0; line-height:1.3;">${h.name}</h4>
+            <p style="font-size:11px; color:#64748B; margin:2px 0 0; display:flex; align-items:center; gap:4px;">
+              <i class="fa-solid fa-location-dot" style="color:#EF4444; font-size:10px;"></i>
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.location || h.address || 'Kolkata, West Bengal'}</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Service Capability & Status Banner -->
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:8px 10px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-shield-halved" style="color:#2563EB; font-size:12px;"></i>
+            <span style="font-size:11px; font-weight:700; color:#1E293B;">${currentService.shortName} Status:</span>
+          </div>
+          <span style="font-size:11px; font-weight:800; color:#059669; background:#ECFDF5; padding:1px 8px; border-radius:6px; border:1px solid #A7F3D0;">
+            ${h.statusText || 'Active & Ready 24x7'}
+          </span>
+        </div>
+
+        <!-- Specialist Doctors at this Hospital for this Service -->
+        ${displayDocs && displayDocs.length > 0 ? `
+          <div style="margin-bottom:10px;">
+            <span style="font-size:10.5px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.3px; display:block; margin-bottom:4px;">
+              Available Specialists (${displayDocs.length}):
+            </span>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              ${displayDocs.map(d => `
+                <div class="service-doc-chip">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="width:28px; height:28px; border-radius:50%; background:#046a4e; color:#FFFFFF; font-weight:900; font-size:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                      ${d.name.replace(/^Dr\.\s*/i, '').charAt(0) || 'D'}
+                    </div>
+                    <div>
+                      <strong style="font-size:11.5px; color:#0F172A; display:block; line-height:1.2;">${d.name}</strong>
+                      <small style="font-size:10px; color:#046a4e; font-weight:700;">${d.specialty || currentService.departmentKey}</small>
+                    </div>
+                  </div>
+                  <div style="text-align:right;">
+                    <span style="font-size:11px; font-weight:900; color:#0F172A;">₹${d.fee || 800}</span>
+                    <small style="font-size:9.5px; color:#059669; display:block; font-weight:700;">OPD Fee</small>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Direct Actions Grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; padding-top:8px; border-top:1px solid #F1F5F9;">
+          <button onclick="openReferWithHospitalAndService(${h.id}, '${currentService.departmentKey}')" style="background:linear-gradient(135deg, #1E40AF 0%, #DC2626 100%); color:#FFFFFF; border:none; padding:8px 10px; border-radius:10px; font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; box-shadow:0 2px 6px rgba(30,58,138,0.25);">
+            <i class="fa-solid fa-user-plus"></i> Refer Patient
+          </button>
+          
+          <a href="tel:${cleanPhone}" style="background:#F1F5F9; color:#0F172A; border:1px solid #CBD5E1; padding:8px 10px; border-radius:10px; font-size:11.5px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; cursor:pointer;">
+            <i class="fa-solid fa-phone" style="color:#059669;"></i> Call Desk
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
 }
 
 function openReferWithHospitalAndService(hospitalId, departmentName) {
@@ -15150,6 +14690,7 @@ function renderAll() {
   try { renderTopHospitalsSlider(); } catch (_) {}
   try { renderHospitalDirectory(); } catch (_) {}
   try { renderServicesCatalog(); } catch (_) {}
+  try { renderSelectedServiceHospitals(); } catch (_) {}
   try { renderDoctorRankingLeaderboard(); } catch (_) {}
   try { updateProfileUI(); } catch (_) {}
   try { populateHospitalSelect(); } catch (_) {}
@@ -15179,6 +14720,14 @@ if (typeof window !== 'undefined') {
 
 // Kickstart on DOM load
 document.addEventListener('DOMContentLoaded', () => {
+  validateServerSession().then(valid => {
+    if (!valid) {
+      const main = document.getElementById('screen-main');
+      const login = document.getElementById('screen-login');
+      if (main) main.classList.add('hidden');
+      if (login) login.classList.remove('hidden');
+    }
+  });
   renderAll();
   initAppSplashScreen();
 });

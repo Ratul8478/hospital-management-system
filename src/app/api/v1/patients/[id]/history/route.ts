@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
 import { verifyApiRequest } from '@/lib/api-auth';
 
 export async function OPTIONS() {
@@ -31,7 +31,7 @@ export async function GET(
         `Patient with identifier '${id}' was not found in the hospital records`,
         404,
         {
-          hint: 'Verify the patient numeric ID or UHID (e.g. UHID-20260812-0040 or UHID-B1-20260810-0001)',
+          hint: 'Verify the patient numeric ID or UHID (e.g. UHID-2026-0042 or UHID-B1-20260810-0001)',
         }
       );
     }
@@ -46,7 +46,7 @@ export async function GET(
       },
     });
   } catch (err: any) {
-    console.error('Error in /api/v1/patients/[id]/history GET:', err);
-    return apiError(err?.message || 'Failed to retrieve patient clinical history', 500);
+    return apiServerError('/api/v1/patients/[id]/history GET', err);
   }
 }
+

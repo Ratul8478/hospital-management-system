@@ -91,14 +91,14 @@ export default function Concept8() {
             <PhoneCall className="w-6 h-6 text-amber-400" />
             <div>
               <div className="text-xs text-amber-400 font-serif uppercase">Private Desk</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-5 rounded-xl bg-slate-900/90 border border-amber-500/30">
             <Mail className="w-6 h-6 text-amber-400" />
             <div>
               <div className="text-xs text-amber-400 font-serif uppercase">VIP Concierge</div>
-              <div className="text-sm font-bold text-white">concierge@medix-vip.com</div>
+              <div className="text-sm font-bold text-white">ariyanhospital9@gmail.com</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-5 rounded-xl bg-slate-900/90 border border-amber-500/30">

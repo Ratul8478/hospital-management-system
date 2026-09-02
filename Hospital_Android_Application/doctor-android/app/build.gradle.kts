@@ -32,9 +32,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("../release-key.jks")
-            storePassword = "medix1234"
-            keyAlias = "medix" 
-            keyPassword = "medix1234"
+            storePassword = System.getenv("MEDIX_KEYSTORE_PASSWORD") ?: System.getenv("KEYSTORE_PASSWORD") ?: "medix1234"
+            keyAlias = System.getenv("MEDIX_KEY_ALIAS") ?: "medix"
+            keyPassword = System.getenv("MEDIX_KEY_PASSWORD") ?: System.getenv("KEY_PASSWORD") ?: "medix1234"
         }
     }
 

@@ -48,8 +48,13 @@ export async function POST(request: NextRequest) {
     const { token, fcmToken, registrationToken, userId, doctorId, deviceType, platform } = body || {};
     const fcmKey = token || fcmToken || registrationToken;
 
-    if (!fcmKey || typeof fcmKey !== 'string' || !fcmKey.trim()) {
-      return apiError('Missing required field: token (FCM registration token)', 422, {
+    if (!fcmKey || typeof fcmKey !== 'string' || fcmKey.trim().length < 8) {
+      return apiError('Field "token" is required and must be at least 8 characters long.', 422, {
+        field: 'token',
+      });
+    }
+    if (fcmKey.trim().length > 1000) {
+      return apiError('Field "token" exceeds maximum length of 1000 characters.', 422, {
         field: 'token',
       });
     }
@@ -57,11 +62,11 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || undefined;
 
     const registration = backendStore.registerFCMToken({
-      userId: userId || doctorId || 'doctor-default',
-      doctorId: doctorId ? parseInt(doctorId, 10) : 99,
+      userId: userId || doctorId || authResult.userName || 'client',
+      doctorId: doctorId ? parseInt(String(doctorId), 10) : undefined,
       token: fcmKey.trim(),
-      deviceType: deviceType || 'web',
-      platform: platform || 'Web Push API',
+      deviceType: (deviceType === 'ios' ? 'ios' : deviceType === 'web' ? 'web' : 'android') as 'web' | 'ios' | 'android',
+      platform: platform ? String(platform).trim() : 'mobile',
       userAgent,
     });
 

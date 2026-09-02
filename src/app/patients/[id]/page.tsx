@@ -25,8 +25,11 @@ export default function PatientProfilePage() {
   const router = useRouter();
   const { patients, invoices, labRequests, medicines, beds } = useApp();
 
-  const patientId = Number(params?.id) || 1;
-  const patient = patients.find(p => p.id === patientId) || patients[0];
+  const paramId = String(params?.id || '');
+  const patient =
+    patients.find(p => p.uhid?.toLowerCase() === paramId.toLowerCase() || String(p.id) === paramId) ||
+    patients.find(p => p.id === Number(paramId)) ||
+    patients[0];
 
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'prescriptions' | 'labs' | 'ipd' | 'billing'>('overview');
 

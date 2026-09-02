@@ -133,14 +133,14 @@ export default function Concept3() {
             <PhoneCall className="w-6 h-6 text-purple-400" />
             <div>
               <div className="text-xs text-slate-400 uppercase">Support Hot Line</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
             <Mail className="w-6 h-6 text-pink-400" />
             <div>
               <div className="text-xs text-slate-400 uppercase">System Support</div>
-              <div className="text-sm font-bold text-white">glass@medix-3d.com</div>
+              <div className="text-sm font-bold text-white">ariyanhospital9@gmail.com</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">

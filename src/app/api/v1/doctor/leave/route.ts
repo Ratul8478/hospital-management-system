@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
-import { verifyApiRequest } from '@/lib/api-auth';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest, resolveDoctorScope } from '@/lib/api-auth';
 import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
 
 export async function OPTIONS() {
@@ -10,14 +10,21 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'doctor');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Doctor session or valid API key required', authResult.statusCode || 401);
     }
 
     const { searchParams } = new URL(request.url);
     const doctorIdParam = searchParams.get('doctorId');
-    const doctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : 99;
+
+    const parsedDoctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : undefined;
+    const scopeCheck = resolveDoctorScope(authResult, parsedDoctorId);
+    if (scopeCheck.error) {
+      return apiError(scopeCheck.error.message, scopeCheck.error.statusCode);
+    }
+
+    const doctorId = scopeCheck.doctorId !== undefined ? scopeCheck.doctorId : (authResult.userId || 1);
 
     const leaveData = backendStore.getDoctorLeave(doctorId);
 
@@ -26,16 +33,15 @@ export async function GET(request: NextRequest) {
       message: 'Doctor leave and duty roster balance retrieved successfully.',
     });
   } catch (err: any) {
-    console.error('Error in /api/v1/doctor/leave GET:', err);
-    return apiError(err?.message || 'Failed to fetch doctor leave data', 500);
+    return apiServerError('/api/v1/doctor/leave GET', err);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'doctor');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Doctor session or valid API key required', authResult.statusCode || 401);
     }
 
     let rawBody: any;
@@ -53,8 +59,7 @@ export async function POST(request: NextRequest) {
     const body = sanitizeObject(rawBody);
 
     const {
-      doctorId,
-      doctorName,
+      doctorId: reqDoctorId,
       leaveType,
       startDate,
       endDate,
@@ -68,27 +73,46 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!reason || typeof reason !== 'string') {
-      return apiError('Missing required field: reason', 422, { field: 'reason' });
+    const startTimestamp = new Date(startDate).getTime();
+    const endTimestamp = new Date(endDate).getTime();
+    if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
+      return apiError('Invalid date format for startDate or endDate. Must be valid ISO dates (e.g. YYYY-MM-DD).', 422);
+    }
+    if (endTimestamp < startTimestamp) {
+      return apiError('Field "endDate" cannot be earlier than "startDate".', 422, { field: 'endDate' });
     }
 
+    if (!reason || typeof reason !== 'string' || reason.trim().length < 3) {
+      return apiError('Field "reason" is required and must be at least 3 characters long.', 422, { field: 'reason' });
+    }
+
+    const validLeaveTypes = ['casual', 'sick', 'emergency', 'annual', 'medical conference', 'maternity', 'paternity', 'other'];
+    const normLeaveType = leaveType ? String(leaveType).trim().toLowerCase() : 'annual';
+    if (leaveType && !validLeaveTypes.includes(normLeaveType)) {
+      return apiError('Field "leaveType" must be one of: Casual, Sick, Emergency, Annual, Medical Conference, Maternity, Paternity, Other.', 422, { field: 'leaveType' });
+    }
+    const formattedLeaveType = normLeaveType.charAt(0).toUpperCase() + normLeaveType.slice(1);
+
+    const effectiveDoctorId = authResult.userId || (reqDoctorId ? parseInt(reqDoctorId, 10) : 1);
+    const doctor = backendStore.getDoctorById(effectiveDoctorId);
+    const doctorName = doctor ? doctor.name : (authResult.userName || 'Medical Specialist');
+
     const calculatedDays =
-      totalDays ||
-      Math.max(
-        Math.round(
-          (new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)
-        ) + 1,
-        1
-      );
+      totalDays && typeof totalDays === 'number' && totalDays > 0
+        ? totalDays
+        : Math.max(
+            Math.round((endTimestamp - startTimestamp) / (1000 * 60 * 60 * 24)) + 1,
+            1
+          );
 
     const newLeave = backendStore.createLeaveRequest({
-      doctorId: doctorId ? parseInt(doctorId, 10) : 1,
-      doctorName: doctorName || 'Dr . Jiarul Haque',
-      leaveType: leaveType || 'annual',
-      startDate,
-      endDate,
+      doctorId: effectiveDoctorId,
+      doctorName,
+      leaveType: (normLeaveType.includes('sick') || normLeaveType.includes('med') ? 'sick' : normLeaveType.includes('cas') ? 'casual' : normLeaveType.includes('emerg') ? 'emergency' : normLeaveType.includes('mat') ? 'maternity' : normLeaveType.includes('conf') ? 'conference' : 'annual') as 'annual' | 'sick' | 'casual' | 'emergency' | 'maternity' | 'conference',
+      startDate: String(startDate).trim(),
+      endDate: String(endDate).trim(),
       totalDays: calculatedDays,
-      reason,
+      reason: reason.trim(),
       status: 'pending',
     });
 
@@ -97,7 +121,7 @@ export async function POST(request: NextRequest) {
       message: `Leave request for ${calculatedDays} day(s) submitted successfully. Status: PENDING review.`,
     });
   } catch (err: any) {
-    console.error('Error in /api/v1/doctor/leave POST:', err);
-    return apiError(err?.message || 'Failed to submit leave request', 500);
+    return apiServerError('/api/v1/doctor/leave POST', err);
   }
 }
+

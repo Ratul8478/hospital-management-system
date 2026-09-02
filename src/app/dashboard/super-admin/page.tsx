@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useApp } from '@/lib/store';
 import { MarketingJoinRequest, MarketingRepresentative } from '@/lib/data';

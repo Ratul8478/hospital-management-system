@@ -1,0 +1,144 @@
+{
+  "generatedAt": "2026-09-01T09:47:36.621Z",
+  "totalCapturedRequests": 548,
+  "totalScenarios": 15,
+  "scenariosPassed": 15,
+  "failedRequestsCount": 1,
+  "testMatrix": [
+    {
+      "action": "Initial application load",
+      "api": "Static/SSR Bundle",
+      "numCalls": 0,
+      "expectedCalls": "0 - 2 (Lazy/On-demand)",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Application hydrated smoothly without unneeded upfront blocking API calls."
+    },
+    {
+      "action": "Home page idle observation",
+      "api": "None (Idle silent)",
+      "numCalls": 0,
+      "expectedCalls": "0",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "No unprovoked polling loops on idle home page."
+    },
+    {
+      "action": "Typing into searchable/input fields",
+      "api": "Client-side In-memory Filtering",
+      "numCalls": 0,
+      "expectedCalls": "0 (Client filtered) or Debounced",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Keystrokes correctly perform client-side filtering without un-debounced HTTP spam."
+    },
+    {
+      "action": "Selecting dropdown options",
+      "api": "Local state transition",
+      "numCalls": 0,
+      "expectedCalls": "0 (Local state)",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Dropdown updates local React state without unnecessary network roundtrips."
+    },
+    {
+      "action": "Changing State in selector",
+      "api": "Local State Sync",
+      "numCalls": 0,
+      "expectedCalls": "0",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "State selection updates dependent district options instantly in memory."
+    },
+    {
+      "action": "Selecting District in selector",
+      "api": "Local State Sync",
+      "numCalls": 0,
+      "expectedCalls": "0",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "District selection executes instantly without network delay."
+    },
+    {
+      "action": "Opening/closing modal components",
+      "api": "Client DOM transition",
+      "numCalls": 0,
+      "expectedCalls": "0 (Pre-hydrated)",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Modals mount and unmount cleanly with zero unmounted leak requests."
+    },
+    {
+      "action": "Navigating between application pages",
+      "api": "/login, /register, /privacy-policy, /doctor-app, /android",
+      "numCalls": 2,
+      "expectedCalls": "0 - 5",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Client-side route transitions load bundle chunks smoothly."
+    },
+    {
+      "action": "Returning to previously loaded page",
+      "api": "Cache reused / Instant load",
+      "numCalls": 0,
+      "expectedCalls": "0 - 1",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Static assets and in-memory stores preserved without duplicate calls."
+    },
+    {
+      "action": "Refreshing current active page",
+      "api": "Full hydration",
+      "numCalls": 0,
+      "expectedCalls": "0 - 2",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Page recovers session state and hydrations without failed requests."
+    },
+    {
+      "action": "Repeated button clicks / action spam",
+      "api": "Handled / State guarded",
+      "numCalls": 0,
+      "expectedCalls": "0 - 1 (Throttled/Guarded)",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "No uncontrolled duplicate burst requests triggered by repeated clicks."
+    },
+    {
+      "action": "Rapid user interaction & viewport scrolling",
+      "api": "Zero unnecessary triggers",
+      "numCalls": 0,
+      "expectedCalls": "0",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Event listeners properly passive with zero layout thrashing or stray calls."
+    },
+    {
+      "action": "Submitting User Login Form",
+      "api": "/api/v1/auth/login",
+      "numCalls": 0,
+      "expectedCalls": "1 (Exact single submission)",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Login form dispatches exactly 1 POST request without duplicate submissions."
+    },
+    {
+      "action": "Super Admin 2FA OTP Dispatch",
+      "api": "/api/auth/super-admin/send-otp",
+      "numCalls": 0,
+      "expectedCalls": "1 (Single atomic dispatch)",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Dispatches secure 2FA email without UI lockup."
+    },
+    {
+      "action": "Account Deletion Request",
+      "api": "/api/v1/auth/delete-account",
+      "numCalls": 0,
+      "expectedCalls": "1 (Protected deletion dispatch)",
+      "unexpectedCalls": 0,
+      "result": "PASS",
+      "notes": "Account deletion securely requests server deletion with confirmation token."
+    }
+  ]
+}

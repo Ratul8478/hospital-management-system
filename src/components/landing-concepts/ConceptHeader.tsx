@@ -82,26 +82,26 @@ export default function ConceptHeader({ theme = 'dark', activeSection, onNavigat
           </div>
         </Link>
 
-        {/* DESKTOP NAVIGATION LINKS: Features, About, Contact (Bigger & Prominent) */}
+        {/* DESKTOP NAVIGATION LINKS: Features, About, Contact */}
         <nav className="hidden md:flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-100/60 border border-emerald-300/60 shadow-xs">
           <a
             href="#features"
             onClick={(e) => handleNavClick('features', e)}
-            className={`px-4 py-1.5 text-xs sm:text-sm font-extrabold rounded-full transition-all cursor-pointer ${currentNavItemStyle}`}
+            className={`px-3 py-1.5 text-xs sm:text-sm font-extrabold rounded-full transition-all cursor-pointer ${currentNavItemStyle}`}
           >
             Features
           </a>
           <a
             href="#about"
             onClick={(e) => handleNavClick('about', e)}
-            className={`px-4 py-1.5 text-xs sm:text-sm font-extrabold rounded-full transition-all cursor-pointer ${currentNavItemStyle}`}
+            className={`px-3 py-1.5 text-xs sm:text-sm font-extrabold rounded-full transition-all cursor-pointer ${currentNavItemStyle}`}
           >
             About
           </a>
           <a
             href="#contact"
             onClick={(e) => handleNavClick('contact', e)}
-            className={`px-4 py-1.5 text-xs sm:text-sm font-extrabold rounded-full transition-all cursor-pointer ${currentNavItemStyle}`}
+            className={`px-3 py-1.5 text-xs sm:text-sm font-extrabold rounded-full transition-all cursor-pointer ${currentNavItemStyle}`}
           >
             Contact
           </a>
@@ -148,29 +148,37 @@ export default function ConceptHeader({ theme = 'dark', activeSection, onNavigat
 
       {/* MOBILE NAVIGATION DRAWER */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-emerald-200/60 px-6 py-4 space-y-3 bg-[#f0fdf4]/95 text-emerald-950 backdrop-blur-2xl shadow-xl">
+        <div className={`md:hidden border-t px-6 py-4 space-y-3 backdrop-blur-2xl shadow-xl transition-all ${
+          theme === 'dark' ? 'bg-[#061422]/98 border-emerald-500/20 text-slate-100' :
+          theme === 'cyber' ? 'bg-black/98 border-cyan-500/40 text-cyan-50' :
+          theme === 'luxury' ? 'bg-[#030712]/98 border-amber-500/30 text-amber-50' :
+          theme === 'glass' ? 'bg-slate-950/95 border-white/20 text-white' :
+          theme === 'light' ? 'bg-white/98 border-slate-200 text-slate-900' :
+          theme === 'brutalist' ? 'bg-white border-black text-black' :
+          'bg-[#f0fdf4]/98 border-emerald-200/60 text-emerald-950'
+        }`}>
           <a
             href="#features"
             onClick={(e) => handleNavClick('features', e)}
-            className="block py-2 text-sm font-extrabold hover:text-[#046a4e]"
+            className={`block py-2 text-sm font-extrabold rounded-lg px-2 ${currentNavItemStyle}`}
           >
             Features
           </a>
           <a
             href="#about"
             onClick={(e) => handleNavClick('about', e)}
-            className="block py-2 text-sm font-extrabold hover:text-[#046a4e]"
+            className={`block py-2 text-sm font-extrabold rounded-lg px-2 ${currentNavItemStyle}`}
           >
             About
           </a>
           <a
             href="#contact"
             onClick={(e) => handleNavClick('contact', e)}
-            className="block py-2 text-sm font-extrabold hover:text-[#046a4e]"
+            className={`block py-2 text-sm font-extrabold rounded-lg px-2 ${currentNavItemStyle}`}
           >
             Contact
           </a>
-          <div className="pt-3 border-t border-emerald-200/60 flex flex-col gap-2">
+          <div className="pt-3 border-t border-emerald-200/40 flex flex-col gap-2">
             <button
               type="button"
               onClick={() => {
@@ -184,13 +192,21 @@ export default function ConceptHeader({ theme = 'dark', activeSection, onNavigat
             </button>
             <Link
               href="/login"
-              className="w-full text-center py-2.5 rounded-xl border border-emerald-300 text-xs font-bold hover:bg-emerald-100"
+              className={`w-full text-center py-2.5 rounded-xl border border-emerald-300 text-xs font-bold ${
+                theme === 'dark' || theme === 'cyber' || theme === 'luxury'
+                  ? 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
+                  : 'text-emerald-950 hover:bg-emerald-100'
+              }`}
             >
               Sign In
             </Link>
             <Link
               href="/register"
-              className="w-full text-center py-2.5 rounded-xl bg-[#046a4e] text-white text-xs font-black shadow-md hover:bg-[#03523c]"
+              className={`w-full text-center py-2.5 rounded-xl text-xs font-black shadow-md ${
+                theme === 'pastels'
+                  ? 'bg-[#046a4e] text-white hover:bg-[#03523c]'
+                  : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 hover:from-emerald-400 hover:to-teal-500'
+              }`}
             >
               Registration
             </Link>

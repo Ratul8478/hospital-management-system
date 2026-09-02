@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
 import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
-import { verifyApiRequest } from '@/lib/api-auth';
+import { verifyApiRequest, resolveDoctorScope } from '@/lib/api-auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -11,9 +11,9 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'doctor');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Doctor session or valid API key required', authResult.statusCode || 401);
     }
 
     const { searchParams } = new URL(request.url);
@@ -21,7 +21,13 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get('date') || undefined;
     const status = searchParams.get('status') || undefined;
 
-    const doctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : 99;
+    const parsedDoctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : undefined;
+    const scopeCheck = resolveDoctorScope(authResult, parsedDoctorId);
+    if (scopeCheck.error) {
+      return apiError(scopeCheck.error.message, scopeCheck.error.statusCode);
+    }
+
+    const doctorId = scopeCheck.doctorId !== undefined ? scopeCheck.doctorId : (authResult.userId || undefined);
 
     const followups = backendStore.getFollowUps({
       doctorId,
@@ -45,16 +51,15 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (err: any) {
-    console.error('Error in /api/v1/doctor/followups GET:', err);
-    return apiError(err?.message || 'Failed to fetch follow-ups', 500);
+    return apiServerError('/api/v1/doctor/followups GET', err);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'doctor');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Doctor session or valid API key required', authResult.statusCode || 401);
     }
 
     let body: any;
@@ -75,46 +80,58 @@ export async function POST(request: NextRequest) {
       uhid,
       patientName,
       patientPhone,
-      doctorId,
-      doctorName,
-      branchId,
+      doctorId: reqDoctorId,
+      branchId: reqBranchId,
       scheduledDate,
       scheduledTime,
       reason,
       notes,
     } = sanitizedBody || {};
 
-    if (!patientName || typeof patientName !== 'string') {
-      return apiError('Missing required field: patientName', 422, { field: 'patientName' });
+    if (!patientName || typeof patientName !== 'string' || patientName.trim().length < 2) {
+      return apiError('Field "patientName" is required and must be at least 2 characters long.', 422, { field: 'patientName' });
     }
 
-    if (!reason || typeof reason !== 'string') {
-      return apiError('Missing required field: reason', 422, { field: 'reason' });
+    if (!reason || typeof reason !== 'string' || reason.trim().length < 2) {
+      return apiError('Field "reason" is required and must be at least 2 characters long.', 422, { field: 'reason' });
     }
+
+    const effectiveDoctorId = authResult.userId || (reqDoctorId ? parseInt(reqDoctorId, 10) : 1);
+    const doctor = backendStore.getDoctorById(effectiveDoctorId);
+    const doctorName = doctor ? doctor.name : (authResult.userName || 'Medical Specialist');
+    const branchId = doctor ? doctor.branchId : (reqBranchId ? parseInt(reqBranchId, 10) : 1);
 
     const todayStr = new Date().toISOString().split('T')[0];
-    const generatedUhid = uhid || `UHID-${todayStr.replace(/-/g, '')}-${crypto.randomInt(1000, 10000)}`;
+
+    // Deterministically get or create the registered patient entity
+    const patientEntity = backendStore.getOrCreatePatient({
+      name: patientName.trim(),
+      uhid: uhid ? String(uhid).trim() : undefined,
+      phone: patientPhone ? String(patientPhone).trim() : undefined,
+      branchId,
+      condition: reason.trim(),
+    });
 
     const newFollowup = backendStore.createFollowUp({
-      patientId: patientId ? parseInt(patientId, 10) : crypto.randomInt(100, 1000),
-      uhid: generatedUhid,
-      patientName,
-      patientPhone: patientPhone || '9804222142',
-      doctorId: doctorId ? parseInt(doctorId, 10) : 1,
-      doctorName: doctorName || 'Dr . Jiarul Haque',
-      branchId: branchId ? parseInt(branchId, 10) : 1,
-      scheduledDate: scheduledDate || todayStr,
-      scheduledTime: scheduledTime || '10:00 AM',
-      reason,
-      notes,
+      patientId: patientEntity.id,
+      uhid: patientEntity.uhid,
+      patientName: patientEntity.name,
+      patientPhone: patientEntity.phone,
+      doctorId: effectiveDoctorId,
+      doctorName,
+      branchId,
+      scheduledDate: scheduledDate ? String(scheduledDate).trim() : todayStr,
+      scheduledTime: scheduledTime ? String(scheduledTime).trim() : '10:00 AM',
+      reason: reason.trim(),
+      notes: notes ? String(notes).trim() : undefined,
     });
 
     return apiSuccess(newFollowup, {
       status: 201,
-      message: `Follow-up consultation successfully scheduled for ${patientName} on ${newFollowup.scheduledDate}`,
+      message: `Follow-up consultation successfully scheduled for ${patientEntity.name} on ${newFollowup.scheduledDate}`,
     });
   } catch (err: any) {
-    console.error('Error in /api/v1/doctor/followups POST:', err);
-    return apiError(err?.message || 'Failed to schedule follow-up', 500);
+    return apiServerError('/api/v1/doctor/followups POST', err);
   }
 }
+

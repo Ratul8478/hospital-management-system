@@ -1,4 +1,4 @@
-﻿const http = require('http');
+const http = require('http');
 const https = require('https');
 
 console.log('===============================================================');
@@ -96,7 +96,8 @@ async function runAllAgents() {
     const hospRes = await requestJson(`${localBase}/api/v1/hospitals`);
     const hosps = hospRes.data?.data?.hospitals || [];
     const ariyanHosp = hosps.find(h => h.name.toLowerCase().includes('ariyan'));
-    const phoneValid = ariyanHosp && (ariyanHosp.phone.includes('9144376971') || ariyanHosp.adminPhone.includes('9144376971'));
+    const rawPhone = ((ariyanHosp && (ariyanHosp.phone || ariyanHosp.adminPhone)) || '').replace(/\s+/g, '');
+    const phoneValid = rawPhone.includes('9144376971');
     report('Agent-5', 'Ariyan Hospital Reception Desk Hotline Verification (+91 91443 76971)', Boolean(phoneValid), `Phone: ${ariyanHosp?.phone}`);
   } catch (err) {
     report('Agent-5', 'Ariyan Hospital Reception Desk Hotline Verification', false, err.message);

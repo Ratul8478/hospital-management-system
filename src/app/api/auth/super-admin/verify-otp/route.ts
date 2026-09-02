@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifySuperAdminOtp } from '@/lib/otp-store';
 import { detectSuspiciousPayload, generateSecureToken } from '@/lib/security';
 import { DEFAULT_SUPER_ADMIN_PROFILE } from '@/lib/data';
+import { registerSuperAdminSession } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,8 +56,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Successful verification - generate cryptographically secure session token
+    // 4. Successful verification - generate cryptographically secure session token and register session
     const sessionToken = `sa_live_token_${Date.now()}_${generateSecureToken(32)}`;
+    registerSuperAdminSession(sessionToken, cleanEmail);
 
     return NextResponse.json({
       success: true,
@@ -73,8 +75,9 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('[VERIFY OTP API ERROR]:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error verifying OTP.' },
+      { success: false, error: 'Internal server error verifying OTP.' },
       { status: 500 }
     );
   }
 }
+

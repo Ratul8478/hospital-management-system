@@ -114,6 +114,7 @@ export default function SuperAdminModal({
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     setError('');
     setSuccessMsg('');
 
@@ -145,9 +146,8 @@ export default function SuperAdminModal({
       return;
     }
 
-    const isPassOk = cleanPassword === expectedPassword || cleanPassword === 'admin@2019' || cleanPassword === 'Saanvi@786';
-    if (!isPassOk) {
-      setError('Authentication Error: Incorrect Master Password. Please enter "admin@2019".');
+    if (!cleanPassword) {
+      setError('Authentication Error: Please enter your Master Password.');
       return;
     }
 
@@ -195,7 +195,7 @@ export default function SuperAdminModal({
   };
 
   const handleResendOtp = async () => {
-    if (resendTimer > 0) return;
+    if (resendTimer > 0 || isLoading) return;
     setError('');
     setSuccessMsg('');
     setIsLoading(true);
@@ -256,6 +256,7 @@ export default function SuperAdminModal({
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     setError('');
     setSuccessMsg('');
 
@@ -273,12 +274,6 @@ export default function SuperAdminModal({
 
     setIsLoading(true);
     const targetEmail = otpDispatchedEmail || 'ariyanhospital9@gmail.com';
-
-    // Instant check against generated OTP or master bypass
-    if ((generatedOtp && cleanOtp === generatedOtp) || cleanOtp === '786914' || cleanOtp === '123456') {
-      proceedLogin(targetEmail);
-      return;
-    }
 
     try {
       const response = await fetch('/api/auth/super-admin/verify-otp', {
@@ -298,16 +293,12 @@ export default function SuperAdminModal({
         return;
       }
 
-      setError(data?.error || 'Invalid OTP code. Please enter the exact 6-digit code shown above.');
+      setError(data?.error || 'Invalid OTP code. Please check the code sent to your email.');
       setIsLoading(false);
     } catch (err: any) {
-      console.warn('Verify OTP network fallback:', err);
-      if (cleanOtp === generatedOtp || cleanOtp === '786914' || cleanOtp === '123456') {
-        proceedLogin(targetEmail);
-      } else {
-        setError('Invalid OTP code. Please enter the exact 6-digit code.');
-        setIsLoading(false);
-      }
+      console.error('Verify OTP network error:', err);
+      setError('Network error verifying OTP. Please try again.');
+      setIsLoading(false);
     }
   };
 
@@ -478,22 +469,7 @@ export default function SuperAdminModal({
                 </p>
               </div>
 
-              {/* REAL-TIME OTP HELPER BANNER */}
-              {generatedOtp && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[#062c21] text-xs flex items-center justify-between shadow-xs">
-                  <div className="flex items-center gap-2">
-                    <Key className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span>Real-time Code: <strong className="font-mono text-amber-800 font-black text-sm tracking-widest">{generatedOtp}</strong></span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setEnteredOtp(generatedOtp)}
-                    className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black rounded-lg transition-colors cursor-pointer shadow-xs"
-                  >
-                    Auto-Fill OTP
-                  </button>
-                </div>
-              )}
+
 
               {/* OTP INPUT */}
               <div>

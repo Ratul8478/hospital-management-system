@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
 import { verifyApiRequest } from '@/lib/api-auth';
 
 export async function OPTIONS() {
@@ -30,9 +30,9 @@ async function handleUpdateStatus(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'doctor');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Doctor session or valid API key required', authResult.statusCode || 401);
     }
 
     const params = await Promise.resolve(context.params);
@@ -40,6 +40,15 @@ async function handleUpdateStatus(
 
     if (isNaN(idNum)) {
       return apiError(`Invalid appointment id: ${params.id}`, 400);
+    }
+
+    const existingAppt = backendStore.getAppointmentById(idNum);
+    if (!existingAppt) {
+      return apiError(`Appointment with ID ${idNum} not found`, 404);
+    }
+
+    if (authResult.keyType === 'doctor_session' && authResult.userId && existingAppt.doctorId !== authResult.userId) {
+      return apiError('Forbidden: You are not authorized to modify another doctor\'s appointment.', 403);
     }
 
     let body: any;
@@ -68,17 +77,12 @@ async function handleUpdateStatus(
 
     const updated = backendStore.updateAppointmentStatus(idNum, normalized, notes);
 
-    if (!updated) {
-      return apiError(`Appointment with ID ${idNum} not found`, 404);
-    }
-
     return apiSuccess(updated, {
       status: 200,
       message: `Appointment #${idNum} status successfully updated to '${normalized}'`,
     });
   } catch (err: any) {
-    console.error('Error updating appointment status:', err);
-    return apiError(err?.message || 'Failed to update appointment status', 500);
+    return apiServerError('/api/v1/doctor/appointments/[id]/status', err);
   }
 }
 
@@ -102,3 +106,4 @@ export async function POST(
 ) {
   return handleUpdateStatus(request, context);
 }
+

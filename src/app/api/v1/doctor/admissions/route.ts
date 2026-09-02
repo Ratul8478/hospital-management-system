@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
-import { verifyApiRequest } from '@/lib/api-auth';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest, resolveDoctorScope } from '@/lib/api-auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -9,9 +9,9 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'doctor');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Doctor session or valid API key required', authResult.statusCode || 401);
     }
 
     const { searchParams } = new URL(request.url);
@@ -19,7 +19,13 @@ export async function GET(request: NextRequest) {
     const branchIdParam = searchParams.get('branchId');
     const wardType = searchParams.get('wardType') || undefined;
 
-    const doctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : 99;
+    const parsedDoctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : undefined;
+    const scopeCheck = resolveDoctorScope(authResult, parsedDoctorId);
+    if (scopeCheck.error) {
+      return apiError(scopeCheck.error.message, scopeCheck.error.statusCode);
+    }
+
+    const doctorId = scopeCheck.doctorId !== undefined ? scopeCheck.doctorId : (authResult.userId || undefined);
     const branchId = branchIdParam ? parseInt(branchIdParam, 10) : undefined;
 
     const admissions = backendStore.getAdmissions({
@@ -49,7 +55,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (err: any) {
-    console.error('Error in /api/v1/doctor/admissions GET:', err);
-    return apiError(err?.message || 'Failed to fetch IPD admissions', 500);
+    return apiServerError('/api/v1/doctor/admissions GET', err);
   }
 }
+

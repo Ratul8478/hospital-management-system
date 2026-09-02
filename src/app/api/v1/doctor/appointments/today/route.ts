@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
 import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
-import { verifyApiRequest } from '@/lib/api-auth';
+import { verifyApiRequest, resolveDoctorScope } from '@/lib/api-auth';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -11,9 +11,9 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = verifyApiRequest(request, 'any');
+    const authResult = verifyApiRequest(request, 'doctor');
     if (!authResult.authenticated) {
-      return apiError(authResult.error || 'Unauthorized: API Key or Doctor Token required', authResult.statusCode || 401);
+      return apiError(authResult.error || 'Unauthorized: Doctor session or valid API key required', authResult.statusCode || 401);
     }
 
     const { searchParams } = new URL(request.url);
@@ -21,7 +21,13 @@ export async function GET(request: NextRequest) {
     const branchIdParam = searchParams.get('branchId');
     const statusParam = searchParams.get('status');
 
-    const doctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : 99;
+    const parsedDoctorId = doctorIdParam ? parseInt(doctorIdParam, 10) : undefined;
+    const scopeCheck = resolveDoctorScope(authResult, parsedDoctorId);
+    if (scopeCheck.error) {
+      return apiError(scopeCheck.error.message, scopeCheck.error.statusCode);
+    }
+
+    const doctorId = scopeCheck.doctorId !== undefined ? scopeCheck.doctorId : (authResult.userId || undefined);
     const branchId = branchIdParam ? parseInt(branchIdParam, 10) : undefined;
     const status = statusParam || undefined;
 
@@ -57,13 +63,17 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (err: any) {
-    console.error('Error in /api/v1/doctor/appointments/today GET:', err);
-    return apiError(err?.message || "Failed to fetch today's appointments", 500);
+    return apiServerError('/api/v1/doctor/appointments/today', err);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = verifyApiRequest(request, 'doctor');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: Doctor session required', authResult.statusCode || 401);
+    }
+
     let body: any;
     try {
       body = await request.json();
@@ -83,45 +93,87 @@ export async function POST(request: NextRequest) {
       patientAge,
       patientGender,
       patientPhone,
-      doctorId,
-      doctorName,
+      doctorId: reqDoctorId,
       department,
       appointmentTime,
       type,
       notes,
     } = sanitizedBody;
 
-    if (!patientName) {
-      return apiError('Missing required field: patientName', 422, { field: 'patientName' });
+    if (!patientName || typeof patientName !== 'string' || patientName.trim().length < 2) {
+      return apiError('Field "patientName" is required and must be at least 2 characters long.', 422, { field: 'patientName' });
+    }
+    if (patientName.trim().length > 100) {
+      return apiError('Field "patientName" must not exceed 100 characters.', 422, { field: 'patientName' });
     }
 
+    let parsedAge = 40;
+    if (patientAge !== undefined && patientAge !== null) {
+      parsedAge = typeof patientAge === 'number' ? patientAge : parseInt(String(patientAge), 10);
+      if (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 125) {
+        return apiError('Field "patientAge" must be a valid age between 0 and 125.', 422, { field: 'patientAge' });
+      }
+    }
+
+    const validGenders = ['male', 'female', 'other', 'unspecified'];
+    const normGender = patientGender ? String(patientGender).trim().toLowerCase() : 'unspecified';
+    if (patientGender && !validGenders.includes(normGender)) {
+      return apiError('Field "patientGender" must be one of: Male, Female, Other, Unspecified.', 422, { field: 'patientGender' });
+    }
+    const formattedGender = normGender.charAt(0).toUpperCase() + normGender.slice(1);
+
+    const validTypes = ['opd', 'emergency', 'follow-up', 'followup', 'routine checkup', 'specialist consultation'];
+    const normType = type ? String(type).trim().toLowerCase() : 'opd';
+    if (type && !validTypes.includes(normType)) {
+      return apiError('Field "type" must be a valid appointment type.', 422, { field: 'type' });
+    }
+    const mappedType: 'OPD' | 'Follow-up' | 'Emergency' | 'Consultation' = 
+      normType.includes('follow') ? 'Follow-up' :
+      normType.includes('emerg') ? 'Emergency' :
+      normType.includes('consult') ? 'Consultation' : 'OPD';
+
+    const effectiveDoctorId = authResult.userId || (reqDoctorId ? parseInt(reqDoctorId, 10) : 1);
+    const doctor = backendStore.getDoctorById(effectiveDoctorId);
+    const doctorName = doctor ? doctor.name : (authResult.userName || 'Medical Specialist');
+    const doctorDepartment = doctor ? doctor.department : (department || 'General Medicine');
+    const branchId = doctor ? doctor.branchId : (sanitizedBody.branchId ? parseInt(sanitizedBody.branchId, 10) : 1);
+
+    // Deterministically get or create the registered patient entity
+    const patientEntity = backendStore.getOrCreatePatient({
+      name: patientName.trim(),
+      uhid: uhid ? String(uhid).trim() : undefined,
+      phone: patientPhone ? String(patientPhone).trim() : undefined,
+      age: parsedAge,
+      gender: formattedGender,
+      branchId,
+      condition: `${mappedType} Consultation`,
+    });
+
     const todayStr = new Date().toISOString().split('T')[0];
-    const generatedUhid = uhid || `UHID-${todayStr.replace(/-/g, '')}-${crypto.randomInt(1000, 10000)}`;
 
     const newAppt = backendStore.addAppointment({
-      branchId: sanitizedBody.branchId || 1,
-      patientId: sanitizedBody.patientId || crypto.randomInt(100, 1000),
-      patientName,
-      uhid: generatedUhid,
-      patientAge: patientAge || 40,
-      patientGender: patientGender || 'Unspecified',
-      patientPhone: patientPhone || '9804222142',
-      doctorId: doctorId || 1,
-      doctorName: doctorName || 'Dr . Jiarul Haque',
-      department: department || 'General Medicine',
+      branchId,
+      patientId: patientEntity.id,
+      patientName: patientEntity.name,
+      uhid: patientEntity.uhid,
+      patientAge: patientEntity.age,
+      patientGender: patientEntity.gender,
+      patientPhone: patientEntity.phone,
+      doctorId: effectiveDoctorId,
+      doctorName,
+      department: doctorDepartment,
       appointmentDate: todayStr,
-      appointmentTime: appointmentTime || '11:30 AM',
-      type: type || 'OPD',
+      appointmentTime: appointmentTime ? String(appointmentTime).trim() : '11:30 AM',
+      type: mappedType,
       status: 'Waiting',
-      notes,
+      notes: notes ? String(notes).trim() : undefined,
     });
 
     return apiSuccess(newAppt, {
       status: 201,
-      message: `Appointment scheduled for ${patientName} with Token #${newAppt.tokenNumber}`,
+      message: `New OPD appointment scheduled successfully for ${patientEntity.name} (Token #${newAppt.tokenNumber}).`,
     });
   } catch (err: any) {
-    console.error('Error in /api/v1/doctor/appointments/today POST:', err);
-    return apiError(err?.message || 'Failed to create new appointment', 500);
+    return apiServerError('/api/v1/doctor/appointments/today POST', err);
   }
 }

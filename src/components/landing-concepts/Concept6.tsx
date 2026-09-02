@@ -129,7 +129,7 @@ export default function Concept6() {
             <PhoneCall className="w-6 h-6 text-sky-400" />
             <div>
               <div className="text-xs text-slate-400 uppercase">Enterprise Sales</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-5 rounded bg-slate-900 border border-slate-800">

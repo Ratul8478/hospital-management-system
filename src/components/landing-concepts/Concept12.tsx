@@ -130,14 +130,14 @@ export default function Concept12() {
             <PhoneCall className="w-6 h-6 text-emerald-400" />
             <div>
               <div className="text-xs text-slate-400 uppercase">Dual Desk</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-5 rounded-xl bg-slate-900 border border-slate-800">
             <Mail className="w-6 h-6 text-blue-400" />
             <div>
               <div className="text-xs text-slate-400 uppercase">Dual Email</div>
-              <div className="text-sm font-bold text-white">support@medix-dual.com</div>
+              <div className="text-sm font-bold text-white">ariyanhospital9@gmail.com</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-5 rounded-xl bg-slate-900 border border-slate-800">

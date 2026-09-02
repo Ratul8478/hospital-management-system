@@ -222,14 +222,14 @@ export default function Concept1() {
             <PhoneCall className="w-8 h-8 text-cyan-400 shrink-0" />
             <div>
               <div className="text-xs text-slate-400 font-mono uppercase">24/7 Medical Support</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-2xl bg-slate-900 border border-slate-800">
             <Mail className="w-8 h-8 text-emerald-400 shrink-0" />
             <div>
               <div className="text-xs text-slate-400 font-mono uppercase">Direct Email</div>
-              <div className="text-sm font-bold text-white">support@medix-health.com</div>
+              <div className="text-sm font-bold text-white">ariyanhospital9@gmail.com</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-2xl bg-slate-900 border border-slate-800">

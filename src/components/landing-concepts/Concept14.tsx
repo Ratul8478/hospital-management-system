@@ -120,7 +120,7 @@ export default function Concept14() {
             <PhoneCall className="w-6 h-6 text-emerald-400" />
             <div>
               <div className="text-xs text-slate-400 uppercase">Aurora Desk</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-2xl bg-slate-900 border border-emerald-900">

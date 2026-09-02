@@ -1,9 +1,10 @@
 "use client";
 
 import React, { Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/lib/store';
-import { Users } from 'lucide-react';
+import { Users, Eye, FileText } from 'lucide-react';
 
 function PatientListContent() {
   const { patients, branches, selectedBranchId } = useApp();
@@ -50,6 +51,7 @@ function PatientListContent() {
             <th className="px-6 py-4">Blood Group</th>
             <th className="px-6 py-4">Primary Condition</th>
             <th className="px-6 py-4">Status</th>
+            <th className="px-6 py-4 text-right">EHR Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 font-medium">
@@ -58,13 +60,22 @@ function PatientListContent() {
             const isAdmitted = patient.status === 'admitted';
             return (
               <tr key={patient.id} className="hover:bg-slate-50/80 transition-colors">
-                <td className="px-6 py-4 font-mono font-bold text-sky-700">{patient.uhid}</td>
+                <td className="px-6 py-4 font-mono font-bold text-sky-700">
+                  <Link href={`/patients/${patient.uhid}`} className="hover:underline flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-sky-500" />
+                    <span>{patient.uhid}</span>
+                  </Link>
+                </td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-0.5 text-[10px] font-extrabold bg-slate-100 text-slate-700 rounded border border-slate-200">
                     {branch?.code}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-bold text-slate-900">{patient.name}</td>
+                <td className="px-6 py-4 font-bold text-slate-900">
+                  <Link href={`/patients/${patient.uhid}`} className="hover:text-sky-600 transition-colors">
+                    {patient.name}
+                  </Link>
+                </td>
                 <td className="px-6 py-4">{patient.age} Yrs / {patient.gender}</td>
                 <td className="px-6 py-4 font-bold text-rose-600">{patient.bloodGroup}</td>
                 <td className="px-6 py-4">{patient.condition}</td>
@@ -76,6 +87,15 @@ function PatientListContent() {
                   }`}>
                     {isAdmitted ? 'INPATIENT (IPD)' : 'OUTPATIENT (OPD)'}
                   </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <Link
+                    href={`/patients/${patient.uhid}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View EHR</span>
+                  </Link>
                 </td>
               </tr>
             );

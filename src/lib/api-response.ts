@@ -48,25 +48,64 @@ export function apiSuccess<T>(data: T, options?: ApiResponseOptions | number) {
 }
 
 export function apiError(
-  error: string,
-  status: number = 400,
-  details?: Record<string, unknown> | unknown[] | string
+  error: string | Error,
+  statusOrCode: number | string = 400,
+  detailsOrStatus?: any,
+  extraDetails?: any
 ) {
+  let status = 400;
+  let code: string | undefined;
+  let details: any = undefined;
+
+  if (typeof statusOrCode === 'number') {
+    status = statusOrCode;
+    details = detailsOrStatus;
+  } else if (typeof statusOrCode === 'string') {
+    code = statusOrCode;
+    if (typeof detailsOrStatus === 'number') {
+      status = detailsOrStatus;
+      details = extraDetails;
+    } else {
+      details = detailsOrStatus;
+    }
+  }
+
+  const message = typeof error === 'string' ? error : (error as any)?.message || 'Request failed';
+
   const body: {
     success: false;
-    error: string;
+    error: {
+      message: string;
+      code?: string;
+      details?: unknown;
+    };
+    code?: string;
     details?: unknown;
   } = {
     success: false,
-    error,
+    error: {
+      message,
+      ...(code ? { code } : {}),
+      ...(details !== undefined ? { details } : {}),
+    },
+    ...(code ? { code } : {}),
+    ...(details !== undefined ? { details } : {}),
   };
 
-  if (details !== undefined) {
-    body.details = details;
-  }
-
   return NextResponse.json(body, {
-    status,
+    status: typeof status === 'number' && status >= 200 && status <= 599 ? status : 400,
     headers: CORS_HEADERS,
   });
+}
+
+/**
+ * Safe 500 handler: logs the real error server-side (with stack) but returns
+ * a generic message so stack traces, driver errors, and internal details
+ * never reach the client.
+ */
+export function apiServerError(errOrRoute?: unknown, err?: unknown) {
+  const errorObj = err || errOrRoute;
+  const route = typeof errOrRoute === 'string' ? errOrRoute : 'API';
+  console.error(`[API ERROR] ${route}:`, errorObj);
+  return apiError('Internal server error. Please try again later.', 500);
 }

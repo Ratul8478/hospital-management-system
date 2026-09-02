@@ -119,7 +119,7 @@ export default function Concept15() {
             <PhoneCall className="w-6 h-6 text-[#00ff87]" />
             <div>
               <div className="text-xs text-zinc-500 uppercase">Direct Line</div>
-              <div className="text-sm font-bold text-white">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-white">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-5 rounded-xl bg-zinc-950 border border-zinc-900">

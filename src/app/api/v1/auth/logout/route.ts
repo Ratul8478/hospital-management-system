@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { backendStore } from '@/lib/backend-store';
-import { apiSuccess, apiError, handleOptions } from '@/lib/api-response';
+import { revokeSuperAdminSession } from '@/lib/api-auth';
+import { apiSuccess, apiServerError, handleOptions } from '@/lib/api-response';
 
 export async function OPTIONS() {
   return handleOptions();
@@ -20,28 +21,26 @@ export async function POST(request: NextRequest) {
     if (!token) {
       try {
         const body = await request.json();
-        token = body?.token || '';
+        token = body?.token || body?.refreshToken || '';
       } catch {
         // Body is optional on logout
       }
     }
 
     if (token) {
-      backendStore.invalidateSession(token);
+      if (token.startsWith('sa_live_token_')) {
+        revokeSuperAdminSession(token);
+      } else {
+        backendStore.revokeUserSession(token);
+      }
     }
 
-    return apiSuccess(
-      {
-        loggedOut: true,
-        timestamp: new Date().toISOString(),
-      },
-      {
-        status: 200,
-        message: 'Doctor session invalidated successfully. Logged out.',
-      }
-    );
-  } catch (err: any) {
-    console.error('Error in /api/v1/auth/logout:', err);
-    return apiError(err?.message || 'Failed to process logout request', 500);
+    return apiSuccess({
+      loggedOut: true,
+      timestamp: new Date().toISOString(),
+      message: 'Session successfully revoked. You have been safely logged out.',
+    });
+  } catch (err) {
+    return apiServerError(err);
   }
 }

@@ -1,56 +1,65 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import crypto from 'crypto';
-import { INITIAL_MARKETING_JOIN_REQUESTS, INITIAL_MARKETING_REPRESENTATIVES, INITIAL_MARKETING_EMAIL_LOGS, MarketingEmailDispatchLog } from '@/lib/data';
+import { backendStore } from '@/lib/backend-store';
+import { apiSuccess, apiError, apiServerError, handleOptions } from '@/lib/api-response';
+import { verifyApiRequest } from '@/lib/api-auth';
 import { sanitizeObject, detectSuspiciousPayload } from '@/lib/security';
+import { MarketingEmailDispatchLog } from '@/lib/data';
 
-let marketingRequests = [...INITIAL_MARKETING_JOIN_REQUESTS];
-let marketingReps = [...INITIAL_MARKETING_REPRESENTATIVES];
-let emailLogs: MarketingEmailDispatchLog[] = [...INITIAL_MARKETING_EMAIL_LOGS];
+export async function OPTIONS() {
+  return handleOptions();
+}
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const reqId = parseInt(id, 10);
+    const authResult = verifyApiRequest(request, 'super_admin');
+    if (!authResult.authenticated) {
+      return apiError(authResult.error || 'Unauthorized: Super Admin authorization required to approve marketing requests.', authResult.statusCode || 401);
+    }
+
+    const params = await Promise.resolve(context.params);
+    const reqId = parseInt(params.id, 10);
+
+    if (isNaN(reqId)) {
+      return apiError(`Invalid marketing request ID: ${params.id}`, 400);
+    }
+
     const rawBody = await request.json().catch(() => ({}));
-    
     const threatCheck = detectSuspiciousPayload(rawBody);
     if (threatCheck.isSuspicious) {
-      return NextResponse.json(
-        { success: false, error: 'Security warning: Malicious payload blocked.' },
-        { status: 400 }
-      );
+      return apiError('Security warning: Malicious payload blocked.', 400);
     }
 
     const body = sanitizeObject(rawBody);
-    const { superAdminName, securityToken } = body;
+    const { superAdminName } = body;
 
-    const targetReq = marketingRequests.find(r => r.id === reqId);
+    const allRequests = backendStore.getMarketingRequests();
+    const targetReq = allRequests.find((r) => r.id === reqId);
+
     if (!targetReq) {
-      return NextResponse.json(
-        { success: false, error: `Marketing Request #${id} not found.` },
-        { status: 404 }
-      );
+      return apiError(`Marketing Request #${reqId} not found.`, 404);
     }
 
     // STRICT PROTOCOL: Only Super Admin Master approval can generate Reference ID and dispatch email
-    const approverName = superAdminName || 'Anichul Haque (Super Admin HQ Master)';
+    const approverName = superAdminName || authResult.userName || 'Anichul Haque (Super Admin HQ Master)';
     const randomSuffix = crypto.randomInt(1000, 10000);
     const generatedRefId = `REF-MKT-B${targetReq.targetBranchId}-${randomSuffix}`;
     const approvalDate = new Date().toISOString().split('T')[0];
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    // Update request
-    targetReq.status = 'approved';
-    targetReq.approvedReferenceId = generatedRefId;
-    targetReq.superAdminApprovedDate = approvalDate;
-    targetReq.superAdminName = approverName;
+    // Update request in backendStore
+    backendStore.updateMarketingRequest(reqId, {
+      status: 'approved',
+      approvedReferenceId: generatedRefId,
+      superAdminApprovedDate: approvalDate,
+      superAdminName: approverName,
+    });
 
     // Create Marketing Representative Record
-    const newRep = {
-      id: marketingReps.length + 1,
+    const newRep = backendStore.addMarketingRepresentative({
       referenceId: generatedRefId,
       branchId: targetReq.targetBranchId,
       branchCode: targetReq.targetBranchCode,
@@ -73,7 +82,7 @@ export async function POST(
       phone: targetReq.phone,
       territory: targetReq.territory,
       experienceYears: targetReq.experienceYears,
-      status: 'active' as const,
+      status: 'active',
       approvedDate: approvalDate,
       branchAdminApprovedDate: targetReq.branchAdminApprovedDate,
       branchAdminName: targetReq.branchAdminName,
@@ -84,12 +93,11 @@ export async function POST(
       totalCommissionEarned: 0,
       pendingPayout: 0,
       commissionRate: '10% on Diagnostics & OPD',
-    };
-    marketingReps = [newRep, ...marketingReps];
+    });
 
-    // Create & Dispatch Email
+    // Create & Dispatch Email Log
     const newEmailLog: MarketingEmailDispatchLog = {
-      id: `EML-DISPATCH-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `EML-DISPATCH-${Date.now()}`,
       requestId: targetReq.id,
       recipientName: targetReq.name,
       recipientEmail: targetReq.email,
@@ -98,27 +106,26 @@ export async function POST(
       targetBranchCode: targetReq.targetBranchCode,
       targetBranchName: targetReq.targetBranchName,
       dispatchedAt: timestamp,
-      dispatchedBySuperAdmin: approverName,
+      dispatchedBySuperAdmin: authResult.userName || 'Super Admin HQ',
+      emailSubject: `OFFICIAL APPROVAL & APPOINTMENT LETTER — Medix Hospital Representative (Ref: ${generatedRefId})`,
       deliveryStatus: 'delivered',
-      smtpServer: 'smtp-relay.medix-network.internal:587',
-      emailSubject: `Official Approval: Your Medix Marketing Reference ID ${generatedRefId}`,
-      securityToken: securityToken || `AUTH-SA-HQ-${Math.floor(100000 + Math.random() * 900000)}-SEC`,
+      smtpServer: 'smtp.gmail.com:465',
+      securityToken: `SEC-TOK-${Date.now()}`,
     };
-    emailLogs = [newEmailLog, ...emailLogs];
+    backendStore.addMarketingEmailLog(newEmailLog);
 
-    return NextResponse.json({
-      success: true,
-      message: `Request approved by Super Admin. Reference ID ${generatedRefId} generated and dispatched to ${targetReq.email}.`,
-      data: {
-        request: targetReq,
+    return apiSuccess(
+      {
+        approvedRequest: targetReq,
         representative: newRep,
-        emailDispatch: newEmailLog,
+        emailLog: newEmailLog,
       },
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || 'Internal Server Error' },
-      { status: 500 }
+      {
+        status: 200,
+        message: `Marketing Request #${reqId} approved successfully. Reference ID ${generatedRefId} generated.`,
+      }
     );
+  } catch (err: any) {
+    return apiServerError('/api/v1/marketing/requests/[id]/approve POST', err);
   }
 }

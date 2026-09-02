@@ -321,6 +321,16 @@ export default function HeroScrollCanvasBackground({
         style={{ opacity: isReady ? 1 : 0.4 }}
       />
 
+      {/* Smooth Loading Indicator before first frame ready */}
+      {!isReady && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#f0fdf4] text-emerald-950 z-10">
+          <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-emerald-200 shadow-md text-xs font-bold text-emerald-900">
+            <Sparkles className="w-4 h-4 text-[#046a4e] animate-spin" />
+            <span>Loading Hospital Video Stream... {loadProgress}%</span>
+          </div>
+        </div>
+      )}
+
       {/* Subtle bottom fade transition into next section */}
       <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#f0fdf4] to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-[#f0fdf4]/50 to-transparent pointer-events-none" />

@@ -140,14 +140,14 @@ export default function Concept2() {
             <PhoneCall className="w-6 h-6 text-slate-950" />
             <div>
               <div className="text-xs text-slate-500 uppercase font-semibold">Telephone</div>
-              <div className="text-sm font-bold text-slate-950">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-bold text-slate-950">+91 91443 76971</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 bg-white border border-slate-200">
             <Mail className="w-6 h-6 text-slate-950" />
             <div>
               <div className="text-xs text-slate-500 uppercase font-semibold">Email</div>
-              <div className="text-sm font-bold text-slate-950">info@medix-swiss.com</div>
+              <div className="text-sm font-bold text-slate-950">ariyanhospital9@gmail.com</div>
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 bg-white border border-slate-200">

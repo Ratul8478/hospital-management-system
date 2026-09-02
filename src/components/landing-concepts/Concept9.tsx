@@ -96,14 +96,14 @@ export default function Concept9() {
             <PhoneCall className="w-8 h-8 text-black" />
             <div>
               <div className="text-xs font-black uppercase">HOTLINE</div>
-              <div className="text-sm font-black">+1 (800) 555-MEDIX</div>
+              <div className="text-sm font-black">+91 91443 76971</div>
             </div>
           </div>
           <div className="p-6 bg-cyan-200 border-3 border-black shadow-[4px_4px_0px_0px_#000] flex items-center gap-4">
             <Mail className="w-8 h-8 text-black" />
             <div>
               <div className="text-xs font-black uppercase">EMAIL</div>
-              <div className="text-sm font-black">support@medix-brutal.com</div>
+              <div className="text-sm font-black">ariyanhospital9@gmail.com</div>
             </div>
           </div>
           <div className="p-6 bg-rose-200 border-3 border-black shadow-[4px_4px_0px_0px_#000] flex items-center gap-4">

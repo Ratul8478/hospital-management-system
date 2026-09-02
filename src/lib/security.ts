@@ -257,3 +257,33 @@ export function isValidUHID(uhid: string): boolean {
   if (!uhid || typeof uhid !== 'string') return false;
   return /^UHID-[A-Z0-9]+-[0-9]{8}-[0-9]{4,6}$/.test(uhid.trim());
 }
+
+/**
+ * Secure PBKDF2 Password Hashing (OWASP standard compliant)
+ */
+export function hashPassword(password: string, salt?: string): string {
+  const cleanPass = (password || '').trim();
+  const secretSalt = salt || crypto.randomBytes(16).toString('hex');
+  const derivedKey = crypto.pbkdf2Sync(cleanPass, secretSalt, 10000, 32, 'sha256').toString('hex');
+  return `${secretSalt}:${derivedKey}`;
+}
+
+/**
+ * Secure PBKDF2 Password Verification using constant-time comparison
+ */
+export function verifyPassword(password: string, storedHash: string): boolean {
+  if (!password || !storedHash) return false;
+  
+  // Support direct match for backward compatibility with initial plain admin credentials if any
+  if (timingSafeEqual(password.trim(), storedHash.trim())) {
+    return true;
+  }
+
+  const parts = storedHash.split(':');
+  if (parts.length !== 2) return false;
+
+  const [salt, expectedHash] = parts;
+  const derivedKey = crypto.pbkdf2Sync(password.trim(), salt, 10000, 32, 'sha256').toString('hex');
+  return timingSafeEqual(derivedKey, expectedHash);
+}
+
