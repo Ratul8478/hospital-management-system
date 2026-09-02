@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://hospital-management-system-using-an.vercel.app/"><img src="https://img.shields.io/badge/Live%20Production-Deploy-emerald?style=for-the-badge&logo=vercel" alt="Live Deployment"></a>
+  <a href="https://medix-hospital-system.vercel.app/"><img src="https://img.shields.io/badge/Live%20Production-Deploy-emerald?style=for-the-badge&logo=vercel" alt="Live Deployment"></a>
   <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Android%20Native-blue?style=for-the-badge&logo=android" alt="Platform">
   <img src="https://img.shields.io/badge/Architecture-Clean%20%26%20MVVM-purple?style=for-the-badge" alt="Architecture">
   <img src="https://img.shields.io/badge/Compliance-HIPAA%20%7C%20HL7%20FHIR-red?style=for-the-badge" alt="Compliance">
@@ -20,7 +20,7 @@
 ## 🏥 Live Production Portal
 
 Access the live production enterprise system directly:  
-🌐 **[https://hospital-management-system-using-an.vercel.app/](https://hospital-management-system-using-an.vercel.app/)**
+🌐 **[https://medix-hospital-system.vercel.app/](https://medix-hospital-system.vercel.app/)**
 
 ---
 
